@@ -1,15 +1,43 @@
-import React from "react"
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { WifiOff, RefreshCw, Bell, Trash2, HardDrive, User, CheckCircle2 } from "lucide-react-native"
+import React from "react";
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { WifiOff, RefreshCw, Bell, Trash2, HardDrive, User, CheckCircle2 } from "lucide-react-native";
 
 const pendingItems = [
-  { id: 1, name: "Alex Rivera",    initials: "AR", time: "10:45 AM", room: "Workshop A12", workshop: "Advanced Robotics" },
-  { id: 2, name: "Sarah Jenkins",  initials: "SJ", time: "11:02 AM", room: "Workshop B04", workshop: "UX Research Methods" },
-  { id: 3, name: "David Chen",     initials: "DC", time: "11:15 AM", room: "Workshop C01", workshop: "Quantum Computing Basics" },
-  { id: 4, name: "Marcus Thorne",  initials: "MT", time: "11:30 AM", room: "Workshop A12", workshop: "Advanced Robotics" },
-  { id: 5, name: "Maya Patel",     initials: "MP", time: "11:45 AM", room: "Workshop B04", workshop: "UX Research Methods" },
-]
+  { id: 1, name: "Alex Rivera", initials: "AR", time: "10:45 AM", room: "Workshop A12", workshop: "Advanced Robotics" },
+  {
+    id: 2,
+    name: "Sarah Jenkins",
+    initials: "SJ",
+    time: "11:02 AM",
+    room: "Workshop B04",
+    workshop: "UX Research Methods",
+  },
+  {
+    id: 3,
+    name: "David Chen",
+    initials: "DC",
+    time: "11:15 AM",
+    room: "Workshop C01",
+    workshop: "Quantum Computing Basics",
+  },
+  {
+    id: 4,
+    name: "Marcus Thorne",
+    initials: "MT",
+    time: "11:30 AM",
+    room: "Workshop A12",
+    workshop: "Advanced Robotics",
+  },
+  {
+    id: 5,
+    name: "Maya Patel",
+    initials: "MP",
+    time: "11:45 AM",
+    room: "Workshop B04",
+    workshop: "UX Research Methods",
+  },
+];
 
 export default function OfflineSyncScreen() {
   return (
@@ -30,7 +58,10 @@ export default function OfflineSyncScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Offline hero */}
         <View style={s.offlineHero}>
           <View style={s.offlineIconBox}>
@@ -76,7 +107,15 @@ export default function OfflineSyncScreen() {
         </TouchableOpacity>
 
         {/* Queue */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 22, marginBottom: 12 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: 22,
+            marginBottom: 12,
+          }}
+        >
           <Text style={{ fontSize: 15, fontWeight: "800", color: "#0f172a" }}>Pending Sync Queue</Text>
           <View style={{ backgroundColor: "#ffedd5", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}>
             <Text style={{ color: "#ea580c", fontWeight: "700", fontSize: 12 }}>Awaiting Upload</Text>
@@ -91,7 +130,9 @@ export default function OfflineSyncScreen() {
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f172a" }}>{item.name}</Text>
-                <Text style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{item.time} · {item.room}</Text>
+                <Text style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                  {item.time} · {item.room}
+                </Text>
                 <View style={s.workshopTag}>
                   <Text style={{ fontSize: 11, color: "#dc2626", fontWeight: "600" }}>{item.workshop}</Text>
                 </View>
@@ -104,69 +145,116 @@ export default function OfflineSyncScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 const s = StyleSheet.create({
   header: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 18, paddingVertical: 14,
-    backgroundColor: "#fff", borderBottomWidth: 1, borderColor: "#f1f5f9",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderColor: "#f1f5f9",
   },
   brand: { fontSize: 20, fontWeight: "900", color: "#2563eb", letterSpacing: -0.5 },
   headerIcon: {
-    width: 38, height: 38, borderRadius: 19,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: "#f1f5f9",
-    justifyContent: "center", alignItems: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
   avatarSmall: {
-    width: 38, height: 38, borderRadius: 19,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: "#dbeafe",
-    justifyContent: "center", alignItems: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
   offlineHero: {
-    flexDirection: "row", alignItems: "center",
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#fff7ed",
-    borderRadius: 18, padding: 18, marginTop: 18, marginBottom: 16,
+    borderRadius: 18,
+    padding: 18,
+    marginTop: 18,
+    marginBottom: 16,
   },
   offlineIconBox: {
-    width: 58, height: 58, borderRadius: 18,
+    width: 58,
+    height: 58,
+    borderRadius: 18,
     backgroundColor: "#ffedd5",
-    justifyContent: "center", alignItems: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
   statCard: {
-    backgroundColor: "#fff", borderRadius: 14, padding: 14, alignItems: "center",
-    shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
   statIcon: {
-    width: 38, height: 38, borderRadius: 12,
-    justifyContent: "center", alignItems: "center", marginBottom: 8,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
   },
   statVal: { fontSize: 20, fontWeight: "800", color: "#0f172a" },
   statLbl: { fontSize: 10, color: "#64748b", textAlign: "center", marginTop: 3 },
   syncBtn: {
-    backgroundColor: "#2563eb", borderRadius: 14,
-    flexDirection: "row", justifyContent: "center", alignItems: "center",
-    paddingVertical: 16, marginBottom: 4,
-    shadowColor: "#2563eb", shadowOpacity: 0.3, shadowRadius: 10, elevation: 4,
+    backgroundColor: "#2563eb",
+    borderRadius: 14,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 16,
+    marginBottom: 4,
+    shadowColor: "#2563eb",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   queueCard: {
-    backgroundColor: "#fff", borderRadius: 18,
-    shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
     overflow: "hidden",
   },
   queueRow: {
-    flexDirection: "row", alignItems: "center",
-    paddingHorizontal: 16, paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   initAvatar: {
-    width: 42, height: 42, borderRadius: 21,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: "#dbeafe",
-    justifyContent: "center", alignItems: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
   workshopTag: {
     alignSelf: "flex-start",
-    backgroundColor: "#fee2e2", borderRadius: 8,
-    paddingHorizontal: 8, paddingVertical: 3, marginTop: 5,
+    backgroundColor: "#fee2e2",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginTop: 5,
   },
-})
+});

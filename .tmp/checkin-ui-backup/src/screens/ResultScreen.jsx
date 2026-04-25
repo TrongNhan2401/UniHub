@@ -1,8 +1,8 @@
-import React from "react"
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { useNavigation } from "@react-navigation/native"
-import { CheckCircle2, User, ChevronLeft, Star, BookOpen, RotateCcw } from "lucide-react-native"
+import React from "react";
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { CheckCircle2, User, ChevronLeft, Star, BookOpen, RotateCcw } from "lucide-react-native";
 
 const student = {
   name: "Alexander J. Rivera",
@@ -12,10 +12,10 @@ const student = {
   credits: 2.5,
   room: "Room B04",
   time: "2:00 PM – 4:00 PM",
-}
+};
 
 export default function ResultScreen() {
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8fafc" }}>
@@ -28,7 +28,10 @@ export default function ResultScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Success hero */}
         <View style={{ alignItems: "center", marginTop: 28, marginBottom: 28 }}>
           <View style={s.successRing}>
@@ -64,8 +67,12 @@ export default function ResultScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 12, color: "#64748b", fontWeight: "600", letterSpacing: 0.3 }}>WORKSHOP</Text>
-              <Text style={{ fontSize: 15, fontWeight: "700", color: "#0f172a", marginTop: 2 }}>{student.workshop}</Text>
-              <Text style={{ fontSize: 12, color: "#64748b", marginTop: 3 }}>{student.room} · {student.time}</Text>
+              <Text style={{ fontSize: 15, fontWeight: "700", color: "#0f172a", marginTop: 2 }}>
+                {student.workshop}
+              </Text>
+              <Text style={{ fontSize: 12, color: "#64748b", marginTop: 3 }}>
+                {student.room} · {student.time}
+              </Text>
             </View>
           </View>
         </View>
@@ -77,7 +84,8 @@ export default function ResultScreen() {
             <Text style={{ fontWeight: "700", color: "#92400e", fontSize: 14 }}>CPD Credits</Text>
           </View>
           <Text style={{ color: "#78350f", fontSize: 13, marginTop: 6, lineHeight: 20 }}>
-            Completing this workshop earns <Text style={{ fontWeight: "800" }}>{student.credits} CPD credits</Text> upon attendance verification.
+            Completing this workshop earns <Text style={{ fontWeight: "800" }}>{student.credits} CPD credits</Text> upon
+            attendance verification.
           </Text>
         </View>
 
@@ -94,62 +102,97 @@ export default function ResultScreen() {
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 const s = StyleSheet.create({
   header: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 16, paddingVertical: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: "#fff",
-    borderBottomWidth: 1, borderColor: "#f1f5f9",
+    borderBottomWidth: 1,
+    borderColor: "#f1f5f9",
   },
   backBtn: {
-    width: 40, height: 40, borderRadius: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#f1f5f9",
-    justifyContent: "center", alignItems: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
   successRing: {
-    width: 100, height: 100, borderRadius: 50,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: "#dcfce7",
-    justifyContent: "center", alignItems: "center",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 4,
   },
   successTitle: { fontSize: 26, fontWeight: "900", color: "#15803d", marginTop: 14 },
   card: {
-    backgroundColor: "#fff", borderRadius: 20, padding: 18, marginBottom: 14,
-    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 10, elevation: 3,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   studentRow: { flexDirection: "row", alignItems: "center" },
   avatarCircle: {
-    width: 56, height: 56, borderRadius: 28,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: "#dbeafe",
-    justifyContent: "center", alignItems: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
   verifiedBadge: {
-    flexDirection: "row", alignItems: "center",
-    backgroundColor: "#dcfce7", borderRadius: 20,
-    paddingHorizontal: 8, paddingVertical: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#dcfce7",
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
   },
   divider: { height: 1, backgroundColor: "#f1f5f9", marginVertical: 16 },
   iconBox: {
-    width: 40, height: 40, borderRadius: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: "#dbeafe",
-    justifyContent: "center", alignItems: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
   cpdBanner: {
-    backgroundColor: "#fef3c7", borderRadius: 16,
-    padding: 16, marginBottom: 22,
+    backgroundColor: "#fef3c7",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 22,
   },
   confirmBtn: {
-    backgroundColor: "#2563eb", borderRadius: 16,
+    backgroundColor: "#2563eb",
+    borderRadius: 16,
     paddingVertical: 16,
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    shadowColor: "#2563eb", shadowOpacity: 0.3, shadowRadius: 10, elevation: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#2563eb",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
     marginBottom: 14,
   },
   rescanBtn: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
   },
-})
+});

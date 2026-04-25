@@ -1,25 +1,30 @@
-import React, { useState } from "react"
+import React, { useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity,
-  ScrollView, StyleSheet, KeyboardAvoidingView, Platform,
-} from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { useNavigation } from "@react-navigation/native"
-import { Mail, Lock, Eye, EyeOff, QrCode, ChevronRight } from "lucide-react-native"
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { Mail, Lock, Eye, EyeOff, QrCode, ChevronRight } from "lucide-react-native";
 
 export default function LoginScreen() {
-  const navigation = useNavigation()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPass, setShowPass] = useState(false)
+  const navigation = useNavigation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
 
-  const handleLogin = () => navigation.replace("Main")
+  const handleLogin = () => navigation.replace("Main");
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8fafc" }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
-
           {/* Logo */}
           <View style={{ alignItems: "center", marginBottom: 36 }}>
             <View style={s.logoBox}>
@@ -61,11 +66,15 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
               />
-              <TouchableOpacity onPress={() => setShowPass(!showPass)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                {showPass
-                  ? <EyeOff size={17} color="#64748b" strokeWidth={1.8} />
-                  : <Eye    size={17} color="#64748b" strokeWidth={1.8} />
-                }
+              <TouchableOpacity
+                onPress={() => setShowPass(!showPass)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                {showPass ? (
+                  <EyeOff size={17} color="#64748b" strokeWidth={1.8} />
+                ) : (
+                  <Eye size={17} color="#64748b" strokeWidth={1.8} />
+                )}
               </TouchableOpacity>
             </View>
 
@@ -96,47 +105,75 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  )
+  );
 }
 
 const s = StyleSheet.create({
   container: { flexGrow: 1, paddingHorizontal: 22, paddingTop: 40, paddingBottom: 40, justifyContent: "center" },
   logoBox: {
-    width: 72, height: 72, borderRadius: 22,
-    backgroundColor: "#dbeafe", justifyContent: "center", alignItems: "center",
+    width: 72,
+    height: 72,
+    borderRadius: 22,
+    backgroundColor: "#dbeafe",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 14,
-    shadowColor: "#2563eb", shadowOpacity: 0.2, shadowRadius: 10, elevation: 4,
+    shadowColor: "#2563eb",
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 4,
   },
   brand: { fontSize: 28, fontWeight: "900", color: "#1e3a8a", letterSpacing: -0.5 },
   brandSub: { fontSize: 14, color: "#2563eb", fontWeight: "600", marginTop: 2 },
   desc: { fontSize: 13, color: "#64748b", marginTop: 6, textAlign: "center" },
   card: {
-    backgroundColor: "#fff", borderRadius: 22, padding: 22,
-    shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 16, elevation: 4,
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    padding: 22,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 4,
     marginBottom: 16,
   },
   cardTitle: { fontSize: 18, fontWeight: "800", color: "#0f172a", marginBottom: 20 },
   label: { fontSize: 12, fontWeight: "600", color: "#374151", marginBottom: 7, letterSpacing: 0.3 },
   inputRow: {
-    flexDirection: "row", alignItems: "center",
-    borderWidth: 1.5, borderColor: "#e2e8f0",
-    borderRadius: 12, paddingHorizontal: 14, backgroundColor: "#f8fafc", gap: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    backgroundColor: "#f8fafc",
+    gap: 10,
   },
   inputActive: { borderColor: "#2563eb", backgroundColor: "#eff6ff" },
   input: { flex: 1, height: 48, fontSize: 15, color: "#0f172a" },
   loginBtn: {
-    marginTop: 22, backgroundColor: "#2563eb",
-    borderRadius: 14, paddingVertical: 15,
-    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
-    shadowColor: "#2563eb", shadowOpacity: 0.3, shadowRadius: 10, elevation: 4,
+    marginTop: 22,
+    backgroundColor: "#2563eb",
+    borderRadius: 14,
+    paddingVertical: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    shadowColor: "#2563eb",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   divRow: { flexDirection: "row", alignItems: "center", marginVertical: 16 },
   divLine: { flex: 1, height: 1, backgroundColor: "#e2e8f0" },
   divTxt: { marginHorizontal: 14, fontSize: 12, color: "#94a3b8", fontWeight: "600" },
   demoBtn: {
-    borderWidth: 1.5, borderColor: "#e2e8f0",
-    borderRadius: 14, paddingVertical: 14,
-    alignItems: "center", backgroundColor: "#fff",
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   footer: { textAlign: "center", marginTop: 24, fontSize: 12, color: "#cbd5e1" },
-})
+});
