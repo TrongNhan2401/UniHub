@@ -1,6 +1,6 @@
 ﻿
 
-namespace Domain.Enties
+namespace Domain.Entities
 {
     public class IdempotencyRecord
     {

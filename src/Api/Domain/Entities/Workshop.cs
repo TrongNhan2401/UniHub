@@ -1,9 +1,6 @@
 ﻿using Domain.Common;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Domain.Enties
+namespace Domain.Entities
 {
     public class Workshop : BaseEntity
     {
@@ -22,10 +19,11 @@ namespace Domain.Enties
         public WorkshopStatus Status { get; set; } = WorkshopStatus.Draft;
         public string? PdfUrl { get; set; }
         public string? AiSummary { get; set; }
-        public string? AiSummaryGeneratedAt { get; set; }
+        public DateTime? AiSummaryGeneratedAt { get; set; }
         public Guid CreatedByUserId { get; set; }
 
         // Navigation
         public ICollection<Registration> Registrations { get; set; } = new List<Registration>();
+        public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
     }
 }

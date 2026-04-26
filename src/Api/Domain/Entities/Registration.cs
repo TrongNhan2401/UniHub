@@ -1,14 +1,15 @@
 ﻿using Domain.Common;
-namespace Domain.Enties
+namespace Domain.Entities
 {
     public class Registration : BaseEntity
     {
         public Guid UserId { get; set; }
         public Guid WorkshopId { get; set; }
+
         public RegistrationStatus Status { get; set; } = RegistrationStatus.Pending;
-        public string? QrCode { get; set; }          // base64 or URL
-        public string? QrToken { get; set; }          // unique token embedded in QR
-        public string? IdempotencyKey { get; set; }   // chống đăng ký 2 lần
+        public string? QrCode { get; set; }
+        public string? QrToken { get; set; }
+        public string? IdempotencyKey { get; set; }
 
         // Navigation
         public AppUser User { get; set; } = null!;
@@ -16,5 +17,4 @@ namespace Domain.Enties
         public Payment? Payment { get; set; }
         public Attendance? Attendance { get; set; }
     }
-
 }
