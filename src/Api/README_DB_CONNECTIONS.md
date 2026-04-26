@@ -134,6 +134,64 @@ dotnet user-secrets list --project src/Api/Api
 dotnet user-secrets set "ConnectionStrings:Default" "<value>" --project src/Api/Api
 ```
 
+## 9. Hướng dẫn chạy Swagger cho teammate
+
+Mục tiêu: mở được giao diện Swagger UI để test nhanh API trước khi làm Auth/JWT.
+
+### 9.1 Điều kiện
+
+- Đã cài package `Swashbuckle.AspNetCore`
+- Đã chạy được API bằng `dotnet run`
+- Environment là `Development`
+
+### 9.2 Chạy Swagger
+
+1. Chạy API:
+
+```bash
+cd src/Api/Api
+dotnet run
+```
+
+2. Mở Swagger UI trên trình duyệt:
+
+```text
+http://localhost:5186/swagger
+```
+
+3. Nếu cần kiểm tra JSON của Swagger:
+
+```bash
+curl http://localhost:5186/swagger/v1/swagger.json
+```
+
+Kỳ vọng: trả về HTTP `200` và JSON OpenAPI.
+
+### 9.3 Những gì đã được config trong Program.cs
+
+- `builder.Services.AddEndpointsApiExplorer();`
+- `builder.Services.AddSwaggerGen();`
+- Trong `if (app.Environment.IsDevelopment())`:
+  - `app.UseSwagger();`
+  - `app.UseSwaggerUI(...)` với endpoint `/swagger/v1/swagger.json`
+
+### 9.4 Troubleshooting Swagger
+
+- Không mở được `/swagger`:
+  - Kiểm tra app có chạy ở `Development` không
+  - Kiểm tra log startup có lỗi bind port không
+
+- Lỗi `address already in use`:
+
+```bash
+netstat -ano | findstr :5186
+taskkill /PID <PID> /F
+```
+
+- `curl` không ra JSON:
+  - Đảm bảo URL đúng: `/swagger/v1/swagger.json`
+  - Đảm bảo app đang chạy trước khi gọi `curl`
+
 ---
 
 Ghi chú:
