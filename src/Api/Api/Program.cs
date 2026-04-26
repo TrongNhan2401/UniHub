@@ -1,4 +1,6 @@
 using Infrastructure;
+using Infrastructure.Persistence.Contexts;
+using Microsoft.EntityFrameworkCore;
 
 using Serilog;
 
@@ -31,9 +33,25 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
-builder.Services.AddInfrastructureDependencies();
+builder.Services.AddInfrastructureDependencies(builder.Configuration);
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var canConnect = await dbContext.Database.CanConnectAsync();
+
+    if (canConnect)
+    {
+        Console.WriteLine("✅ Supabase successfully connected.");
+    }
+    else
+    {
+        Console.WriteLine("❌ Supabase connection failed.");
+    }
+}
+
 app.UseCors("AllowLocalhost");
 app.UseSerilogRequestLogging();
 // Configure the HTTP request pipeline.
@@ -44,6 +62,14 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.MapGet("/api/health/db", async (AppDbContext dbContext) =>
+{
+    var canConnect = await dbContext.Database.CanConnectAsync();
+    return canConnect
+        ? Results.Ok(new { message = "✅ Supabase successfully connected." })
+        : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+});
 
 app.MapControllers();
 
