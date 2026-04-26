@@ -16,7 +16,7 @@ namespace Infrastructure.Persistence.Configurations
                 .HasMaxLength(100);
 
             builder.Property(i => i.ResponseBody)
-                .HasColumnType("nvarchar(max)");
+                .HasColumnType("text");
 
             builder.Property(i => i.StatusCode)
                 .IsRequired();

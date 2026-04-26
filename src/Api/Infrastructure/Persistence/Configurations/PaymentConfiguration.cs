@@ -24,7 +24,7 @@ namespace Infrastructure.Persistence.Configurations
                 .HasMaxLength(200);
 
             builder.Property(p => p.GatewayResponse)
-                .HasColumnType("nvarchar(max)");
+                .HasColumnType("text");
 
             // Relationships
             builder.HasOne(p => p.User)
