@@ -2,6 +2,7 @@ using Application.Abstractions;
 using Domain;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -14,11 +15,16 @@ namespace Api.Controllers
     {
         private readonly IHostEnvironment _environment;
         private readonly IJwtTokenService _jwtTokenService;
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
 
-        public AuthPipelineController(IHostEnvironment environment, IJwtTokenService jwtTokenService)
+        public AuthPipelineController(
+            IHostEnvironment environment,
+            IJwtTokenService jwtTokenService,
+            RoleManager<IdentityRole<Guid>> roleManager)
         {
             _environment = environment;
             _jwtTokenService = jwtTokenService;
+            _roleManager = roleManager;
         }
 
         [HttpPost("dev-token")]
@@ -72,6 +78,28 @@ namespace Api.Controllers
             };
 
             return Ok(response);
+        }
+
+        [HttpGet("dev-roles")]
+        [AllowAnonymous]
+        public IActionResult GetSeededRoles()
+        {
+            if (!_environment.IsDevelopment())
+            {
+                return NotFound();
+            }
+
+            var roles = _roleManager.Roles
+                .Select(r => r.Name)
+                .Where(r => !string.IsNullOrWhiteSpace(r))
+                .OrderBy(r => r)
+                .ToArray();
+
+            return Ok(new
+            {
+                count = roles.Length,
+                roles
+            });
         }
     }
 }

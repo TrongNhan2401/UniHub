@@ -1,4 +1,5 @@
 using Infrastructure;
+using Infrastructure.Persistence.Seed;
 using Microsoft.OpenApi;
 
 using Serilog;
@@ -60,6 +61,9 @@ builder.Host.UseSerilog();
 builder.Services.AddInfrastructureDependencies(builder.Configuration);
 
 var app = builder.Build();
+
+await SystemRoleSeeder.SeedAsync(app.Services);
+
 app.UseCors("AllowLocalhost");
 app.UseSerilogRequestLogging();
 // Configure the HTTP request pipeline.
