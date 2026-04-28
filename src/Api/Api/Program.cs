@@ -1,6 +1,4 @@
 using Infrastructure;
-using Infrastructure.Persistence.Contexts;
-using Microsoft.EntityFrameworkCore;
 
 using Serilog;
 
@@ -9,8 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
 var ClientUrl = builder.Configuration["ClientUrl"];
 Console.WriteLine($"Client Url {ClientUrl}");
 builder.Services.AddCors(options =>
@@ -33,48 +31,19 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
-builder.Services.AddInfrastructureDependencies(builder.Configuration);
+builder.Services.AddInfrastructureDependencies();
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var canConnect = await dbContext.Database.CanConnectAsync();
-
-    if (canConnect)
-    {
-        Console.WriteLine("✅ Supabase successfully connected.");
-    }
-    else
-    {
-        Console.WriteLine("❌ Supabase connection failed.");
-    }
-}
-
 app.UseCors("AllowLocalhost");
 app.UseSerilogRequestLogging();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "UniHub API v1");
-        options.RoutePrefix = "swagger";
-    });
+    app.MapOpenApi();
 }
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
-app.MapGet("/api/health/db", async (AppDbContext dbContext) =>
-{
-    var canConnect = await dbContext.Database.CanConnectAsync();
-    return canConnect
-        ? Results.Ok(new { message = "✅ Supabase successfully connected." })
-        : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
-});
 
 app.MapControllers();
 

@@ -3,7 +3,7 @@ import { MoreVertical } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
 import { recentRegistrations, upcomingDeadlines, weeklyData } from "@/data/mockData";
 
-// ─── Simple SVG sparkline ──────────────────────────────────────
+// ─── Biểu đồ sparkline đơn giản ──────────────────────────────────────
 function TrendChart({ data }) {
   const max = Math.max(...data.map((d) => d.value));
   const W = 520;
@@ -61,28 +61,33 @@ const statusStyles = {
   PENDING: "bg-amber-100 text-amber-700",
 };
 
+const statusLabels = {
+  CONFIRMED: "ĐÃ XÁC NHẬN",
+  PENDING: "ĐANG CHỜ",
+};
+
 export default function DashboardPage() {
   return (
-    <AdminShell activeTop="My Workshops">
-      <h1 className="text-4xl font-bold">Workshop Insights</h1>
-      <p className="mt-1 text-slate-500">Real-time performance metrics and registration trends.</p>
+    <AdminShell activeTop="Bảng điều khiển">
+      <h1 className="text-4xl font-bold">Phân tích Workshop</h1>
+      <p className="mt-1 text-slate-500">Các chỉ số hiệu suất và xu hướng đăng ký theo thời gian thực.</p>
 
       <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <MetricCard label="TOTAL WORKSHOPS" value="42" delta="+12%" icon="🎓" />
-        <MetricCard label="TOTAL REGISTRATIONS" value="1,284" delta="+8%" icon="👥" />
-        <MetricCard label="ACTIVE CHECK-INS" value="156" tag="LIVENOW" icon="📋" />
+        <MetricCard label="TỔNG WORKSHOP" value="42" delta="+12%" icon="🎓" />
+        <MetricCard label="TỔNG LƯỢT ĐĂNG KÝ" value="1,284" delta="+8%" icon="👥" />
+        <MetricCard label="LƯỢT CHECK-IN HIỆN TẠI" value="156" tag="TRỰC TIẾP" icon="📋" />
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-[1fr_300px]">
         <div className="rounded-xl border bg-white p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-2xl font-semibold">Registration Trends</p>
-              <p className="text-sm text-slate-500">Daily signup volume for the current month</p>
+              <p className="text-2xl font-semibold">Xu hướng đăng ký</p>
+              <p className="text-sm text-slate-500">Số lượng đăng ký hàng ngày trong tháng hiện tại</p>
             </div>
             <div className="flex gap-1 rounded-lg border p-1 text-sm">
-              <button className="rounded bg-slate-100 px-3 py-1 font-medium">Daily</button>
-              <button className="rounded px-3 py-1 text-slate-500">Weekly</button>
+              <button className="rounded bg-slate-100 px-3 py-1 font-medium">Hàng ngày</button>
+              <button className="rounded px-3 py-1 text-slate-500">Hàng tuần</button>
             </div>
           </div>
           <div className="mt-4">
@@ -91,7 +96,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="rounded-xl border bg-white p-5">
-          <p className="text-xl font-semibold">Upcoming Deadlines</p>
+          <p className="text-xl font-semibold">Thời hạn sắp tới</p>
           <div className="mt-4 space-y-4">
             {upcomingDeadlines.map((item) => (
               <div key={item.id} className="flex items-start gap-3">
@@ -108,27 +113,27 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-          <button className="mt-6 text-sm font-medium text-blue-700">View All Schedule ›</button>
+          <button className="mt-6 text-sm font-medium text-blue-700">Xem toàn bộ lịch trình ›</button>
         </div>
       </div>
 
       <div className="mt-5 rounded-xl border bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-2xl font-semibold">Recent Registrations</p>
+          <p className="text-2xl font-semibold">Đăng ký gần đây</p>
           <div className="flex w-52 items-center rounded-lg border px-3 py-2">
             <span className="mr-2 text-slate-400">🔍</span>
-            <input className="w-full text-sm outline-none" placeholder="Filter users..." />
+            <input className="w-full text-sm outline-none" placeholder="Lọc người dùng..." />
           </div>
         </div>
         <div className="overflow-x-auto rounded-lg border">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-100 text-slate-500">
               <tr>
-                <th className="px-4 py-3 font-medium">USER</th>
+                <th className="px-4 py-3 font-medium">NGƯỜI DÙNG</th>
                 <th className="px-4 py-3 font-medium">WORKSHOP</th>
-                <th className="px-4 py-3 font-medium">STATUS</th>
-                <th className="px-4 py-3 font-medium">DATE</th>
-                <th className="px-4 py-3 font-medium">ACTIONS</th>
+                <th className="px-4 py-3 font-medium">TRẠNG THÁI</th>
+                <th className="px-4 py-3 font-medium">NGÀY</th>
+                <th className="px-4 py-3 font-medium">THAO TÁC</th>
               </tr>
             </thead>
             <tbody>
@@ -149,7 +154,7 @@ export default function DashboardPage() {
                   </td>
                   <td className="px-4 py-3">{r.workshop}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded px-2 py-1 text-xs font-bold ${statusStyles[r.status]}`}>{r.status}</span>
+                    <span className={`rounded px-2 py-1 text-xs font-bold ${statusStyles[r.status]}`}>{statusLabels[r.status]}</span>
                   </td>
                   <td className="px-4 py-3 text-slate-500">{r.date}</td>
                   <td className="px-4 py-3">

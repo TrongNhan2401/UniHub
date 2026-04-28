@@ -3,10 +3,10 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import WorkshopsPage from "@/pages/WorkshopsPage";
-import WorkshopCreatePage from "@/pages/WorkshopCreatePage";
-import RegistrationsPage from "@/pages/RegistrationsPage";
-import AISummaryPage from "@/pages/AISummaryPage";
+import CalendarPage from "@/pages/CalendarPage";
 import { useAuthStore } from "@/store/authStore";
+import AdminSignInPage from "./pages/AdminSignInPage";
+import WorkshopDetailPage from "./pages/WorkshopDetailPage";
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -34,29 +34,15 @@ export default function App() {
         }
       />
       <Route
-        path="/workshops/create"
+        path="/calendar"
         element={
           <ProtectedRoute>
-            <WorkshopCreatePage />
+            <CalendarPage />
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/registrations"
-        element={
-          <ProtectedRoute>
-            <RegistrationsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/ai-summary"
-        element={
-          <ProtectedRoute>
-            <AISummaryPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/workshop/:id" element={<WorkshopDetailPage />} />
+      <Route path="/sign-in" element={<AdminSignInPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

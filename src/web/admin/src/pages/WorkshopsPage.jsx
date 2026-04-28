@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
 import { workshops } from "@/data/mockData";
+import CreateWorkshopModal from "@/components/CreateWorkshopModal";
 
 const statusStyles = {
   Active: "bg-emerald-100 text-emerald-700",
@@ -22,20 +23,31 @@ const statusStyles = {
   Draft: "bg-amber-100 text-amber-700",
 };
 
+const statusLabels = {
+  Active: "Đang diễn ra",
+  Scheduled: "Đã lên lịch",
+  Completed: "Đã kết thúc",
+  Draft: "Bản nháp",
+};
+
 export default function WorkshopsPage() {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [query, setQuery] = useState("");
   const filtered = workshops.filter(
     (w) => w.title.toLowerCase().includes(query.toLowerCase()) || w.speaker.toLowerCase().includes(query.toLowerCase()),
   );
   return (
-    <AdminShell activeTop="My Workshops">
+    <AdminShell activeTop="Quản lý Workshop">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-5xl font-bold tracking-tight">Workshop Management</h1>
-          <p className="mt-1 text-slate-500">Control and monitor all academic workshops across campus.</p>
+          <h1 className="text-5xl font-bold tracking-tight">Quản lý Workshop</h1>
+          <p className="mt-1 text-slate-500">Kiểm soát và theo dõi tất cả các workshop học thuật trong khuôn viên trường.</p>
         </div>
-        <button className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700">
-          + Add New Workshop
+        <button 
+          onClick={() => setIsCreateModalOpen(true)}
+          className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]"
+        >
+          + Thêm Workshop Mới
         </button>
       </div>
 
@@ -45,17 +57,17 @@ export default function WorkshopsPage() {
             <Search className="mr-2 h-4 w-4 text-slate-400" />
             <input
               className="w-full text-sm outline-none"
-              placeholder="Filter by title or speaker..."
+              placeholder="Lọc theo tiêu đề hoặc diễn giả..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
           <div className="flex gap-2">
             <button className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm hover:bg-slate-50">
-              <Filter className="h-4 w-4" /> Filter
+              <Filter className="h-4 w-4" /> Bộ lọc
             </button>
             <button className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm hover:bg-slate-50">
-              <Download className="h-4 w-4" /> Export
+              <Download className="h-4 w-4" /> Xuất file
             </button>
           </div>
         </div>
@@ -64,12 +76,12 @@ export default function WorkshopsPage() {
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
-                <th className="px-5 py-3 font-medium">TITLE</th>
-                <th className="px-5 py-3 font-medium">SPEAKER</th>
-                <th className="px-5 py-3 font-medium">DATE</th>
-                <th className="px-5 py-3 font-medium">ROOM</th>
-                <th className="px-5 py-3 font-medium">STATUS</th>
-                <th className="px-5 py-3 font-medium">ACTIONS</th>
+                <th className="px-5 py-3 font-medium text-xs tracking-wider">TIÊU ĐỀ</th>
+                <th className="px-5 py-3 font-medium text-xs tracking-wider">DIỄN GIẢ</th>
+                <th className="px-5 py-3 font-medium text-xs tracking-wider">NGÀY</th>
+                <th className="px-5 py-3 font-medium text-xs tracking-wider">PHÒNG</th>
+                <th className="px-5 py-3 font-medium text-xs tracking-wider">TRẠNG THÁI</th>
+                <th className="px-5 py-3 font-medium text-xs tracking-wider">THAO TÁC</th>
               </tr>
             </thead>
             <tbody>
@@ -87,7 +99,7 @@ export default function WorkshopsPage() {
                   <td className="px-5 py-4">{item.room}</td>
                   <td className="px-5 py-4">
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[item.status]}`}>
-                      {item.status}
+                      {statusLabels[item.status]}
                     </span>
                   </td>
                   <td className="px-5 py-4">
@@ -107,7 +119,7 @@ export default function WorkshopsPage() {
         </div>
 
         <div className="flex items-center justify-between border-t px-5 py-3 text-sm text-slate-500">
-          <p>Showing 1 to {filtered.length} of 24 results</p>
+          <p>Hiển thị 1 đến {filtered.length} trong tổng số 24 kết quả</p>
           <div className="flex items-center gap-1">
             <button className="rounded-md border p-1.5 hover:bg-slate-50">
               <ChevronLeft className="h-4 w-4" />
@@ -130,19 +142,19 @@ export default function WorkshopsPage() {
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         <StatCard
           icon={<GraduationCap className="h-6 w-6 text-blue-600" />}
-          label="TOTAL WORKSHOPS"
+          label="TỔNG WORKSHOP"
           value="142"
           bg="bg-blue-50"
         />
         <StatCard
           icon={<Users className="h-6 w-6 text-emerald-600" />}
-          label="REGISTRATIONS"
+          label="LƯỢT ĐĂNG KÝ"
           value="2,840"
           bg="bg-emerald-50"
         />
         <StatCard
           icon={<ClipboardList className="h-6 w-6 text-amber-600" />}
-          label="PENDING APPROVAL"
+          label="CHỜ PHÊ DUYỆT"
           value="18"
           bg="bg-amber-50"
         />
@@ -150,8 +162,13 @@ export default function WorkshopsPage() {
 
       <div className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-800/90 px-4 py-2.5 text-sm text-white">
         <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-        Dashboard automatically synced with master schedule.
+        Bảng điều khiển tự động đồng bộ với lịch trình chính.
       </div>
+
+      <CreateWorkshopModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+      />
     </AdminShell>
   );
 }

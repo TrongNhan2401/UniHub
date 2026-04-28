@@ -1,140 +1,140 @@
-// ─── Workshop list ────────────────────────────────────────────
+// ─── Danh sách Workshop ────────────────────────────────────────────
 export const workshops = [
   {
     id: 1,
-    title: "Advanced UI Design Systems",
+    title: "Hệ thống Thiết kế UI Nâng cao",
     code: "DS-102",
-    speaker: "Dr. Helena Vance",
-    dateLabel: "Oct 24, 2023",
-    shortTime: "09:00 AM",
-    room: "Auditorium B",
+    speaker: "TS. Helena Vance",
+    dateLabel: "24 Tháng 10, 2026",
+    shortTime: "09:00 SA",
+    room: "Hội trường B",
     status: "Active",
   },
   {
     id: 2,
-    title: "Data Science Ethics",
+    title: "Đạo đức trong Khoa học Dữ liệu",
     code: "CS-405",
-    speaker: "Prof. Julian Marat",
-    dateLabel: "Oct 26, 2023",
-    shortTime: "02:30 PM",
-    room: "Lab 402",
+    speaker: "GS. Julian Marat",
+    dateLabel: "26 Tháng 10, 2026",
+    shortTime: "02:30 CH",
+    room: "Phòng Lab 402",
     status: "Scheduled",
   },
   {
     id: 3,
-    title: "Modern Architecture Trends",
+    title: "Xu hướng Kiến trúc Hiện đại",
     code: "AR-201",
     speaker: "Sonia Rodriguez",
-    dateLabel: "Oct 22, 2023",
-    shortTime: "11:00 AM",
+    dateLabel: "22 Tháng 10, 2026",
+    shortTime: "11:00 SA",
     room: "Studio 1",
     status: "Completed",
   },
   {
     id: 4,
-    title: "Creative Writing Workshop",
+    title: "Workshop Viết lách Sáng tạo",
     code: "EN-332",
     speaker: "Liam Sterling",
-    dateLabel: "Nov 02, 2023",
-    shortTime: "04:00 PM",
-    room: "Room 12B",
+    dateLabel: "02 Tháng 11, 2026",
+    shortTime: "04:00 CH",
+    room: "Phòng 12B",
     status: "Draft",
   },
 ];
 
-// ─── Recent registrations ─────────────────────────────────────
+// ─── Đăng ký gần đây ─────────────────────────────────────
 export const recentRegistrations = [
   {
     id: 1,
-    name: "Jane Doe",
-    email: "j.doe@university.edu",
-    initials: "JD",
+    name: "Nguyễn Văn A",
+    email: "vana@university.edu",
+    initials: "VA",
     color: "bg-blue-200 text-blue-700",
-    workshop: "Advanced React Patterns",
+    workshop: "Mẫu Thiết kế React Nâng cao",
     status: "CONFIRMED",
-    date: "Oct 12, 2023",
+    date: "12 Tháng 10, 2026",
   },
   {
     id: 2,
-    name: "Mark Smith",
-    email: "mark.s@college.edu",
-    initials: "MS",
+    name: "Trần Thị B",
+    email: "thib@college.edu",
+    initials: "TB",
     color: "bg-orange-200 text-orange-700",
-    workshop: "Cloud Architecture",
+    workshop: "Kiến trúc Đám mây",
     status: "PENDING",
-    date: "Oct 11, 2023",
+    date: "11 Tháng 10, 2026",
   },
   {
     id: 3,
-    name: "Emma Lou",
-    email: "emma.a@edu.com",
-    initials: "EL",
+    name: "Lê Văn C",
+    email: "vanc@edu.com",
+    initials: "VC",
     color: "bg-purple-200 text-purple-700",
-    workshop: "Cybersecurity 101",
+    workshop: "An ninh mạng cơ bản",
     status: "CONFIRMED",
-    date: "Oct 11, 2023",
+    date: "11 Tháng 10, 2026",
   },
 ];
 
-// ─── Upcoming deadlines ───────────────────────────────────────
+// ─── Thời hạn sắp tới ───────────────────────────────────────
 export const upcomingDeadlines = [
   {
     id: 1,
-    title: "AI Ethics Workshop",
-    sub: "Registration closes in 4h",
-    tag: "URGENT",
+    title: "Workshop Đạo đức AI",
+    sub: "Đóng đăng ký sau 4 giờ",
+    tag: "KHẨN CẤP",
     tagColor: "bg-red-500 text-white",
     icon: "⏰",
   },
   {
     id: 2,
-    title: "Data Science 101",
-    sub: "Starting Tomorrow, 10:00 AM",
+    title: "Khoa học Dữ liệu 101",
+    sub: "Bắt đầu vào ngày mai, 10:00 SA",
     tag: null,
     icon: "📅",
   },
   {
     id: 3,
-    title: "Certification Review",
-    sub: "Due Oct 24th",
+    title: "Xét duyệt Chứng chỉ",
+    sub: "Hạn chót 24 Tháng 10",
     tag: null,
     icon: "📋",
   },
 ];
 
-// ─── AI Summary queue ─────────────────────────────────────────
+// ─── Hàng chờ tóm tắt AI ─────────────────────────────────────────
 export const processingQueue = [
   {
     id: 1,
-    name: "Modern_Architecture_History_V2.pdf",
+    name: "Lich_su_Kien_truc_Hien_dai_V2.pdf",
     size: "2.4 MB",
     progress: 75,
     state: "processing",
-    label: "Processing AI Summary",
+    label: "Đang xử lý tóm tắt AI",
   },
   {
     id: 2,
-    name: "Neural_Networks_Intro.pdf",
+    name: "Nhap_mon_Mang_than_kinh.pdf",
     size: "1.1 MB",
     progress: 42,
     state: "processing",
-    label: "Extracting Key Concepts",
+    label: "Đang trích xuất khái niệm chính",
   },
-  { id: 3, name: "Macroeconomics_Exam_Prep.pdf", size: "842 KB", progress: 100, state: "done", label: "Summary Ready" },
+  { id: 3, name: "On_tap_Kinh_te_Vi_mo.pdf", size: "842 KB", progress: 100, state: "done", label: "Tóm tắt đã sẵn sàng" },
 ];
 
 export const recentSummaries = [
-  { id: 1, title: "Cell Biology Midterm Prep", time: "2 hours ago", icon: "📄" },
-  { id: 2, title: "Advanced Calculus Notes", time: "Yesterday", icon: "📘" },
+  { id: 1, title: "Ôn tập giữa kỳ Sinh học tế bào", time: "2 giờ trước", icon: "📄" },
+  { id: 2, title: "Ghi chú Giải tích nâng cao", time: "Hôm qua", icon: "📘" },
 ];
 
-// ─── Chart data (simple sparkline) ────────────────────────────
+// ─── Dữ liệu biểu đồ (sparkline đơn giản) ────────────────────────────
 export const weeklyData = [
-  { day: "MON", value: 30 },
-  { day: "TUE", value: 55 },
-  { day: "WED", value: 40 },
-  { day: "THU", value: 70 },
-  { day: "FRI", value: 50 },
-  { day: "SAT", value: 65 },
-  { day: "SUN", value: 45 },
+  { day: "T2", value: 30 },
+  { day: "T3", value: 55 },
+  { day: "T4", value: 40 },
+  { day: "T5", value: 70 },
+  { day: "T6", value: 50 },
+  { day: "T7", value: 65 },
+  { day: "CN", value: 45 },
 ];
