@@ -3,12 +3,15 @@ using Domain.Entities;
 using Infrastructure.Persistence.Contexts;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Text;
 
 namespace Infrastructure
@@ -44,6 +47,53 @@ namespace Infrastructure
                         NameClaimType = ClaimTypes.Name,
                         RoleClaimType = ClaimTypes.Role,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnChallenge = async context =>
+                        {
+                            if (context.Response.HasStarted)
+                            {
+                                return;
+                            }
+
+                            context.HandleResponse();
+                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            context.Response.ContentType = "application/problem+json";
+
+                            var problem = new ProblemDetails
+                            {
+                                Status = StatusCodes.Status401Unauthorized,
+                                Title = "Chua xac thuc.",
+                                Detail = "Token khong hop le hoac khong duoc gui kem request.",
+                                Type = "https://httpstatuses.com/401"
+                            };
+                            problem.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+                            await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
+                        },
+                        OnForbidden = async context =>
+                        {
+                            if (context.Response.HasStarted)
+                            {
+                                return;
+                            }
+
+                            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                            context.Response.ContentType = "application/problem+json";
+
+                            var problem = new ProblemDetails
+                            {
+                                Status = StatusCodes.Status403Forbidden,
+                                Title = "Khong co quyen truy cap.",
+                                Detail = "Ban da xac thuc nhung khong du quyen cho tai nguyen nay.",
+                                Type = "https://httpstatuses.com/403"
+                            };
+                            problem.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+                            await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
+                        }
                     };
                 });
 

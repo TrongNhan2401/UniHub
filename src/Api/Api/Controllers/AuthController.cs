@@ -33,19 +33,19 @@ namespace Api.Controllers
 
             if (!TryMapRole(roleText, out var roleEnum))
             {
-                return BadRequest(new
-                {
-                    message = "Role khong hop le.",
-                    validRoles = new[] { "STUDENT", "ORGANIZER", "CHECKIN_STAFF" }
-                });
+                return ProblemResponse(
+                    StatusCodes.Status400BadRequest,
+                    "Yeu cau khong hop le.",
+                    "Role khong hop le.",
+                    new[] { "Gia tri role phai la STUDENT, ORGANIZER hoac CHECKIN_STAFF." });
             }
 
             if (await _userManager.FindByEmailAsync(request.Email) is not null)
             {
-                return Conflict(new
-                {
-                    message = "Email da ton tai."
-                });
+                return ProblemResponse(
+                    StatusCodes.Status409Conflict,
+                    "Xung dot du lieu.",
+                    "Email da ton tai.");
             }
 
             var user = new AppUser
@@ -61,22 +61,22 @@ namespace Api.Controllers
             var createResult = await _userManager.CreateAsync(user, request.Password);
             if (!createResult.Succeeded)
             {
-                return BadRequest(new
-                {
-                    message = "Tao tai khoan that bai.",
-                    errors = createResult.Errors.Select(e => e.Description)
-                });
+                return ProblemResponse(
+                    StatusCodes.Status400BadRequest,
+                    "Yeu cau khong hop le.",
+                    "Tao tai khoan that bai.",
+                    createResult.Errors.Select(e => e.Description));
             }
 
             var addRoleResult = await _userManager.AddToRoleAsync(user, roleText);
             if (!addRoleResult.Succeeded)
             {
                 await _userManager.DeleteAsync(user);
-                return BadRequest(new
-                {
-                    message = "Gan role that bai.",
-                    errors = addRoleResult.Errors.Select(e => e.Description)
-                });
+                return ProblemResponse(
+                    StatusCodes.Status400BadRequest,
+                    "Yeu cau khong hop le.",
+                    "Gan role that bai.",
+                    addRoleResult.Errors.Select(e => e.Description));
             }
 
             return Ok(new
@@ -100,19 +100,19 @@ namespace Api.Controllers
             var user = await _userManager.FindByEmailAsync(request.Email.Trim());
             if (user is null)
             {
-                return Unauthorized(new
-                {
-                    message = "Email hoac mat khau khong dung."
-                });
+                return ProblemResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Chua xac thuc.",
+                    "Email hoac mat khau khong dung.");
             }
 
             var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
             if (!isPasswordValid)
             {
-                return Unauthorized(new
-                {
-                    message = "Email hoac mat khau khong dung."
-                });
+                return ProblemResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Chua xac thuc.",
+                    "Email hoac mat khau khong dung.");
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -143,19 +143,19 @@ namespace Api.Controllers
 
             if (!Guid.TryParse(userIdValue, out var userId))
             {
-                return Unauthorized(new
-                {
-                    message = "Token khong hop le."
-                });
+                return ProblemResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Chua xac thuc.",
+                    "Token khong hop le.");
             }
 
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user is null)
             {
-                return NotFound(new
-                {
-                    message = "Khong tim thay nguoi dung."
-                });
+                return ProblemResponse(
+                    StatusCodes.Status404NotFound,
+                    "Khong tim thay tai nguyen.",
+                    "Khong tim thay nguoi dung.");
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -197,6 +197,25 @@ namespace Api.Controllers
             UserRole.CheckInStaff => "CHECKIN_STAFF",
             _ => "STUDENT"
         };
+
+        private ObjectResult ProblemResponse(int statusCode, string title, string detail, IEnumerable<string>? errors = null)
+        {
+            var problem = new ProblemDetails
+            {
+                Status = statusCode,
+                Title = title,
+                Detail = detail,
+                Type = $"https://httpstatuses.com/{statusCode}"
+            };
+            problem.Extensions["traceId"] = HttpContext.TraceIdentifier;
+
+            if (errors is not null)
+            {
+                problem.Extensions["errors"] = errors.ToArray();
+            }
+
+            return StatusCode(statusCode, problem);
+        }
     }
 
     public sealed class SignUpRequest
