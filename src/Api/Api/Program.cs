@@ -1,4 +1,5 @@
 using Infrastructure;
+using Microsoft.OpenApi;
 
 using Serilog;
 
@@ -7,17 +8,42 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
-var ClientUrl = builder.Configuration["ClientUrl"];
-Console.WriteLine($"Client Url {ClientUrl}");
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "UniHub API",
+        Version = "v1"
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Nhap JWT theo dinh dang: Bearer {token}"
+    });
+
+    options.AddSecurityRequirement(_ =>
+    {
+        var requirement = new OpenApiSecurityRequirement();
+        requirement.Add(new OpenApiSecuritySchemeReference("Bearer"), new List<string>());
+        return requirement;
+    });
+});
+
+var clientUrl = builder.Configuration["ClientUrl"] ?? "http://localhost:5173";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost", policy =>
     {
         policy.WithOrigins(
                 "http://localhost:5125",   // Backend or Swagger UI
-                 ClientUrl!    // Vite frontend
+                 clientUrl    // Vite frontend
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -31,7 +57,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
-builder.Services.AddInfrastructureDependencies();
+builder.Services.AddInfrastructureDependencies(builder.Configuration);
 
 var app = builder.Build();
 app.UseCors("AllowLocalhost");
@@ -39,10 +65,13 @@ app.UseSerilogRequestLogging();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
     app.MapOpenApi();
 }
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
