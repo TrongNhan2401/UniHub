@@ -26,7 +26,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Nhap JWT theo dinh dang: Bearer {token}"
+        Description = "Chi dan chuoi JWT vao o Authorize, khong them tien to Bearer."
     });
 
     options.AddSecurityRequirement(_ =>
