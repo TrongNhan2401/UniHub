@@ -5,11 +5,15 @@ using Domain.Entities;
 using Infrastructure.Persistence.Contexts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace Infrastructure.Services
 {
     public sealed class RegistrationService : IRegistrationService
     {
+        private const string RegistrationCreateScope = "reg_create";
         private readonly AppDbContext _db;
 
         public RegistrationService(AppDbContext db)
@@ -21,6 +25,17 @@ namespace Infrastructure.Services
             CreateRegistrationCommand command,
             CancellationToken ct = default)
         {
+            var scopedIdempotencyKey = BuildIdempotencyScopeKey(
+                command.UserId,
+                RegistrationCreateScope,
+                command.IdempotencyKey);
+
+            var replayResponse = await TryGetReplayResponseAsync(scopedIdempotencyKey, ct);
+            if (replayResponse is not null)
+            {
+                return replayResponse;
+            }
+
             var workshop = await _db.Workshops
                 .AsNoTracking()
                 .Where(w => w.Id == command.WorkshopId && !w.IsDeleted)
@@ -112,21 +127,7 @@ namespace Infrastructure.Services
 
             _db.Registrations.Add(registration);
 
-            try
-            {
-                await _db.SaveChangesAsync(ct);
-                await tx.CommitAsync(ct);
-            }
-            catch (DbUpdateException)
-            {
-                await tx.RollbackAsync(ct);
-                throw new RegistrationDomainException(
-                    StatusCodes.Status409Conflict,
-                    "Xung dot du lieu.",
-                    "Ban da dang ky workshop nay truoc do.");
-            }
-
-            return new CreateRegistrationResult
+            var response = new CreateRegistrationResult
             {
                 RegistrationId = registration.Id,
                 WorkshopId = registration.WorkshopId,
@@ -137,6 +138,65 @@ namespace Infrastructure.Services
                     Status = "PENDING"
                 }
             };
+
+            _db.IdempotencyRecords.Add(new IdempotencyRecord
+            {
+                Key = scopedIdempotencyKey,
+                ResponseBody = JsonSerializer.Serialize(response),
+                StatusCode = StatusCodes.Status201Created,
+                ExpiresAt = DateTime.UtcNow.AddHours(24)
+            });
+
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+            }
+            catch (DbUpdateException)
+            {
+                await tx.RollbackAsync(ct);
+
+                // Request trùng có thể chạy đồng thời; nếu key đã được lưu thì phát lại response cũ.
+                var replayAfterConflict = await TryGetReplayResponseAsync(scopedIdempotencyKey, ct);
+                if (replayAfterConflict is not null)
+                {
+                    return replayAfterConflict;
+                }
+
+                throw new RegistrationDomainException(
+                    StatusCodes.Status409Conflict,
+                    "Xung dot du lieu.",
+                    "Ban da dang ky workshop nay truoc do.");
+            }
+
+            return response;
+        }
+
+        private async Task<CreateRegistrationResult?> TryGetReplayResponseAsync(
+            string scopedIdempotencyKey,
+            CancellationToken ct)
+        {
+            var record = await _db.IdempotencyRecords
+                .AsNoTracking()
+                .Where(x => x.Key == scopedIdempotencyKey && x.ExpiresAt > DateTime.UtcNow)
+                .Select(x => new { x.ResponseBody })
+                .FirstOrDefaultAsync(ct);
+
+            if (record is null)
+            {
+                return null;
+            }
+
+            return JsonSerializer.Deserialize<CreateRegistrationResult>(record.ResponseBody);
+        }
+
+        private static string BuildIdempotencyScopeKey(Guid userId, string endpoint, string idempotencyKey)
+        {
+            var normalized = idempotencyKey.Trim();
+            var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+            var hash = Convert.ToHexString(hashBytes.AsSpan(0, 16));
+
+            return $"idem:{endpoint}:{userId:N}:{hash}";
         }
     }
 
