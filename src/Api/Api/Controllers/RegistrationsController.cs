@@ -45,10 +45,7 @@ namespace Api.Controllers
                     "Header Idempotency-Key la bat buoc.");
             }
 
-            var userIdValue = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
-                ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (!Guid.TryParse(userIdValue, out var userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
                 return ProblemResponse(
                     StatusCodes.Status401Unauthorized,
@@ -74,6 +71,43 @@ namespace Api.Controllers
             }
         }
 
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyRegistrations(CancellationToken ct)
+        {
+            if (!TryGetCurrentUserId(out var userId))
+            {
+                return ProblemResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Chua xac thuc.",
+                    "Token khong hop le.");
+            }
+
+            var result = await _registrationService.GetMyRegistrationsAsync(userId, ct);
+            return Ok(result);
+        }
+
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> CancelRegistration(Guid id, CancellationToken ct)
+        {
+            if (!TryGetCurrentUserId(out var userId))
+            {
+                return ProblemResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Chua xac thuc.",
+                    "Token khong hop le.");
+            }
+
+            try
+            {
+                var result = await _registrationService.CancelAsync(userId, id, ct);
+                return Ok(result);
+            }
+            catch (RegistrationDomainException ex)
+            {
+                return ProblemResponse(ex.StatusCode, ex.Title, ex.Detail);
+            }
+        }
+
         private static List<string> ValidateRequest(CreateRegistrationRequest request)
         {
             var errors = new List<string>();
@@ -82,6 +116,14 @@ namespace Api.Controllers
                 errors.Add("Gia tri workshopId khong hop le.");
 
             return errors;
+        }
+
+        private bool TryGetCurrentUserId(out Guid userId)
+        {
+            var userIdValue = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            return Guid.TryParse(userIdValue, out userId);
         }
 
         private ObjectResult ProblemResponse(int statusCode, string title, string detail, IEnumerable<string>? errors = null)

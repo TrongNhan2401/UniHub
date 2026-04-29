@@ -172,6 +172,108 @@ namespace Infrastructure.Services
             return response;
         }
 
+        public async Task<MyRegistrationsResult> GetMyRegistrationsAsync(
+            Guid userId,
+            CancellationToken ct = default)
+        {
+            var items = await _db.Registrations
+                .AsNoTracking()
+                .Where(r => r.UserId == userId
+                    && !r.IsDeleted
+                    && !r.Workshop.IsDeleted)
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new MyRegistrationItem
+                {
+                    RegistrationId = r.Id,
+                    WorkshopId = r.WorkshopId,
+                    WorkshopTitle = r.Workshop.Title,
+                    StartTime = r.Workshop.StartTime,
+                    Status = MapRegistrationStatus(r.Status),
+                    PaymentStatus = r.Payment != null
+                        ? MapPaymentStatus(r.Payment.Status)
+                        : null,
+                    QrStatus = ResolveQrStatus(r.Status, r.QrCode)
+                })
+                .ToListAsync(ct);
+
+            return new MyRegistrationsResult
+            {
+                Items = items
+            };
+        }
+
+        public async Task<CancelRegistrationResult> CancelAsync(
+            Guid userId,
+            Guid registrationId,
+            CancellationToken ct = default)
+        {
+            var registration = await _db.Registrations
+                .AsNoTracking()
+                .Where(r => r.Id == registrationId
+                    && r.UserId == userId
+                    && !r.IsDeleted)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.WorkshopId,
+                    r.Status
+                })
+                .FirstOrDefaultAsync(ct);
+
+            if (registration is null)
+            {
+                throw new RegistrationDomainException(
+                    StatusCodes.Status404NotFound,
+                    "Khong tim thay tai nguyen.",
+                    "Khong tim thay registration cua ban.");
+            }
+
+            if (registration.Status == RegistrationStatus.Cancelled)
+            {
+                throw new RegistrationDomainException(
+                    StatusCodes.Status409Conflict,
+                    "Xung dot du lieu.",
+                    "Registration da duoc huy truoc do.");
+            }
+
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
+            var updatedRegistrations = await _db.Registrations
+                .Where(r => r.Id == registrationId
+                    && r.UserId == userId
+                    && !r.IsDeleted
+                    && r.Status != RegistrationStatus.Cancelled)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(r => r.Status, RegistrationStatus.Cancelled), ct);
+
+            if (updatedRegistrations == 0)
+            {
+                await tx.RollbackAsync(ct);
+                throw new RegistrationDomainException(
+                    StatusCodes.Status409Conflict,
+                    "Xung dot du lieu.",
+                    "Registration da duoc huy truoc do.");
+            }
+
+            if (ShouldReleaseSlot(registration.Status))
+            {
+                await _db.Workshops
+                    .Where(w => w.Id == registration.WorkshopId
+                        && !w.IsDeleted
+                        && w.RegisteredCount > 0)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(w => w.RegisteredCount, w => w.RegisteredCount - 1), ct);
+            }
+
+            await tx.CommitAsync(ct);
+
+            return new CancelRegistrationResult
+            {
+                RegistrationId = registrationId,
+                Status = "CANCELLED"
+            };
+        }
+
         private async Task<CreateRegistrationResult?> TryGetReplayResponseAsync(
             string scopedIdempotencyKey,
             CancellationToken ct)
@@ -198,6 +300,47 @@ namespace Infrastructure.Services
 
             return $"idem:{endpoint}:{userId:N}:{hash}";
         }
+
+        private static string MapRegistrationStatus(RegistrationStatus status) => status switch
+        {
+            RegistrationStatus.Pending => "PENDING",
+            RegistrationStatus.Confirmed => "CONFIRMED",
+            RegistrationStatus.Cancelled => "CANCELLED",
+            RegistrationStatus.WaitListed => "WAITLISTED",
+            RegistrationStatus.PendingPayment => "PENDING_PAYMENT",
+            RegistrationStatus.PaymentFailed => "PAYMENT_FAILED",
+            _ => "UNKNOWN"
+        };
+
+        private static string MapPaymentStatus(PaymentStatus status) => status switch
+        {
+            PaymentStatus.Pending => "PENDING",
+            PaymentStatus.Completed => "PAID",
+            PaymentStatus.Failed => "FAILED",
+            PaymentStatus.Refunded => "REFUNDED",
+            PaymentStatus.Timeout => "TIMEOUT",
+            _ => "UNKNOWN"
+        };
+
+        private static string ResolveQrStatus(RegistrationStatus status, string? qrCode)
+        {
+            if (status == RegistrationStatus.Cancelled)
+            {
+                return "DISABLED";
+            }
+
+            return string.IsNullOrWhiteSpace(qrCode)
+                ? "PENDING"
+                : "READY";
+        }
+
+        private static bool ShouldReleaseSlot(RegistrationStatus status) => status switch
+        {
+            RegistrationStatus.Confirmed => true,
+            RegistrationStatus.Pending => true,
+            RegistrationStatus.PendingPayment => true,
+            _ => false
+        };
     }
 
     public sealed class RegistrationDomainException : Exception

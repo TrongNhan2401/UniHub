@@ -7,5 +7,14 @@ namespace Application.Abstractions
         Task<CreateRegistrationResult> CreateAsync(
             CreateRegistrationCommand command,
             CancellationToken ct = default);
+
+        Task<MyRegistrationsResult> GetMyRegistrationsAsync(
+            Guid userId,
+            CancellationToken ct = default);
+
+        Task<CancelRegistrationResult> CancelAsync(
+            Guid userId,
+            Guid registrationId,
+            CancellationToken ct = default);
     }
 }
