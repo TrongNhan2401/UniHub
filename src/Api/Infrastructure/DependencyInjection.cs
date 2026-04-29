@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions;
 using Domain.Entities;
+using Domain.Shared;
 using Infrastructure.Persistence.Contexts;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -97,8 +98,13 @@ namespace Infrastructure
                     };
                 });
 
-            services.AddAuthorization();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(AppPolicies.WorkshopRead, policy =>
+                    policy.RequireRole(AppRoles.Student, AppRoles.Organizer, AppRoles.CheckInStaff));
+            });
             services.AddScoped<IJwtTokenService, JwtTokenService>();
+            services.AddScoped<IWorkshopQueryService, WorkshopQueryService>();
 
             services.AddIdentityCore<AppUser>(options =>
             {

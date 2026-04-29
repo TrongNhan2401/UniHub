@@ -1,7 +1,9 @@
 using Infrastructure;
+using Infrastructure.Persistence.Contexts;
 using Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
 using Serilog;
@@ -79,7 +81,22 @@ builder.Services.AddInfrastructureDependencies(builder.Configuration);
 
 var app = builder.Build();
 
+using (var startupScope = app.Services.CreateScope())
+{
+    var db = startupScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var canConnect = await db.Database.CanConnectAsync();
+
+    if (!canConnect)
+    {
+        Console.WriteLine("[Startup] Khong ket noi duoc database. Dung ung dung.");
+        throw new InvalidOperationException("Database connection failed.");
+    }
+
+    Console.WriteLine("[Startup] Ket noi database thanh cong. Bat dau chay seeder...");
+}
+
 await SystemRoleSeeder.SeedAsync(app.Services);
+await WorkshopSeeder.SeedAsync(app.Services);
 
 app.UseCors("AllowLocalhost");
 app.UseSerilogRequestLogging();
