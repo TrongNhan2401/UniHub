@@ -1,4 +1,6 @@
 ﻿using Application.Abstractions;
+using Application.Features.Implementations;
+using Application.Features.Interfaces;
 using Domain.Entities;
 using Infrastructure.Persistence.Contexts;
 using Infrastructure.Services;
@@ -99,6 +101,7 @@ namespace Infrastructure
 
             services.AddAuthorization();
             services.AddScoped<IJwtTokenService, JwtTokenService>();
+            services.AddScoped<IAuthService, AuthService>();
 
             services.AddIdentityCore<AppUser>(options =>
             {
