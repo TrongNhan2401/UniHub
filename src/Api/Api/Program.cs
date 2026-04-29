@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Diagnostics;
 
 using Serilog;
@@ -55,6 +56,8 @@ builder.Services.AddSwaggerGen(options =>
         requirement.Add(new OpenApiSecuritySchemeReference("Bearer", doc), new List<string>());
         return requirement;
     });
+
+    options.OperationFilter<IdempotencyKeyHeaderOperationFilter>();
 });
 
 var clientUrl = builder.Configuration["ClientUrl"] ?? "http://localhost:5173";
@@ -235,5 +238,43 @@ static void OpenBrowser(string url)
     if (OperatingSystem.IsMacOS())
     {
         Process.Start("open", url);
+    }
+}
+
+sealed class IdempotencyKeyHeaderOperationFilter : IOperationFilter
+{
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    {
+        var path = context.ApiDescription.RelativePath ?? string.Empty;
+        var method = context.ApiDescription.HttpMethod ?? string.Empty;
+
+        // Hien o nhap Idempotency-Key cho endpoint create registration.
+        if (!string.Equals(method, "POST", StringComparison.OrdinalIgnoreCase)
+            || !path.StartsWith("api/registrations", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (operation.Parameters is null)
+        {
+            operation.Parameters = new List<IOpenApiParameter>();
+        }
+
+        var hasHeader = operation.Parameters.Any(p =>
+            p.In == ParameterLocation.Header
+            && string.Equals(p.Name, "Idempotency-Key", StringComparison.OrdinalIgnoreCase));
+
+        if (hasHeader)
+        {
+            return;
+        }
+
+        operation.Parameters.Add(new OpenApiParameter
+        {
+            Name = "Idempotency-Key",
+            In = ParameterLocation.Header,
+            Required = true,
+            Description = "Key duy nhat cho moi request tao registration, vi du: reg-s1-001"
+        });
     }
 }

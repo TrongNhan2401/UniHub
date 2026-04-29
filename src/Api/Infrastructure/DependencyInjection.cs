@@ -102,9 +102,13 @@ namespace Infrastructure
             {
                 options.AddPolicy(AppPolicies.WorkshopRead, policy =>
                     policy.RequireRole(AppRoles.Student, AppRoles.Organizer, AppRoles.CheckInStaff));
+
+                options.AddPolicy(AppPolicies.RegistrationCreate, policy =>
+                    policy.RequireRole(AppRoles.Student));
             });
             services.AddScoped<IJwtTokenService, JwtTokenService>();
             services.AddScoped<IWorkshopQueryService, WorkshopQueryService>();
+            services.AddScoped<IRegistrationService, RegistrationService>();
 
             services.AddIdentityCore<AppUser>(options =>
             {

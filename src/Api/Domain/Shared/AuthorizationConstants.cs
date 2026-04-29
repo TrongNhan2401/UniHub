@@ -3,6 +3,7 @@ namespace Domain.Shared
     public static class AppPolicies
     {
         public const string WorkshopRead = "WorkshopRead";
+        public const string RegistrationCreate = "RegistrationCreate";
     }
 
     public static class AppRoles

@@ -20,7 +20,9 @@
         Pending = 0,
         Confirmed = 1,
         Cancelled = 2,
-        WaitListed = 3
+        WaitListed = 3,
+        PendingPayment = 4,
+        PaymentFailed = 5
     }
 
     public enum PaymentStatus
