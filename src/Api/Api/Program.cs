@@ -1,8 +1,11 @@
 using Infrastructure;
+using Infrastructure.Persistence.Contexts;
 using Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using System.Diagnostics;
 
 using Serilog;
 
@@ -79,7 +82,22 @@ builder.Services.AddInfrastructureDependencies(builder.Configuration);
 
 var app = builder.Build();
 
+using (var startupScope = app.Services.CreateScope())
+{
+    var db = startupScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var canConnect = await db.Database.CanConnectAsync();
+
+    if (!canConnect)
+    {
+        Console.WriteLine("[Startup] Khong ket noi duoc database. Dung ung dung.");
+        throw new InvalidOperationException("Database connection failed.");
+    }
+
+    Console.WriteLine("[Startup] Ket noi database thanh cong. Bat dau chay seeder...");
+}
+
 await SystemRoleSeeder.SeedAsync(app.Services);
+await WorkshopSeeder.SeedAsync(app.Services);
 
 app.UseCors("AllowLocalhost");
 app.UseSerilogRequestLogging();
@@ -169,4 +187,53 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+if (app.Environment.IsDevelopment())
+{
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        var baseUrl = app.Urls.FirstOrDefault(u => u.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            ?? app.Urls.FirstOrDefault(u => u.StartsWith("http://", StringComparison.OrdinalIgnoreCase));
+
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return;
+        }
+
+        var swaggerUrl = $"{baseUrl.TrimEnd('/')}/swagger";
+        try
+        {
+            OpenBrowser(swaggerUrl);
+            Console.WriteLine($"[Startup] Opened Swagger: {swaggerUrl}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Startup] Khong mo duoc trinh duyet tu dong: {ex.Message}");
+        }
+    });
+}
+
 app.Run();
+
+static void OpenBrowser(string url)
+{
+    if (OperatingSystem.IsWindows())
+    {
+        Process.Start(new ProcessStartInfo("cmd", $"/c start \"\" \"{url}\"")
+        {
+            CreateNoWindow = true,
+            UseShellExecute = false
+        });
+        return;
+    }
+
+    if (OperatingSystem.IsLinux())
+    {
+        Process.Start("xdg-open", url);
+        return;
+    }
+
+    if (OperatingSystem.IsMacOS())
+    {
+        Process.Start("open", url);
+    }
+}
