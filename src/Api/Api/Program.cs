@@ -250,7 +250,7 @@ sealed class IdempotencyKeyHeaderOperationFilter : IOperationFilter
 
         // Hien o nhap Idempotency-Key cho endpoint create registration.
         if (!string.Equals(method, "POST", StringComparison.OrdinalIgnoreCase)
-            || !path.StartsWith("api/registrations", StringComparison.OrdinalIgnoreCase))
+            || !string.Equals(path, "api/registrations", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }

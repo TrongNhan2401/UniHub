@@ -16,5 +16,10 @@ namespace Application.Abstractions
             Guid userId,
             Guid registrationId,
             CancellationToken ct = default);
+
+        Task<ConfirmPaymentResult> ConfirmDemoPaymentSuccessAsync(
+            Guid userId,
+            Guid registrationId,
+            CancellationToken ct = default);
     }
 }

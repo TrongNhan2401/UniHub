@@ -1,6 +1,11 @@
-﻿namespace Application.Abstractions
+﻿using Application.Features.Payments;
+
+namespace Application.Abstractions
 {
-    internal class IPaymentService
+    public interface IPaymentService
     {
+        Task<CreatePaymentCheckoutResult> CreateCheckoutAsync(
+            CreatePaymentCheckoutCommand command,
+            CancellationToken ct = default);
     }
 }

@@ -109,6 +109,7 @@ namespace Infrastructure
             services.AddScoped<IJwtTokenService, JwtTokenService>();
             services.AddScoped<IWorkshopQueryService, WorkshopQueryService>();
             services.AddScoped<IRegistrationService, RegistrationService>();
+            services.AddScoped<IPaymentService, BankQrPaymentService>();
 
             services.AddIdentityCore<AppUser>(options =>
             {

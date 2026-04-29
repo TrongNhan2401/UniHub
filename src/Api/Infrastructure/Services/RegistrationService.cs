@@ -1,4 +1,5 @@
 using Application.Abstractions;
+using Application.Features.Payments;
 using Application.Features.Registrations;
 using Domain;
 using Domain.Entities;
@@ -15,10 +16,12 @@ namespace Infrastructure.Services
     {
         private const string RegistrationCreateScope = "reg_create";
         private readonly AppDbContext _db;
+        private readonly IPaymentService _paymentService;
 
-        public RegistrationService(AppDbContext db)
+        public RegistrationService(AppDbContext db, IPaymentService paymentService)
         {
             _db = db;
+            _paymentService = paymentService;
         }
 
         public async Task<CreateRegistrationResult> CreateAsync(
@@ -42,7 +45,9 @@ namespace Infrastructure.Services
                 .Select(w => new
                 {
                     w.Id,
+                    w.Title,
                     w.IsFree,
+                    w.Price,
                     w.Status,
                     w.StartTime
                 })
@@ -54,14 +59,6 @@ namespace Infrastructure.Services
                     StatusCodes.Status404NotFound,
                     "Khong tim thay tai nguyen.",
                     "Workshop khong ton tai.");
-            }
-
-            if (!workshop.IsFree)
-            {
-                throw new RegistrationDomainException(
-                    StatusCodes.Status409Conflict,
-                    "Xung dot du lieu.",
-                    "Workshop co phi se duoc ho tro o slice paid flow.");
             }
 
             if (workshop.Status != WorkshopStatus.Published)
@@ -121,23 +118,78 @@ namespace Infrastructure.Services
             {
                 UserId = command.UserId,
                 WorkshopId = command.WorkshopId,
-                Status = RegistrationStatus.Confirmed,
+                Status = workshop.IsFree
+                    ? RegistrationStatus.Confirmed
+                    : RegistrationStatus.PendingPayment,
                 IdempotencyKey = command.IdempotencyKey
             };
 
             _db.Registrations.Add(registration);
 
-            var response = new CreateRegistrationResult
+            Payment? payment = null;
+            if (!workshop.IsFree)
             {
-                RegistrationId = registration.Id,
-                WorkshopId = registration.WorkshopId,
-                Status = "CONFIRMED",
-                Payment = null,
-                Qr = new RegistrationQrResult
+                payment = new Payment
                 {
-                    Status = "PENDING"
+                    RegistrationId = registration.Id,
+                    UserId = command.UserId,
+                    Amount = workshop.Price,
+                    Status = PaymentStatus.Pending,
+                    IdempotencyKey = command.IdempotencyKey,
+                    ExpiredAt = DateTime.UtcNow.AddMinutes(30)
+                };
+
+                _db.Payments.Add(payment);
+            }
+
+            await _db.SaveChangesAsync(ct);
+
+            CreatePaymentCheckoutResult? checkout = null;
+            if (payment is not null)
+            {
+                var orderCode = BuildOrderCode(registration.Id);
+
+                checkout = await _paymentService.CreateCheckoutAsync(
+                    new CreatePaymentCheckoutCommand
+                    {
+                        PaymentId = payment.Id,
+                        RegistrationId = registration.Id,
+                        UserId = command.UserId,
+                        Amount = payment.Amount,
+                        OrderCode = orderCode,
+                        Description = $"Thanh toan workshop {workshop.Title}"
+                    },
+                    ct);
+
+                payment.GatewayTransactionId = checkout.ProviderTransactionId;
+                payment.GatewayResponse = checkout.RawResponse;
+            }
+
+            var response = workshop.IsFree
+                ? new CreateRegistrationResult
+                {
+                    RegistrationId = registration.Id,
+                    WorkshopId = registration.WorkshopId,
+                    Status = "CONFIRMED",
+                    Payment = null,
+                    Qr = new RegistrationQrResult
+                    {
+                        Status = "PENDING"
+                    }
                 }
-            };
+                : new CreateRegistrationResult
+                {
+                    RegistrationId = registration.Id,
+                    WorkshopId = registration.WorkshopId,
+                    Status = "PENDING_PAYMENT",
+                    Payment = new RegistrationPaymentResult
+                    {
+                        PaymentId = payment!.Id,
+                        Status = "PENDING",
+                        CheckoutUrl = checkout!.CheckoutUrl
+                    },
+                    Qr = null
+                };
 
             _db.IdempotencyRecords.Add(new IdempotencyRecord
             {
@@ -274,6 +326,87 @@ namespace Infrastructure.Services
             };
         }
 
+        public async Task<ConfirmPaymentResult> ConfirmDemoPaymentSuccessAsync(
+            Guid userId,
+            Guid registrationId,
+            CancellationToken ct = default)
+        {
+            var registration = await _db.Registrations
+                .Include(r => r.Payment)
+                .Where(r => r.Id == registrationId
+                    && r.UserId == userId
+                    && !r.IsDeleted)
+                .FirstOrDefaultAsync(ct);
+
+            if (registration is null)
+            {
+                throw new RegistrationDomainException(
+                    StatusCodes.Status404NotFound,
+                    "Khong tim thay tai nguyen.",
+                    "Khong tim thay registration cua ban.");
+            }
+
+            if (registration.Status == RegistrationStatus.Cancelled)
+            {
+                throw new RegistrationDomainException(
+                    StatusCodes.Status409Conflict,
+                    "Xung dot du lieu.",
+                    "Registration da bi huy, khong the xac nhan thanh toan.");
+            }
+
+            if (registration.Payment is null)
+            {
+                throw new RegistrationDomainException(
+                    StatusCodes.Status409Conflict,
+                    "Xung dot du lieu.",
+                    "Registration nay khong co payment de xac nhan.");
+            }
+
+            if (registration.Payment.Status == PaymentStatus.Completed
+                && registration.Status == RegistrationStatus.Confirmed)
+            {
+                return new ConfirmPaymentResult
+                {
+                    RegistrationId = registration.Id,
+                    PaymentId = registration.Payment.Id,
+                    RegistrationStatus = "CONFIRMED",
+                    PaymentStatus = "PAID",
+                    PaidAt = registration.Payment.PaidAt ?? DateTime.UtcNow
+                };
+            }
+
+            if (registration.Payment.Status != PaymentStatus.Pending
+                || registration.Status != RegistrationStatus.PendingPayment)
+            {
+                throw new RegistrationDomainException(
+                    StatusCodes.Status409Conflict,
+                    "Xung dot du lieu.",
+                    "Registration/payment khong o trang thai cho xac nhan.");
+            }
+
+            var paidAt = DateTime.UtcNow;
+
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
+            registration.Payment.Status = PaymentStatus.Completed;
+            registration.Payment.PaidAt = paidAt;
+            registration.Payment.GatewayResponse = "{\"provider\":\"BANK_QR\",\"mode\":\"SIMULATED_SUCCESS\"}";
+
+            registration.Status = RegistrationStatus.Confirmed;
+
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+
+            return new ConfirmPaymentResult
+            {
+                RegistrationId = registration.Id,
+                PaymentId = registration.Payment.Id,
+                RegistrationStatus = "CONFIRMED",
+                PaymentStatus = "PAID",
+                PaidAt = paidAt
+            };
+        }
+
         private async Task<CreateRegistrationResult?> TryGetReplayResponseAsync(
             string scopedIdempotencyKey,
             CancellationToken ct)
@@ -299,6 +432,12 @@ namespace Infrastructure.Services
             var hash = Convert.ToHexString(hashBytes.AsSpan(0, 16));
 
             return $"idem:{endpoint}:{userId:N}:{hash}";
+        }
+
+        private static string BuildOrderCode(Guid registrationId)
+        {
+            var compact = registrationId.ToString("N");
+            return $"UH{compact[..12].ToUpperInvariant()}";
         }
 
         private static string MapRegistrationStatus(RegistrationStatus status) => status switch

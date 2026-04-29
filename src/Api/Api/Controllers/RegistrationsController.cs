@@ -108,6 +108,28 @@ namespace Api.Controllers
             }
         }
 
+        [HttpPost("{id:guid}/payments/simulate-success")]
+        public async Task<IActionResult> ConfirmDemoPaymentSuccess(Guid id, CancellationToken ct)
+        {
+            if (!TryGetCurrentUserId(out var userId))
+            {
+                return ProblemResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Chua xac thuc.",
+                    "Token khong hop le.");
+            }
+
+            try
+            {
+                var result = await _registrationService.ConfirmDemoPaymentSuccessAsync(userId, id, ct);
+                return Ok(result);
+            }
+            catch (RegistrationDomainException ex)
+            {
+                return ProblemResponse(ex.StatusCode, ex.Title, ex.Detail);
+            }
+        }
+
         private static List<string> ValidateRequest(CreateRegistrationRequest request)
         {
             var errors = new List<string>();
