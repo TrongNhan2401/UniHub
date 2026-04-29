@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using System.Diagnostics;
 
 using Serilog;
 
@@ -186,4 +187,53 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+if (app.Environment.IsDevelopment())
+{
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        var baseUrl = app.Urls.FirstOrDefault(u => u.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            ?? app.Urls.FirstOrDefault(u => u.StartsWith("http://", StringComparison.OrdinalIgnoreCase));
+
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return;
+        }
+
+        var swaggerUrl = $"{baseUrl.TrimEnd('/')}/swagger";
+        try
+        {
+            OpenBrowser(swaggerUrl);
+            Console.WriteLine($"[Startup] Opened Swagger: {swaggerUrl}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Startup] Khong mo duoc trinh duyet tu dong: {ex.Message}");
+        }
+    });
+}
+
 app.Run();
+
+static void OpenBrowser(string url)
+{
+    if (OperatingSystem.IsWindows())
+    {
+        Process.Start(new ProcessStartInfo("cmd", $"/c start \"\" \"{url}\"")
+        {
+            CreateNoWindow = true,
+            UseShellExecute = false
+        });
+        return;
+    }
+
+    if (OperatingSystem.IsLinux())
+    {
+        Process.Start("xdg-open", url);
+        return;
+    }
+
+    if (OperatingSystem.IsMacOS())
+    {
+        Process.Start("open", url);
+    }
+}
