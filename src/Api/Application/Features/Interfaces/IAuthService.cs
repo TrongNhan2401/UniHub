@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Application.Features.Auth;
+using Domain.Shared;
 
 namespace Application.Features.Interfaces
 {
-    internal class IAuthService
+    public interface IAuthService
     {
+        Task<Result<SignUpResponse>> SignUpAsync(SignUpRequest request);
+        Task<Result<SignInResponse>> SignInAsync(SignInRequest request);
+        Task<Result<MeResponse>> GetMeAsync(Guid userId);
     }
 }

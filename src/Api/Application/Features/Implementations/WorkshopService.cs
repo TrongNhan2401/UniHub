@@ -5,6 +5,7 @@ using Application.Features.Interfaces;
 using Application.Mappings;
 using Domain.Entities;
 using Domain.Shared;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -75,6 +76,7 @@ namespace Application.Features.Implementations
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error saving workshop: {ex.Message}");
                 return Result.Failure<WorkshopDto>(new Error("Workshop.SaveFailed", "An error occurred while saving the workshop."));
             }
 
@@ -128,6 +130,7 @@ namespace Application.Features.Implementations
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error saving workshop: {ex.Message}");
                 return Result.Failure<WorkshopDto>(new Error("Workshop.UpdateFailed", "An error occurred while updating the workshop."));
             }
 
@@ -155,7 +158,7 @@ namespace Application.Features.Implementations
             }
             catch (Exception ex)
             {
-                return Result.Failure<bool>(new Error("Workshop.SaveFailed", "An error occurred while saving the workshop."));
+                return Result.Failure<bool>(new Error("Workshop.SaveFailed", $"An error occurred while saving the workshop: {ex.Message}"));
             }
         }
 
@@ -180,6 +183,7 @@ namespace Application.Features.Implementations
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return Result.Failure<bool>(new Error("Workshop.SaveFailed", "An error occurred while saving the workshop."));
             }
         }

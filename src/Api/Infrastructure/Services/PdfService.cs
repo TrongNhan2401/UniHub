@@ -1,8 +1,6 @@
 using Application.Abstractions;
 using UglyToad.PdfPig;
 using System.Text;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
@@ -28,8 +26,9 @@ namespace Infrastructure.Services
         {
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
-            // Simple cleaning: remove extra whitespace and newlines
-            return System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
+            return System.Text.RegularExpressions.Regex
+                .Replace(text, @"\s+", " ")
+                .Trim();
         }
     }
 }
