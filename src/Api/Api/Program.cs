@@ -1,3 +1,4 @@
+using Application;
 using Infrastructure;
 
 using Serilog;
@@ -31,7 +32,8 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
-builder.Services.AddInfrastructureDependencies();
+builder.Services.AddInfrastructureDependencies(builder.Configuration);
+builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 app.UseCors("AllowLocalhost");

@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using Domain.Entities;
+using System.Threading.Tasks;
 
 namespace Application.Abstractions.Repositories
 {
-    internal interface IWorkshopRepo
+    public interface IWorkshopRepo
     {
+        Task<Workshop> AddAsync(Workshop workshop);
+        Task<(List<Workshop> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, System.DateTime? date = null);
+        Task<Workshop?> GetByIdAsync(Guid id);
     }
 }

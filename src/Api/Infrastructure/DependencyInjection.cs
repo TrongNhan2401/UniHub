@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Infrastructure.Persistence.Contexts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +27,16 @@ namespace Infrastructure
             })
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AppDbContext>();
+
+            services.AddScoped<Application.Abstractions.Repositories.IWorkshopRepo, Infrastructure.Persistence.Repositories.WorkshopRepo>();
+            services.AddScoped<Application.Abstractions.IUnitOfWork, Infrastructure.Persistence.UnitOfWork>();
+            
+            services.Configure<Infrastructure.Storage.CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
+            services.AddScoped<Application.Abstractions.IUploadService, Infrastructure.Storage.CloudinaryUploadService>();
+
+            services.AddHttpClient();
+            services.AddScoped<Application.Abstractions.IPdfService, Infrastructure.Services.PdfService>();
+            services.AddScoped<Application.Abstractions.IAiService, Infrastructure.Services.GeminiService>();
 
             return services;
         }
