@@ -7,7 +7,7 @@ namespace Application.Abstractions
     public interface IUnitOfWork : IDisposable
     {
         IWorkshopRepo Workshops { get; }
-        // Add other repositories here as needed
+        ISyncTaskRepo SyncTasks { get; }
         
         Task<int> SaveChangesAsync();
         Task BeginTransactionAsync();

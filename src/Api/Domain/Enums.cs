@@ -1,4 +1,4 @@
-﻿namespace Domain
+namespace Domain
 {
     public enum UserRole
     {
@@ -51,5 +51,11 @@
         Completed = 2,
         Failed = 3
     }
-
+    public enum SyncState
+    {
+        Pending = 0,
+        Filtered = 1,
+        Synchronized = 2,
+        Failed = 3
+    }
 }

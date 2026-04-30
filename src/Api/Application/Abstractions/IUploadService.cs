@@ -7,5 +7,6 @@ namespace Application.Abstractions
     {
         Task<string> UploadImageAsync(IFormFile file);
         Task<string> UploadPdfAsync(IFormFile file);
+        Task<string> UploadFileAsync(Stream fileStream, string fileName);
     }
 }

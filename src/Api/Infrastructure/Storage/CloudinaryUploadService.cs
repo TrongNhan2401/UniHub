@@ -55,6 +55,21 @@ namespace Infrastructure.Storage
                 throw new System.Exception(uploadResult.Error.Message);
 
             return uploadResult.SecureUrl.ToString();
+        public async Task<string> UploadFileAsync(Stream fileStream, string fileName)
+        {
+            if (fileStream == null || fileStream.Length == 0) return string.Empty;
+
+            var uploadParams = new RawUploadParams
+            {
+                File = new FileDescription(fileName, fileStream)
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult.Error != null)
+                throw new System.Exception(uploadResult.Error.Message);
+
+            return uploadResult.SecureUrl.ToString();
         }
     }
 }

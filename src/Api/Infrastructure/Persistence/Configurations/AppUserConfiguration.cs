@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -21,6 +21,12 @@ namespace Infrastructure.Persistence.Configurations
 
             builder.Property(u => u.TelegramChatId)
                 .HasMaxLength(100);
+
+            builder.Property(u => u.DateOfBirth)
+                .IsRequired(false);
+
+            builder.Property(u => u.EntryYear)
+                .IsRequired(false);
 
             builder.Property(u => u.CreatedAt)
                 .IsRequired();

@@ -1,4 +1,4 @@
-﻿using Application.Abstractions;
+using Application.Abstractions;
 using Application.Features.Implementations;
 using Application.Features.Interfaces;
 using Domain.Entities;
@@ -107,23 +107,27 @@ namespace Infrastructure
             {
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
+                options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
-                options.Password.RequiredLength = 8;
+                options.Password.RequiredLength = 6;
                 options.User.RequireUniqueEmail = true;
             })
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AppDbContext>();
 
             services.AddScoped<Application.Abstractions.Repositories.IWorkshopRepo, Infrastructure.Persistence.Repositories.WorkshopRepo>();
+            services.AddScoped<Application.Abstractions.Repositories.ISyncTaskRepo, Infrastructure.Persistence.Repositories.SyncTaskRepo>();
             services.AddScoped<Application.Abstractions.IUnitOfWork, Infrastructure.Persistence.UnitOfWork>();
             
             services.Configure<Infrastructure.Storage.CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
             services.AddScoped<Application.Abstractions.IUploadService, Infrastructure.Storage.CloudinaryUploadService>();
+            services.AddScoped<Application.Features.Interfaces.ISyncTaskService, Application.Features.Implementations.SyncTaskService>();
 
             services.AddHttpClient();
             services.AddScoped<Application.Abstractions.IPdfService, Infrastructure.Services.PdfService>();
             services.AddScoped<Application.Abstractions.IAiService, Infrastructure.Services.GeminiService>();
+
+            services.AddHostedService<Infrastructure.BackgroundJobs.SyncBackgroundService>();
 
             return services;
         }

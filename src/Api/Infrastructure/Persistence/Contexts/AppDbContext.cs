@@ -1,4 +1,4 @@
-﻿using Domain.Common;
+using Domain.Common;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -27,6 +27,7 @@ namespace Infrastructure.Persistence.Contexts
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<IdempotencyRecord> IdempotencyRecords { get; set; }
+        public DbSet<SyncTask> SyncTasks { get; set; }
 
         // Outbox
         //public DbSet<OutboxMessage> OutboxMessages { get; set; }
