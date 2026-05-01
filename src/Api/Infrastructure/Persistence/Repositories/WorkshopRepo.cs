@@ -35,7 +35,7 @@ namespace Infrastructure.Persistence.Repositories
             }
 
             query = query.OrderByDescending(w => w.CreatedAt);
-            
+
             var totalCount = await query.CountAsync();
             var items = await query
                 .Skip((pageNumber - 1) * pageSize)
@@ -54,6 +54,37 @@ namespace Infrastructure.Persistence.Repositories
                 .Include(w => w.Attendances)
                     .ThenInclude(a => a.User)
                 .FirstOrDefaultAsync(w => w.Id == id);
+        }
+
+        public async Task<Workshop?> GetByIdForUpdateAsync(Guid id)
+        {
+            return await _context.Workshops
+                .Include(w => w.Registrations)
+                .Include(w => w.Attendances)
+                .FirstOrDefaultAsync(w => w.Id == id);
+        }
+
+        public async Task<bool> TryReserveSlotAsync(Guid workshopId, DateTime nowUtc)
+        {
+            var affected = await _context.Workshops
+                .Where(w => w.Id == workshopId
+                            && w.Status == Domain.WorkshopStatus.Published
+                            && w.StartTime > nowUtc
+                            && w.RegisteredCount < w.TotalSlots)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(w => w.RegisteredCount, w => w.RegisteredCount + 1));
+
+            return affected == 1;
+        }
+
+        public async Task<bool> TryReleaseSlotAsync(Guid workshopId)
+        {
+            var affected = await _context.Workshops
+                .Where(w => w.Id == workshopId && w.RegisteredCount > 0)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(w => w.RegisteredCount, w => w.RegisteredCount - 1));
+
+            return affected == 1;
         }
     }
 }

@@ -8,5 +8,8 @@ namespace Application.Abstractions.Repositories
         Task<Workshop> AddAsync(Workshop workshop);
         Task<(List<Workshop> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, System.DateTime? date = null);
         Task<Workshop?> GetByIdAsync(Guid id);
+        Task<Workshop?> GetByIdForUpdateAsync(Guid id);
+        Task<bool> TryReserveSlotAsync(Guid workshopId, DateTime nowUtc);
+        Task<bool> TryReleaseSlotAsync(Guid workshopId);
     }
 }

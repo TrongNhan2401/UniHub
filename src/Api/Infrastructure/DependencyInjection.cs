@@ -117,8 +117,11 @@ namespace Infrastructure
 
             services.AddScoped<Application.Abstractions.Repositories.IWorkshopRepo, Infrastructure.Persistence.Repositories.WorkshopRepo>();
             services.AddScoped<Application.Abstractions.Repositories.ISyncTaskRepo, Infrastructure.Persistence.Repositories.SyncTaskRepo>();
+            services.AddScoped<Application.Abstractions.Repositories.IRegistrationRepo, Infrastructure.Persistence.Repositories.RegistrationRepo>();
+            services.AddScoped<Application.Abstractions.Repositories.IPaymentRepo, Infrastructure.Persistence.Repositories.PaymentRepo>();
+            services.AddScoped<Application.Abstractions.Repositories.IAttendanceRepo, Infrastructure.Persistence.Repositories.AttendanceRepo>();
             services.AddScoped<Application.Abstractions.IUnitOfWork, Infrastructure.Persistence.UnitOfWork>();
-            
+
             services.Configure<Infrastructure.Storage.CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
             services.AddScoped<Application.Abstractions.IUploadService, Infrastructure.Storage.CloudinaryUploadService>();
             services.AddScoped<Application.Features.Interfaces.ISyncTaskService, Application.Features.Implementations.SyncTaskService>();
@@ -126,6 +129,7 @@ namespace Infrastructure
             services.AddHttpClient();
             services.AddScoped<Application.Abstractions.IPdfService, Infrastructure.Services.PdfService>();
             services.AddScoped<Application.Abstractions.IAiService, Infrastructure.Services.GeminiService>();
+            services.AddScoped<Application.Abstractions.IPaymentGatewayService, Infrastructure.Services.MockPaymentGatewayService>();
 
             services.AddHostedService<Infrastructure.BackgroundJobs.SyncBackgroundService>();
 

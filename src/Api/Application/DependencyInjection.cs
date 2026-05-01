@@ -9,7 +9,10 @@ namespace Application
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddScoped<IWorkshopService, WorkshopService>();
-            
+            services.AddScoped<IRegistrationService, RegistrationService>();
+            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<ICheckInService, CheckInService>();
+
             return services;
         }
     }
