@@ -1,7 +1,9 @@
 using Application;
 using Infrastructure;
+using Infrastructure.Persistence.Contexts;
 using Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
 
@@ -80,6 +82,13 @@ builder.Services.AddInfrastructureDependencies(builder.Configuration);
 builder.Services.AddApplicationServices();
 
 var app = builder.Build();
+
+// Ensure database schema is up-to-date before hosted services start querying tables.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 await SystemRoleSeeder.SeedAsync(app.Services);
 

@@ -1,4 +1,5 @@
 using Application.Abstractions;
+using Application.Features.Interfaces;
 using Domain;
 using Domain.Entities;
 using Infrastructure.Persistence.Contexts;
@@ -44,7 +45,7 @@ namespace Api.Controllers
         public async Task<IActionResult> GetStatus(Guid id)
         {
             var result = await _syncTaskService.GetTaskStatusAsync(id);
-            
+
             if (result.IsFailure)
             {
                 if (result.Error.Code == "Sync.NotFound")
@@ -61,7 +62,7 @@ namespace Api.Controllers
         public async Task<IActionResult> GetTasks()
         {
             var result = await _syncTaskService.GetAllTasksAsync();
-            
+
             if (result.IsFailure)
             {
                 return BadRequest(result.Error);
