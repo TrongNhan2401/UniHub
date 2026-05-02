@@ -10,6 +10,7 @@ namespace Application
         {
             services.AddScoped<IWorkshopService, WorkshopService>();
             services.AddScoped<IRegistrationService, RegistrationService>();
+            services.AddScoped<IPaymentService, PaymentService>();
 
             return services;
         }

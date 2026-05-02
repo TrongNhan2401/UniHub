@@ -9,6 +9,7 @@ namespace Application.Abstractions
         IWorkshopRepo Workshops { get; }
         ISyncTaskRepo SyncTasks { get; }
         IRegistrationRepo Registrations { get; }
+        IPaymentRepo Payments { get; }
 
         Task<int> SaveChangesAsync();
         Task BeginTransactionAsync();

@@ -88,12 +88,7 @@ namespace Infrastructure.Persistence.Repositories
             // PostgreSQL: SELECT ... FOR UPDATE locks the row until transaction commits/rollbacks
             return await _context.Workshops
                 .FromSqlRaw(
-                    "SELECT \"Id\", \"Title\", \"Description\", \"SpeakerName\", \"SpeakerBio\", " +
-                    "\"Room\", \"RoomMapUrl\", \"StartTime\", \"EndTime\", \"TotalSlots\", " +
-                    "\"RegisteredCount\", \"IsFree\", \"Price\", \"Status\", \"ImageUrl\", " +
-                    "\"PdfUrl\", \"AiSummary\", \"AiSummaryGeneratedAt\", \"CreatedByUserId\", " +
-                    "\"CreatedAt\", \"UpdatedAt\" " +
-                    "FROM \"Workshops\" WHERE \"Id\" = {0} FOR UPDATE",
+                    "SELECT * FROM \"Workshops\" WHERE \"Id\" = {0} FOR UPDATE",
                     workshopId)
                 .FirstOrDefaultAsync();
         }
