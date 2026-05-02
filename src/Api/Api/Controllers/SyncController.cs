@@ -1,4 +1,5 @@
 using Application.Abstractions;
+using Application.Features.Interfaces;
 using Domain;
 using Domain.Entities;
 using Infrastructure.Persistence.Contexts;
