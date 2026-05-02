@@ -13,8 +13,11 @@ api.interceptors.request.use(async (config) => {
 });
 
 export const checkinService = {
-  login: (data) => api.post("/auth/login", data),
-  verify: (qrCode) => api.post("/checkin/verify", { qrCode }),
+  login: (data) => api.post("/auth/signin", data),
+  preloadRegistrations: (workshopId) => api.get(`/checkin/workshops/${workshopId}/registrations`),
+  validateRegistration: (registrationId) => api.get(`/checkin/registrations/${registrationId}/validate`),
+  checkin: (payload) => api.post("/checkin", payload),
+  sync: (records) => api.post("/checkin/sync", { records }),
 };
 
 export default api;

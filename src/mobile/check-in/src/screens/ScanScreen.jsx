@@ -1,207 +1,123 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { X, Zap, WifiOff, CheckCircle2, ChevronRight, ScanLine } from "lucide-react-native";
-
-const recentScans = [
-  { id: 1, name: "Marcus Thompson", studentId: "249910", time: "2m ago", status: "verified" },
-  { id: 2, name: "Elena Rodriguez", studentId: "248812", time: "5m ago", status: "verified" },
-  { id: 3, name: "James Park", studentId: "247601", time: "12m ago", status: "offline" },
-];
+import { ChevronLeft, QrCode, WifiOff, Wifi } from "lucide-react-native";
+import { useCheckin } from "../context/CheckinContext";
 
 export default function ScanScreen() {
   const navigation = useNavigation();
-  const [flash, setFlash] = useState(false);
-  const [offline] = useState(true);
+  const { isOnline, selectedWorkshop, processQr } = useCheckin();
+  const [qrInput, setQrInput] = useState("REG-1001");
+
+  const onScan = () => {
+    const result = processQr(qrInput);
+    navigation.navigate("Result", { result, workshop: selectedWorkshop });
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
-      {/* Camera area */}
-      <View style={s.cameraArea}>
-        {/* Top bar */}
-        <View style={s.topBar}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={s.iconBtn}>
-            <X size={20} color="#fff" strokeWidth={2} />
-          </TouchableOpacity>
-          <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>Scan QR Code</Text>
-          <TouchableOpacity
-            onPress={() => setFlash(!flash)}
-            style={[s.iconBtn, flash && { backgroundColor: "#fbbf24" }]}
-          >
-            <Zap size={20} color={flash ? "#0f172a" : "#fff"} strokeWidth={2} />
-          </TouchableOpacity>
-        </View>
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={s.iconBtn}>
+          <ChevronLeft size={20} color="#fff" />
+        </TouchableOpacity>
+        <Text style={s.title}>Quet QR check-in</Text>
+        <View style={{ width: 40 }} />
+      </View>
 
-        {/* Offline badge */}
-        {offline && (
-          <View style={s.offlineBadge}>
-            <WifiOff size={13} color="#fff" strokeWidth={2} />
-            <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700", marginLeft: 6 }}>OFFLINE MODE</Text>
-          </View>
-        )}
-
-        {/* QR Frame */}
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <View style={s.qrFrame}>
-            <View style={[s.corner, s.topLeft]} />
-            <View style={[s.corner, s.topRight]} />
-            <View style={[s.corner, s.bottomLeft]} />
-            <View style={[s.corner, s.bottomRight]} />
-            <View style={s.scanLine} />
-            <View style={s.scanIconCenter}>
-              <ScanLine size={30} color="rgba(255,255,255,0.5)" strokeWidth={1.5} />
-            </View>
-          </View>
-          <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginTop: 20, textAlign: "center" }}>
-            Position the student's QR code{"\n"}within the frame to scan
+      <View style={s.body}>
+        <View style={s.modeBadge}>
+          {isOnline ? <Wifi size={14} color="#16a34a" /> : <WifiOff size={14} color="#ea580c" />}
+          <Text style={{ color: isOnline ? "#16a34a" : "#ea580c", fontWeight: "700", marginLeft: 6 }}>
+            {isOnline ? "ONLINE" : "OFFLINE"}
           </Text>
         </View>
 
-        {/* Simulate scan */}
-        <TouchableOpacity style={s.simulateBtn} onPress={() => navigation.navigate("Result")} activeOpacity={0.85}>
-          <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>Simulate Scan</Text>
-          <ChevronRight size={18} color="#fff" strokeWidth={2.5} />
-        </TouchableOpacity>
-      </View>
+        <Text style={s.metaTitle}>{selectedWorkshop.title}</Text>
+        <Text style={s.metaSub}>
+          Phong {selectedWorkshop.room} · Bat dau {selectedWorkshop.start}
+        </Text>
 
-      {/* Recent scans bottom sheet */}
-      <View style={s.sheet}>
-        <View style={s.sheetHandle} />
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <Text style={{ fontWeight: "800", fontSize: 16, color: "#0f172a" }}>Recent Scans</Text>
-          <View style={s.countBadge}>
-            <Text style={{ color: "#2563eb", fontWeight: "700", fontSize: 12 }}>{recentScans.length} today</Text>
-          </View>
+        <View style={s.frame}>
+          <QrCode size={58} color="#93c5fd" />
+          <Text style={s.frameText}>Nhap QR de mo phong quet</Text>
+          <TextInput
+            value={qrInput}
+            onChangeText={setQrInput}
+            placeholder="REG-1001"
+            placeholderTextColor="#94a3b8"
+            autoCapitalize="characters"
+            style={s.input}
+          />
+          <TouchableOpacity style={s.demoBtn} onPress={() => setQrInput("REG-1002")}>
+            <Text style={s.demoTxt}>Dung QR mau REG-1002</Text>
+          </TouchableOpacity>
         </View>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {recentScans.map((item, i) => (
-            <View key={item.id} style={[s.scanRow, i > 0 && { borderTopWidth: 1, borderColor: "#f1f5f9" }]}>
-              <View style={[s.avatarCircle, { backgroundColor: item.status === "offline" ? "#fee2e2" : "#dbeafe" }]}>
-                <Text
-                  style={{ fontWeight: "700", fontSize: 13, color: item.status === "offline" ? "#dc2626" : "#2563eb" }}
-                >
-                  {item.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </Text>
-              </View>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f172a" }}>{item.name}</Text>
-                <Text style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-                  ID: {item.studentId} · {item.time}
-                </Text>
-              </View>
-              {item.status === "verified" ? (
-                <CheckCircle2 size={18} color="#16a34a" strokeWidth={2} />
-              ) : (
-                <WifiOff size={18} color="#ea580c" strokeWidth={2} />
-              )}
-            </View>
-          ))}
-        </ScrollView>
+
+        <TouchableOpacity style={s.scanBtn} onPress={onScan}>
+          <Text style={s.scanTxt}>{isOnline ? "Validate va check-in" : "Luu offline"}</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
-const CORNER = 22;
-
 const s = StyleSheet.create({
-  cameraArea: { flex: 1, backgroundColor: "#0f172a" },
-  topBar: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 18,
-    paddingVertical: 14,
+    paddingVertical: 12,
   },
   iconBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
-  offlineBadge: {
-    alignSelf: "center",
+  title: { color: "#fff", fontWeight: "800", fontSize: 16 },
+  body: { flex: 1, paddingHorizontal: 20, paddingTop: 10 },
+  modeBadge: {
+    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ea580c",
-    paddingHorizontal: 14,
+    borderRadius: 999,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 20,
-    marginBottom: 8,
+    backgroundColor: "#fff",
   },
-  qrFrame: {
-    width: 240,
-    height: 240,
-    justifyContent: "center",
+  metaTitle: { marginTop: 14, color: "#fff", fontWeight: "800", fontSize: 20 },
+  metaSub: { color: "#cbd5e1", marginTop: 4, fontSize: 12 },
+  frame: {
+    marginTop: 18,
+    backgroundColor: "#1e293b",
+    borderRadius: 16,
+    padding: 18,
     alignItems: "center",
   },
-  corner: {
-    position: "absolute",
-    width: CORNER,
-    height: CORNER,
-    borderColor: "#2563eb",
-    borderWidth: 3.5,
+  frameText: { color: "#cbd5e1", marginTop: 10, marginBottom: 12 },
+  input: {
+    width: "100%",
+    backgroundColor: "#0f172a",
+    borderWidth: 1,
+    borderColor: "#334155",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#fff",
+    fontWeight: "700",
   },
-  topLeft: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 6 },
-  topRight: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 6 },
-  bottomLeft: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 6 },
-  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 6 },
-  scanLine: {
-    position: "absolute",
-    width: 200,
-    height: 2,
-    backgroundColor: "#2563eb",
-    opacity: 0.7,
-  },
-  scanIconCenter: { width: 60, height: 60, justifyContent: "center", alignItems: "center" },
-  simulateBtn: {
-    margin: 18,
+  demoBtn: { marginTop: 10 },
+  demoTxt: { color: "#60a5fa", fontSize: 12, fontWeight: "700" },
+  scanBtn: {
+    marginTop: 18,
     backgroundColor: "#2563eb",
     borderRadius: 14,
-    paddingVertical: 15,
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
+    paddingVertical: 14,
   },
-  sheet: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    paddingTop: 10,
-    maxHeight: 280,
-  },
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: "#e2e8f0",
-    borderRadius: 2,
-    alignSelf: "center",
-    marginBottom: 16,
-  },
-  countBadge: {
-    backgroundColor: "#dbeafe",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  scanRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-  },
-  avatarCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  scanTxt: { color: "#fff", fontWeight: "800", fontSize: 15 },
 });
