@@ -32,12 +32,13 @@ export default function QRModal({ open, onClose, workshop }) {
           <div>
             <h4 className="text-2xl font-bold">{workshop.title}</h4>
             <p className="mt-1 text-sm text-slate-500">
-              Student ID: <span className="font-semibold text-blue-700">{workshop.qrCode}</span>
+              Registration ID: <span className="font-semibold text-blue-700">{workshop.qrCode}</span>
             </p>
           </div>
 
-          <button className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white">Done</button>
-          <button className="text-sm font-medium text-blue-700">Save to Google Wallet</button>
+          <button onClick={onClose} className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white">
+            Dong
+          </button>
         </div>
       </div>
     </div>

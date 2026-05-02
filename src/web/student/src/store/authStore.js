@@ -6,8 +6,8 @@ import { persist } from "zustand/middleware";
 export const useAuthStore = create(
   persist(
     (set) => ({
-      token: "demo-student-token",
-      user: { name: "Student Demo", role: "STUDENT" },
+      token: null,
+      user: null,
       setAuth: (token, user) => set({ token, user }),
       logout: () => set({ token: null, user: null }),
     }),

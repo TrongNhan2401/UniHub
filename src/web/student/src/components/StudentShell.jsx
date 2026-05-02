@@ -1,22 +1,22 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Bell, CircleHelp, Compass, Grid2x2, Award, CalendarDays, Settings, LogOut, Search, User } from "lucide-react";
+import { Bell, CalendarDays, Compass, LogOut, Search, User } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
 const sideItems = [
-  { label: "Dashboard", icon: Grid2x2, to: "/" },
-  { label: "Explore", icon: Compass, to: "/" },
-  { label: "My Schedule", icon: CalendarDays, to: "/my-registrations" },
-  { label: "Certificates", icon: Award, to: "/my-registrations" },
+  { label: "Kham pha workshop", icon: Compass, to: "/" },
+  { label: "Dang ky cua toi", icon: CalendarDays, to: "/my-registrations" },
 ];
 
 const topItems = [
   { label: "Browse", to: "/" },
-  { label: "My Workshops", to: "/my-registrations" },
-  { label: "Calendar", to: "/my-registrations" },
+  { label: "My Registrations", to: "/my-registrations" },
 ];
 
 export default function StudentShell({ children, activeTop = "Browse" }) {
-  const activeSide = activeTop === "My Workshops" ? "My Schedule" : "Explore";
+  const activeSide = activeTop === "My Registrations" ? "Dang ky cua toi" : "Kham pha workshop";
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -24,7 +24,7 @@ export default function StudentShell({ children, activeTop = "Browse" }) {
         <aside className="hidden w-64 border-r bg-white lg:flex lg:flex-col">
           <div className="px-6 py-6">
             <p className="text-2xl font-bold text-blue-600">UniHub Student</p>
-            <p className="text-sm text-slate-500">Academic Portal</p>
+            <p className="text-sm text-slate-500">Workshop Portal</p>
           </div>
 
           <nav className="flex-1 px-3">
@@ -50,14 +50,10 @@ export default function StudentShell({ children, activeTop = "Browse" }) {
           </nav>
 
           <div className="border-t p-3">
-            <button className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white">
-              + Register New
-            </button>
-            <button className="mb-1 flex w-full items-center gap-2 rounded-lg px-4 py-3 text-sm text-slate-600 hover:bg-slate-100">
-              <Settings className="h-4 w-4" />
-              Settings
-            </button>
-            <button className="flex w-full items-center gap-2 rounded-lg px-4 py-3 text-sm text-slate-600 hover:bg-slate-100">
+            <button
+              onClick={logout}
+              className="flex w-full items-center gap-2 rounded-lg px-4 py-3 text-sm text-slate-600 hover:bg-slate-100"
+            >
               <LogOut className="h-4 w-4" />
               Logout
             </button>
@@ -90,12 +86,10 @@ export default function StudentShell({ children, activeTop = "Browse" }) {
               <button className="p-2 text-slate-600">
                 <Bell className="h-4 w-4" />
               </button>
-              <button className="p-2 text-slate-600">
-                <CircleHelp className="h-4 w-4" />
-              </button>
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700">
                 <User className="h-4 w-4" />
               </div>
+              <p className="hidden text-sm font-medium text-slate-600 lg:block">{user?.name || "Student"}</p>
             </div>
           </header>
 

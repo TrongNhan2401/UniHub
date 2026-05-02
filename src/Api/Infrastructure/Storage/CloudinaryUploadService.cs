@@ -55,6 +55,8 @@ namespace Infrastructure.Storage
                 throw new System.Exception(uploadResult.Error.Message);
 
             return uploadResult.SecureUrl.ToString();
+        }
+
         public async Task<string> UploadFileAsync(Stream fileStream, string fileName)
         {
             if (fileStream == null || fileStream.Length == 0) return string.Empty;
