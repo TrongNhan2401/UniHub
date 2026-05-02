@@ -14,17 +14,20 @@ namespace Infrastructure.Persistence
         public IWorkshopRepo Workshops { get; }
         public ISyncTaskRepo SyncTasks { get; }
         public IRegistrationRepo Registrations { get; }
+        public IPaymentRepo Payments { get; }
 
         public UnitOfWork(
             AppDbContext context,
             IWorkshopRepo workshopRepo,
             ISyncTaskRepo syncTaskRepo,
-            IRegistrationRepo registrationRepo)
+            IRegistrationRepo registrationRepo,
+            IPaymentRepo paymentRepo)
         {
             _context = context;
             Workshops = workshopRepo;
             SyncTasks = syncTaskRepo;
             Registrations = registrationRepo;
+            Payments = paymentRepo;
         }
 
         public async Task<int> SaveChangesAsync()

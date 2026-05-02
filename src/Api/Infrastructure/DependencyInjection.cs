@@ -3,6 +3,7 @@ using Application.Features.Implementations;
 using Application.Features.Interfaces;
 using Domain.Entities;
 using Infrastructure.Persistence.Contexts;
+using Infrastructure.Options;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
@@ -118,7 +119,10 @@ namespace Infrastructure
             services.AddScoped<Application.Abstractions.Repositories.IWorkshopRepo, Infrastructure.Persistence.Repositories.WorkshopRepo>();
             services.AddScoped<Application.Abstractions.Repositories.ISyncTaskRepo, Infrastructure.Persistence.Repositories.SyncTaskRepo>();
             services.AddScoped<Application.Abstractions.Repositories.IRegistrationRepo, Infrastructure.Persistence.Repositories.RegistrationRepo>();
+            services.AddScoped<Application.Abstractions.Repositories.IPaymentRepo, Infrastructure.Persistence.Repositories.PaymentRepo>();
             services.AddScoped<Application.Abstractions.IUnitOfWork, Infrastructure.Persistence.UnitOfWork>();
+            services.Configure<PayOsSettings>(configuration.GetSection("Payment:PayOS"));
+            services.AddScoped<Application.Abstractions.IPaymentGateway, PayOsGateway>();
 
             services.Configure<Infrastructure.Storage.CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
             services.AddScoped<Application.Abstractions.IUploadService, Infrastructure.Storage.CloudinaryUploadService>();
