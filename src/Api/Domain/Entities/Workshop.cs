@@ -34,17 +34,17 @@ namespace Domain.Entities
         private Workshop() { }
 
         private Workshop(
-            string title, 
-            string description, 
-            string speakerName, 
-            string speakerBio, 
-            string room, 
-            string? roomMapUrl, 
-            DateTime startTime, 
-            DateTime endTime, 
-            int totalSlots, 
-            bool isFree, 
-            decimal price, 
+            string title,
+            string description,
+            string speakerName,
+            string speakerBio,
+            string room,
+            string? roomMapUrl,
+            DateTime startTime,
+            DateTime endTime,
+            int totalSlots,
+            bool isFree,
+            decimal price,
             Guid createdByUserId,
             string? imageUrl = null)
         {
@@ -65,17 +65,17 @@ namespace Domain.Entities
         }
 
         public static Result<Workshop> Create(
-            string title, 
-            string description, 
-            string speakerName, 
-            string speakerBio, 
-            string room, 
-            string? roomMapUrl, 
-            DateTime startTime, 
-            DateTime endTime, 
-            int totalSlots, 
-            bool isFree, 
-            decimal price, 
+            string title,
+            string description,
+            string speakerName,
+            string speakerBio,
+            string room,
+            string? roomMapUrl,
+            DateTime startTime,
+            DateTime endTime,
+            int totalSlots,
+            bool isFree,
+            decimal price,
             Guid createdByUserId,
             string? imageUrl = null)
         {
@@ -86,7 +86,7 @@ namespace Domain.Entities
                 return Result.Failure<Workshop>(new Error("Workshop.InvalidSlots", "Total slots must be greater than zero."));
 
             return Result.Success(new Workshop(
-                title, description, speakerName, speakerBio, room, roomMapUrl, 
+                title, description, speakerName, speakerBio, room, roomMapUrl,
                 startTime, endTime, totalSlots, isFree, price, createdByUserId, imageUrl));
         }
 
@@ -96,16 +96,16 @@ namespace Domain.Entities
         }
 
         public Result Update(
-            string title, 
-            string description, 
-            string speakerName, 
-            string speakerBio, 
-            string room, 
-            string? roomMapUrl, 
-            DateTime startTime, 
-            DateTime endTime, 
-            int totalSlots, 
-            bool isFree, 
+            string title,
+            string description,
+            string speakerName,
+            string speakerBio,
+            string room,
+            string? roomMapUrl,
+            DateTime startTime,
+            DateTime endTime,
+            int totalSlots,
+            bool isFree,
             decimal price,
             string? imageUrl = null)
         {
@@ -116,7 +116,7 @@ namespace Domain.Entities
             {
                 if (IsFree != isFree)
                     return Result.Failure(new Error("Workshop.UpdateInvalid", "Cannot change the pricing type (Free/Paid) of a published workshop."));
-                
+
                 if (Price != price)
                     return Result.Failure(new Error("Workshop.UpdateInvalid", "Cannot change the price of a published workshop."));
             }
@@ -138,7 +138,7 @@ namespace Domain.Entities
             TotalSlots = totalSlots;
             IsFree = isFree;
             Price = price;
-            
+
             if (imageUrl != null)
             {
                 ImageUrl = imageUrl;
@@ -174,6 +174,59 @@ namespace Domain.Entities
         {
             AiSummary = summary;
             AiSummaryGeneratedAt = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// [SLOT RESERVATION] Cố gắng reserve 1 slot cho workshop này.
+        /// 
+        /// Logic:
+        /// 1. Check: workshop phải Published
+        /// 2. Check: còn slot (RegisteredCount < TotalSlots)
+        /// 3. Nếu OK: increment RegisteredCount → return true
+        /// 4. Nếu fail (hết chỗ hoặc cancelled): return false
+        /// 
+        /// Lưu ý: Method này chỉ modify in-memory state.
+        /// SaveChangesAsync() sẽ persist RegisteredCount vào DB.
+        /// Phải gọi trong transaction kèm pessimistic lock để tránh race condition.
+        /// </summary>
+        public bool TryReserveSlot()
+        {
+            // Business rule: Chỉ reserved slot khi workshop Published
+            if (Status != WorkshopStatus.Published)
+            {
+                return false;
+            }
+
+            // Kiểm tra: còn slot?
+            // RegisteredCount >= TotalSlots → hết chỗ
+            if (RegisteredCount >= TotalSlots)
+            {
+                return false;
+            }
+
+            // OK: increment RegisteredCount
+            RegisteredCount++;
+            return true;
+        }
+
+        /// <summary>
+        /// [SLOT RELEASE] Hoàn trả 1 slot (khi user huỷ đăng ký).
+        /// 
+        /// Logic:
+        /// 1. Decrement RegisteredCount nếu > 0
+        /// 2. Tránh underflow (RegisteredCount không được âm)
+        /// 
+        /// Lưu ý: Method này chỉ modify in-memory state.
+        /// SaveChangesAsync() sẽ persist RegisteredCount vào DB.
+        /// Phải gọi trong transaction để đảm bảo atomicity với registration.Cancel().
+        /// </summary>
+        public void ReleaseSlot()
+        {
+            // Decrement RegisteredCount với safety check (không được âm)
+            if (RegisteredCount > 0)
+            {
+                RegisteredCount--;
+            }
         }
     }
 }
