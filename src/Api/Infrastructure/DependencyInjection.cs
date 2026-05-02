@@ -117,8 +117,9 @@ namespace Infrastructure
 
             services.AddScoped<Application.Abstractions.Repositories.IWorkshopRepo, Infrastructure.Persistence.Repositories.WorkshopRepo>();
             services.AddScoped<Application.Abstractions.Repositories.ISyncTaskRepo, Infrastructure.Persistence.Repositories.SyncTaskRepo>();
+            services.AddScoped<Application.Abstractions.Repositories.IRegistrationRepo, Infrastructure.Persistence.Repositories.RegistrationRepo>();
             services.AddScoped<Application.Abstractions.IUnitOfWork, Infrastructure.Persistence.UnitOfWork>();
-            
+
             services.Configure<Infrastructure.Storage.CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
             services.AddScoped<Application.Abstractions.IUploadService, Infrastructure.Storage.CloudinaryUploadService>();
             services.AddScoped<Application.Features.Interfaces.ISyncTaskService, Application.Features.Implementations.SyncTaskService>();

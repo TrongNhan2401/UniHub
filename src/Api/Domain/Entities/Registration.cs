@@ -25,5 +25,21 @@ namespace Domain.Entities
             WorkshopId = workshopId;
             IdempotencyKey = idempotencyKey;
         }
+
+        public void Confirm(string? qrCode = null)
+        {
+            Status = RegistrationStatus.Confirmed;
+            QrCode = qrCode;
+        }
+
+        public void Cancel()
+        {
+            Status = RegistrationStatus.Cancelled;
+        }
+
+        public void SetQrCode(string qrCode)
+        {
+            QrCode = qrCode;
+        }
     }
 }

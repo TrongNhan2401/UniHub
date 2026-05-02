@@ -34,17 +34,17 @@ namespace Domain.Entities
         private Workshop() { }
 
         private Workshop(
-            string title, 
-            string description, 
-            string speakerName, 
-            string speakerBio, 
-            string room, 
-            string? roomMapUrl, 
-            DateTime startTime, 
-            DateTime endTime, 
-            int totalSlots, 
-            bool isFree, 
-            decimal price, 
+            string title,
+            string description,
+            string speakerName,
+            string speakerBio,
+            string room,
+            string? roomMapUrl,
+            DateTime startTime,
+            DateTime endTime,
+            int totalSlots,
+            bool isFree,
+            decimal price,
             Guid createdByUserId,
             string? imageUrl = null)
         {
@@ -65,17 +65,17 @@ namespace Domain.Entities
         }
 
         public static Result<Workshop> Create(
-            string title, 
-            string description, 
-            string speakerName, 
-            string speakerBio, 
-            string room, 
-            string? roomMapUrl, 
-            DateTime startTime, 
-            DateTime endTime, 
-            int totalSlots, 
-            bool isFree, 
-            decimal price, 
+            string title,
+            string description,
+            string speakerName,
+            string speakerBio,
+            string room,
+            string? roomMapUrl,
+            DateTime startTime,
+            DateTime endTime,
+            int totalSlots,
+            bool isFree,
+            decimal price,
             Guid createdByUserId,
             string? imageUrl = null)
         {
@@ -86,7 +86,7 @@ namespace Domain.Entities
                 return Result.Failure<Workshop>(new Error("Workshop.InvalidSlots", "Total slots must be greater than zero."));
 
             return Result.Success(new Workshop(
-                title, description, speakerName, speakerBio, room, roomMapUrl, 
+                title, description, speakerName, speakerBio, room, roomMapUrl,
                 startTime, endTime, totalSlots, isFree, price, createdByUserId, imageUrl));
         }
 
@@ -96,16 +96,16 @@ namespace Domain.Entities
         }
 
         public Result Update(
-            string title, 
-            string description, 
-            string speakerName, 
-            string speakerBio, 
-            string room, 
-            string? roomMapUrl, 
-            DateTime startTime, 
-            DateTime endTime, 
-            int totalSlots, 
-            bool isFree, 
+            string title,
+            string description,
+            string speakerName,
+            string speakerBio,
+            string room,
+            string? roomMapUrl,
+            DateTime startTime,
+            DateTime endTime,
+            int totalSlots,
+            bool isFree,
             decimal price,
             string? imageUrl = null)
         {
@@ -116,7 +116,7 @@ namespace Domain.Entities
             {
                 if (IsFree != isFree)
                     return Result.Failure(new Error("Workshop.UpdateInvalid", "Cannot change the pricing type (Free/Paid) of a published workshop."));
-                
+
                 if (Price != price)
                     return Result.Failure(new Error("Workshop.UpdateInvalid", "Cannot change the price of a published workshop."));
             }
@@ -138,7 +138,7 @@ namespace Domain.Entities
             TotalSlots = totalSlots;
             IsFree = isFree;
             Price = price;
-            
+
             if (imageUrl != null)
             {
                 ImageUrl = imageUrl;
@@ -174,6 +174,30 @@ namespace Domain.Entities
         {
             AiSummary = summary;
             AiSummaryGeneratedAt = DateTime.UtcNow;
+        }
+
+        public bool TryReserveSlot()
+        {
+            if (Status != WorkshopStatus.Published)
+            {
+                return false;
+            }
+
+            if (RegisteredCount >= TotalSlots)
+            {
+                return false;
+            }
+
+            RegisteredCount++;
+            return true;
+        }
+
+        public void ReleaseSlot()
+        {
+            if (RegisteredCount > 0)
+            {
+                RegisteredCount--;
+            }
         }
     }
 }
