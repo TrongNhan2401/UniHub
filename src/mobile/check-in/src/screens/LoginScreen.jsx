@@ -32,12 +32,12 @@ export default function LoginScreen() {
             </View>
             <Text style={s.brand}>UniHub</Text>
             <Text style={s.brandSub}>Check-in Portal</Text>
-            <Text style={s.desc}>Sign in to manage workshop attendance</Text>
+            <Text style={s.desc}>Dang nhap tai khoan CHECKIN_STAFF de quet QR check-in</Text>
           </View>
 
           {/* Card */}
           <View style={s.card}>
-            <Text style={s.cardTitle}>Welcome back</Text>
+            <Text style={s.cardTitle}>Nhan su check-in</Text>
 
             {/* Email */}
             <Text style={s.label}>Email address</Text>
@@ -79,12 +79,12 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity style={{ alignSelf: "flex-end", marginTop: 10 }}>
-              <Text style={{ color: "#2563eb", fontSize: 13, fontWeight: "600" }}>Forgot password?</Text>
+              <Text style={{ color: "#2563eb", fontSize: 13, fontWeight: "600" }}>Can ho tro dang nhap?</Text>
             </TouchableOpacity>
 
             {/* Primary CTA */}
             <TouchableOpacity style={s.loginBtn} onPress={handleLogin} activeOpacity={0.85}>
-              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Sign In</Text>
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Dang nhap</Text>
               <ChevronRight size={18} color="#fff" strokeWidth={2.5} />
             </TouchableOpacity>
           </View>
@@ -98,7 +98,7 @@ export default function LoginScreen() {
 
           {/* Demo */}
           <TouchableOpacity style={s.demoBtn} onPress={handleLogin} activeOpacity={0.85}>
-            <Text style={{ fontSize: 14, fontWeight: "600", color: "#374151" }}>Continue as Demo Organizer</Text>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: "#374151" }}>Demo CHECKIN_STAFF</Text>
           </TouchableOpacity>
 
           <Text style={s.footer}>UniHub Workshop System · v1.0</Text>

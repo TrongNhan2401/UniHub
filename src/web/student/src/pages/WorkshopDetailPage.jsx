@@ -13,6 +13,8 @@ export default function WorkshopDetailPage() {
     return workshops.find((item) => String(item.id) === id) || workshops[0];
   }, [id]);
 
+  const canRegister = workshop.status === "OPEN" && workshop.slotsLeft > 0;
+
   return (
     <StudentShell activeTop="Browse">
       <section>
@@ -21,10 +23,10 @@ export default function WorkshopDetailPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           <div className="absolute bottom-6 left-6 right-6 text-white">
             <div className="mb-3 flex gap-2">
-              <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold">INNOVATION</span>
-              <span className="rounded-full bg-slate-700 px-3 py-1 text-xs font-semibold">ADVANCED</span>
+              <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold">{workshop.code}</span>
+              <span className="rounded-full bg-slate-700 px-3 py-1 text-xs font-semibold">{workshop.status}</span>
             </div>
-            <h1 className="max-w-4xl text-5xl font-bold">Architecting the Future: Human-Centered AI Systems</h1>
+            <h1 className="max-w-4xl text-5xl font-bold">{workshop.title}</h1>
             <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-200">
               <span className="inline-flex items-center gap-1">
                 <CalendarDays className="h-4 w-4" /> {workshop.dateLabel}
@@ -33,7 +35,7 @@ export default function WorkshopDetailPage() {
                 <Clock3 className="h-4 w-4" /> {workshop.timeLabel}
               </span>
               <span className="inline-flex items-center gap-1">
-                <MapPin className="h-4 w-4" /> Engineering Hall B-12
+                <MapPin className="h-4 w-4" /> {workshop.room}
               </span>
             </div>
           </div>
@@ -43,12 +45,6 @@ export default function WorkshopDetailPage() {
           <div>
             <h2 className="text-4xl font-bold">About this workshop</h2>
             <p className="mt-4 text-slate-600">{workshop.description}</p>
-            <p className="mt-4 text-slate-600">
-              We will dive deep into architectural frameworks that prioritize transparency, user agency, and feedback
-              loops. Whether you are a developer looking to understand design or a designer curious about AI
-              capabilities, this session provides the technical and conceptual tools necessary for modern product
-              development.
-            </p>
 
             <div className="mt-6 grid gap-3 md:grid-cols-2">
               {workshop.aboutPoints.map((point) => (
@@ -63,21 +59,7 @@ export default function WorkshopDetailPage() {
               <p className="inline-flex items-center gap-2 text-xl font-semibold text-blue-700">
                 <Sparkles className="h-5 w-5" /> AI Insights
               </p>
-              <p className="mt-3 text-sm italic text-slate-600">
-                "This workshop is highly recommended for students focusing on HCI or Machine Learning. It provides a
-                unique bridge between technical feasibility and ethical design, which is a key differentiator in today's
-                job market."
-              </p>
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <div className="rounded-xl bg-white p-3 text-sm">
-                  <p className="text-xs text-slate-500">COMPLEXITY</p>
-                  <p className="mt-1 font-semibold">Intermediate</p>
-                </div>
-                <div className="rounded-xl bg-white p-3 text-sm">
-                  <p className="text-xs text-slate-500">PREPARATION</p>
-                  <p className="mt-1 font-semibold">Laptop, Basic Python</p>
-                </div>
-              </div>
+              <p className="mt-3 text-sm italic text-slate-600">"{workshop.aiSummary}"</p>
             </div>
           </div>
 
@@ -85,9 +67,10 @@ export default function WorkshopDetailPage() {
             <div className="rounded-2xl border bg-white p-5">
               <button
                 onClick={() => setOpenSuccess(true)}
-                className="w-full rounded-lg bg-blue-600 py-3 text-lg font-semibold text-white"
+                disabled={!canRegister}
+                className="w-full rounded-lg bg-blue-600 py-3 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                Register Now
+                {canRegister ? "Dang ky ngay" : "Khong the dang ky"}
               </button>
               <div className="mt-5 space-y-3 text-sm">
                 <div className="flex items-center justify-between">
@@ -97,19 +80,18 @@ export default function WorkshopDetailPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">Availability</span>
                   <span className="rounded bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700">
-                    {workshop.slotsLeft} Slots Left
+                    {workshop.slotsLeft}/{workshop.capacity} cho
                   </span>
                 </div>
+                {!canRegister ? (
+                  <p className="text-xs text-rose-700">Workshop da day cho hoac khong con mo dang ky.</p>
+                ) : null}
               </div>
 
               <div className="mt-5 border-t pt-4">
                 <p className="text-xs tracking-widest text-slate-500">SPEAKER</p>
                 <p className="mt-1 text-xl font-semibold">{workshop.speaker}</p>
                 <p className="text-sm text-slate-500">{workshop.speakerRole}</p>
-                <p className="mt-2 text-sm text-slate-600">
-                  Former Lead Research at DeepMind, Dr. Vance has spent 15 years developing neural networks that
-                  interface with medical diagnostics.
-                </p>
               </div>
             </div>
 
@@ -117,9 +99,14 @@ export default function WorkshopDetailPage() {
               <p className="text-xs tracking-widest text-slate-500">LOCATION</p>
               <div className="mt-3 h-44 rounded-xl bg-slate-100" />
               <p className="mt-3 text-sm">{workshop.location}</p>
-              <button className="mt-3 w-full rounded-lg border py-2 text-sm font-medium text-blue-700">
-                Get Directions
-              </button>
+              <a
+                href={workshop.roomMapUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 block w-full rounded-lg border py-2 text-center text-sm font-medium text-blue-700"
+              >
+                Xem so do phong
+              </a>
             </div>
 
             <div className="rounded-2xl border bg-white p-5">
@@ -151,7 +138,7 @@ export default function WorkshopDetailPage() {
         </section>
       </section>
 
-      <SuccessModal open={openSuccess} onClose={() => setOpenSuccess(false)} />
+      <SuccessModal open={openSuccess} onClose={() => setOpenSuccess(false)} workshop={workshop} />
     </StudentShell>
   );
 }

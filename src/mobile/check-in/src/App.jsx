@@ -3,29 +3,21 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, Text, TouchableOpacity } from "react-native";
-import { LayoutDashboard, RefreshCw, Calendar, Award } from "lucide-react-native";
+import { LayoutDashboard, RefreshCw, ScanLine } from "lucide-react-native";
 import LoginScreen from "./screens/LoginScreen";
 import ScanScreen from "./screens/ScanScreen";
 import ResultScreen from "./screens/ResultScreen";
 import OfflineSyncScreen from "./screens/OfflineSyncScreen";
 import DashboardScreen from "./screens/DashboardScreen";
+import { CheckinProvider } from "./context/CheckinContext";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function PlaceholderScreen({ title }) {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8fafc" }}>
-      <Text style={{ fontSize: 18, color: "#64748b", fontWeight: "600" }}>{title}</Text>
-    </View>
-  );
-}
-
 const TAB_ITEMS = [
   { name: "Dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { name: "Scan", label: "Scan", Icon: ScanLine },
   { name: "Sync", label: "Sync", Icon: RefreshCw },
-  { name: "Schedule", label: "Schedule", Icon: Calendar },
-  { name: "Awards", label: "Awards", Icon: Award },
 ];
 
 function CustomTabBar({ state, navigation }) {
@@ -70,22 +62,23 @@ function MainTabs() {
   return (
     <Tab.Navigator tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Scan" component={ScanScreen} />
       <Tab.Screen name="Sync" component={OfflineSyncScreen} />
-      <Tab.Screen name="Schedule" children={() => <PlaceholderScreen title="Schedule" />} />
-      <Tab.Screen name="Awards" children={() => <PlaceholderScreen title="Awards" />} />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Main" component={MainTabs} />
-        <Stack.Screen name="Scan" component={ScanScreen} />
-        <Stack.Screen name="Result" component={ResultScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <CheckinProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen name="Scan" component={ScanScreen} />
+          <Stack.Screen name="Result" component={ResultScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </CheckinProvider>
   );
 }

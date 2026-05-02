@@ -1,7 +1,7 @@
 import api from "./api";
 
 export const authService = {
-  login: (data) => api.post("/auth/login", data),
+  login: (data) => api.post("/auth/signin", data),
 };
 
 export const workshopService = {
@@ -18,5 +18,5 @@ export const registrationService = {
         headers: { "Idempotency-Key": idempotencyKey },
       },
     ),
-  getMyRegistrations: () => api.get("/registrations/me"),
+  getMyRegistrations: () => api.get("/registrations/mine"),
 };
