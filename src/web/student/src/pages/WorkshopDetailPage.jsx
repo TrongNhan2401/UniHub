@@ -3,15 +3,100 @@ import { useParams } from "react-router-dom";
 import { CalendarDays, Clock3, MapPin, CheckCircle2, Sparkles } from "lucide-react";
 import StudentShell from "@/components/StudentShell";
 import SuccessModal from "@/components/SuccessModal";
-import { workshops } from "@/data/mockData";
+import {
+  generateIdempotencyKey,
+  paymentService,
+  registrationService,
+  workshopService,
+} from "@/services/workshopService";
 
 export default function WorkshopDetailPage() {
   const { id } = useParams();
   const [openSuccess, setOpenSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [workshop, setWorkshop] = useState(null);
+  const [allWorkshops, setAllWorkshops] = useState([]);
 
-  const workshop = useMemo(() => {
-    return workshops.find((item) => String(item.id) === id) || workshops[0];
+  React.useEffect(() => {
+    let active = true;
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const [item, items] = await Promise.all([
+          workshopService.getById(id),
+          workshopService.getAll({ pageNumber: 1, pageSize: 30 }),
+        ]);
+        if (active) {
+          setWorkshop(item);
+          setAllWorkshops(items);
+        }
+      } catch (err) {
+        if (active) {
+          setError(err?.response?.data?.detail || err?.message || "Khong the tai chi tiet workshop.");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      active = false;
+    };
   }, [id]);
+
+  const similarWorkshops = useMemo(
+    () => allWorkshops.filter((w) => String(w.id) !== String(id)).slice(0, 3),
+    [allWorkshops, id],
+  );
+
+  const handleRegister = async () => {
+    if (!workshop || !canRegister || submitting) return;
+
+    setSubmitting(true);
+    setError("");
+    try {
+      const registerKey = generateIdempotencyKey();
+      const { data: reg } = await registrationService.register(workshop.id, registerKey);
+
+      if (reg?.payment_status === "NOT_REQUIRED") {
+        setOpenSuccess(true);
+        return;
+      }
+
+      const checkoutKey = generateIdempotencyKey();
+      const { data: checkout } = await paymentService.checkout(reg.id, checkoutKey);
+      if (checkout?.checkout_url) {
+        window.location.href = checkout.checkout_url;
+        return;
+      }
+
+      setError("Da tao dang ky thanh cong nhung chua lay duoc link thanh toan.");
+    } catch (err) {
+      setError(err?.response?.data?.detail || err?.message || "Dang ky that bai.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <StudentShell activeTop="Browse">
+        <p className="text-sm text-slate-500">Dang tai chi tiet workshop...</p>
+      </StudentShell>
+    );
+  }
+
+  if (!workshop) {
+    return (
+      <StudentShell activeTop="Browse">
+        <p className="text-sm text-rose-700">{error || "Khong tim thay workshop."}</p>
+      </StudentShell>
+    );
+  }
 
   const canRegister = workshop.status === "OPEN" && workshop.slotsLeft > 0;
 
@@ -66,11 +151,11 @@ export default function WorkshopDetailPage() {
           <aside className="space-y-4">
             <div className="rounded-2xl border bg-white p-5">
               <button
-                onClick={() => setOpenSuccess(true)}
+                onClick={handleRegister}
                 disabled={!canRegister}
                 className="w-full rounded-lg bg-blue-600 py-3 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                {canRegister ? "Dang ky ngay" : "Khong the dang ky"}
+                {canRegister ? (submitting ? "Dang xu ly..." : "Dang ky ngay") : "Khong the dang ky"}
               </button>
               <div className="mt-5 space-y-3 text-sm">
                 <div className="flex items-center justify-between">
@@ -86,6 +171,7 @@ export default function WorkshopDetailPage() {
                 {!canRegister ? (
                   <p className="text-xs text-rose-700">Workshop da day cho hoac khong con mo dang ky.</p>
                 ) : null}
+                {error ? <p className="text-xs text-rose-700">{error}</p> : null}
               </div>
 
               <div className="mt-5 border-t pt-4">
@@ -123,7 +209,7 @@ export default function WorkshopDetailPage() {
         <section className="mt-16">
           <h3 className="text-4xl font-bold">Similar Workshops</h3>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
-            {workshops.slice(1, 4).map((item) => (
+            {similarWorkshops.map((item) => (
               <article key={item.id} className="overflow-hidden rounded-xl border bg-white">
                 <img src={item.image} alt={item.title} className="h-44 w-full object-cover" />
                 <div className="p-4">
@@ -134,6 +220,7 @@ export default function WorkshopDetailPage() {
                 </div>
               </article>
             ))}
+            {!similarWorkshops.length ? <p className="text-sm text-slate-500">Chua co workshop tuong tu.</p> : null}
           </div>
         </section>
       </section>

@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { CalendarDays, Clock3, MapPin, Search, Ticket } from "lucide-react";
 import StudentShell from "@/components/StudentShell";
-import { workshops } from "@/data/mockData";
+import { workshopService } from "@/services/workshopService";
 
 const statusStyles = {
   OPEN: "bg-emerald-100 text-emerald-700",
@@ -12,6 +12,33 @@ const statusStyles = {
 
 export default function WorkshopListPage() {
   const [query, setQuery] = React.useState("");
+  const [workshops, setWorkshops] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState("");
+
+  React.useEffect(() => {
+    let active = true;
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const items = await workshopService.getAll();
+        if (active) setWorkshops(items);
+      } catch (err) {
+        if (active) {
+          setError(err?.response?.data?.detail || err?.message || "Khong the tai danh sach workshop.");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const filtered = workshops.filter((w) => {
     const haystack = `${w.title} ${w.speaker} ${w.dateLabel}`.toLowerCase();
     return haystack.includes(query.toLowerCase());
@@ -45,54 +72,59 @@ export default function WorkshopListPage() {
             </div>
           </div>
 
+          {loading ? <p className="text-sm text-slate-500">Dang tai workshop...</p> : null}
+          {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+
           <div className="grid gap-4 md:grid-cols-2">
-            {filtered.map((item) => (
-              <article key={item.id} className="overflow-hidden rounded-xl border bg-white shadow-sm">
-                <img src={item.image} alt={item.title} className="h-44 w-full object-cover" />
-                <div className="space-y-3 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <Link to={`/workshops/${item.id}`} className="text-2xl font-bold hover:text-blue-700">
-                        {item.title}
-                      </Link>
-                      <p className="text-sm text-slate-500">Dien gia: {item.speaker}</p>
+            {!loading &&
+              !error &&
+              filtered.map((item) => (
+                <article key={item.id} className="overflow-hidden rounded-xl border bg-white shadow-sm">
+                  <img src={item.image} alt={item.title} className="h-44 w-full object-cover" />
+                  <div className="space-y-3 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <Link to={`/workshops/${item.id}`} className="text-2xl font-bold hover:text-blue-700">
+                          {item.title}
+                        </Link>
+                        <p className="text-sm text-slate-500">Dien gia: {item.speaker}</p>
+                      </div>
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[item.status]}`}>
+                        {item.status}
+                      </span>
                     </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[item.status]}`}>
-                      {item.status}
-                    </span>
-                  </div>
 
-                  <div className="grid gap-1 text-sm text-slate-600">
-                    <p className="inline-flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4" /> {item.dateLabel}
-                    </p>
-                    <p className="inline-flex items-center gap-2">
-                      <Clock3 className="h-4 w-4" /> {item.timeLabel}
-                    </p>
-                    <p className="inline-flex items-center gap-2">
-                      <MapPin className="h-4 w-4" /> {item.room}
-                    </p>
-                  </div>
+                    <div className="grid gap-1 text-sm text-slate-600">
+                      <p className="inline-flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4" /> {item.dateLabel}
+                      </p>
+                      <p className="inline-flex items-center gap-2">
+                        <Clock3 className="h-4 w-4" /> {item.timeLabel}
+                      </p>
+                      <p className="inline-flex items-center gap-2">
+                        <MapPin className="h-4 w-4" /> {item.room}
+                      </p>
+                    </div>
 
-                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
-                    <span>
-                      Hoc phi: <strong>{item.price}</strong>
-                    </span>
-                    <span>
-                      Con <strong>{item.slotsLeft}</strong>/{item.capacity} cho
-                    </span>
-                  </div>
+                    <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                      <span>
+                        Hoc phi: <strong>{item.price}</strong>
+                      </span>
+                      <span>
+                        Con <strong>{item.slotsLeft}</strong>/{item.capacity} cho
+                      </span>
+                    </div>
 
-                  <Link
-                    to={`/workshops/${item.id}`}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 font-semibold text-white"
-                  >
-                    <Ticket className="h-4 w-4" />
-                    Xem chi tiet va dang ky
-                  </Link>
-                </div>
-              </article>
-            ))}
+                    <Link
+                      to={`/workshops/${item.id}`}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 font-semibold text-white"
+                    >
+                      <Ticket className="h-4 w-4" />
+                      Xem chi tiet va dang ky
+                    </Link>
+                  </div>
+                </article>
+              ))}
           </div>
 
           {!filtered.length ? <p className="mt-4 text-sm text-slate-500">Khong tim thay workshop phu hop.</p> : null}

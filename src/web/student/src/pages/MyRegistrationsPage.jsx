@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { CalendarDays, MapPin, Ticket, Search } from "lucide-react";
 import StudentShell from "@/components/StudentShell";
 import QRModal from "@/components/QRModal";
-import { myRegistrations } from "@/data/mockData";
+import { mapRegistrationToUi, workshopService, registrationService } from "@/services/workshopService";
 
 const regStyles = {
   CONFIRMED: "bg-emerald-100 text-emerald-700",
@@ -20,10 +20,45 @@ const payStyles = {
 export default function MyRegistrationsPage() {
   const [selected, setSelected] = useState(null);
   const [query, setQuery] = useState("");
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filtered = myRegistrations.filter((item) =>
-    `${item.title} ${item.date}`.toLowerCase().includes(query.toLowerCase()),
-  );
+  React.useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const [registrationsRes, workshopItems] = await Promise.all([
+          registrationService.getMyRegistrations(),
+          workshopService.getAll({ pageNumber: 1, pageSize: 200 }),
+        ]);
+
+        const workshopById = workshopItems.reduce((acc, w) => {
+          acc[w.id] = w;
+          return acc;
+        }, {});
+
+        const mapped = (registrationsRes?.data || []).map((r) => mapRegistrationToUi(r, workshopById));
+        if (active) setItems(mapped);
+      } catch (err) {
+        if (active) {
+          setError(err?.response?.data?.detail || err?.message || "Khong the tai danh sach dang ky.");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filtered = items.filter((item) => `${item.title} ${item.date}`.toLowerCase().includes(query.toLowerCase()));
   const upcoming = filtered.filter((item) => item.registrationStatus !== "CANCELLED");
   const history = filtered.filter((item) => item.registrationStatus === "CANCELLED");
 
@@ -49,37 +84,46 @@ export default function MyRegistrationsPage() {
         </div>
 
         <h2 className="mb-3 text-3xl font-semibold">Sap dien ra</h2>
+        {loading ? <p className="mb-3 text-sm text-slate-500">Dang tai du lieu dang ky...</p> : null}
+        {error ? <p className="mb-3 text-sm text-rose-700">{error}</p> : null}
         <div className="grid gap-4 md:grid-cols-2">
-          {upcoming.map((item) => (
-            <article key={item.id} className="rounded-xl border bg-white p-4 shadow-sm">
-              <div className="mb-3 h-40 rounded-lg bg-gradient-to-r from-slate-900 to-blue-900" />
-              <p className="text-2xl font-bold">{item.title}</p>
-              <div className="mt-2 space-y-1 text-sm text-slate-600">
-                <p className="inline-flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4" /> {item.date} · {item.time}
-                </p>
-                <p className="inline-flex items-center gap-2">
-                  <MapPin className="h-4 w-4" /> {item.room}
-                </p>
-              </div>
+          {!loading &&
+            !error &&
+            upcoming.map((item) => (
+              <article key={item.id} className="rounded-xl border bg-white p-4 shadow-sm">
+                <div className="mb-3 h-40 rounded-lg bg-gradient-to-r from-slate-900 to-blue-900" />
+                <p className="text-2xl font-bold">{item.title}</p>
+                <div className="mt-2 space-y-1 text-sm text-slate-600">
+                  <p className="inline-flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" /> {item.date} · {item.time}
+                  </p>
+                  <p className="inline-flex items-center gap-2">
+                    <MapPin className="h-4 w-4" /> {item.room}
+                  </p>
+                </div>
 
-              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-                <span className={`rounded-full px-2 py-1 ${regStyles[item.registrationStatus]}`}>
-                  {item.registrationStatus}
-                </span>
-                <span className={`rounded-full px-2 py-1 ${payStyles[item.paymentStatus]}`}>{item.paymentStatus}</span>
-              </div>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                  <span className={`rounded-full px-2 py-1 ${regStyles[item.registrationStatus]}`}>
+                    {item.registrationStatus}
+                  </span>
+                  <span className={`rounded-full px-2 py-1 ${payStyles[item.paymentStatus]}`}>
+                    {item.paymentStatus}
+                  </span>
+                </div>
 
-              <button
-                disabled={!item.qrCode}
-                onClick={() => setSelected(item)}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-              >
-                <Ticket className="h-4 w-4" />
-                {item.qrCode ? "Hien QR check-in" : "Dang cho QR"}
-              </button>
-            </article>
-          ))}
+                <button
+                  disabled={!item.qrCode}
+                  onClick={() => setSelected(item)}
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+                >
+                  <Ticket className="h-4 w-4" />
+                  {item.qrCode ? "Hien QR check-in" : "Dang cho QR"}
+                </button>
+              </article>
+            ))}
+          {!loading && !error && !upcoming.length ? (
+            <p className="text-sm text-slate-500">Ban chua co dang ky nao.</p>
+          ) : null}
         </div>
 
         <section className="mt-8 rounded-xl border bg-white p-4 shadow-sm">
@@ -115,6 +159,13 @@ export default function MyRegistrationsPage() {
                     <td className="px-3 py-3 text-slate-400">{item.qrCode || "N/A"}</td>
                   </tr>
                 ))}
+                {!loading && !error && !history.length ? (
+                  <tr className="border-t">
+                    <td className="px-3 py-3 text-slate-500" colSpan={5}>
+                      Chua co du lieu lich su.
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
