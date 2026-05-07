@@ -11,5 +11,6 @@ namespace Application.Abstractions.Repositories
         Task<Registration?> GetByUserAndWorkshopAsync(Guid userId, Guid workshopId);
         Task<Registration?> GetByIdempotencyKeyAsync(Guid userId, string idempotencyKey);
         Task<Workshop?> GetWorkshopForUpdateAsync(Guid workshopId);
+        Task<Registration?> GetByQrCodeAsync(string qrCode);
     }
 }

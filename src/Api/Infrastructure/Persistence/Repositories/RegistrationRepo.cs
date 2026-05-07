@@ -92,5 +92,12 @@ namespace Infrastructure.Persistence.Repositories
                     workshopId)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<Registration?> GetByQrCodeAsync(string qrCode)
+        {
+            return await _context.Registrations
+                .Include(r => r.Workshop)
+                .FirstOrDefaultAsync(r => r.QrCode == qrCode);
+        }
     }
 }

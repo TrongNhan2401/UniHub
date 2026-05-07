@@ -120,6 +120,7 @@ namespace Infrastructure
             services.AddScoped<Application.Abstractions.Repositories.ISyncTaskRepo, Infrastructure.Persistence.Repositories.SyncTaskRepo>();
             services.AddScoped<Application.Abstractions.Repositories.IRegistrationRepo, Infrastructure.Persistence.Repositories.RegistrationRepo>();
             services.AddScoped<Application.Abstractions.Repositories.IPaymentRepo, Infrastructure.Persistence.Repositories.PaymentRepo>();
+            services.AddScoped<Application.Abstractions.Repositories.IAttendanceRepo, Infrastructure.Persistence.Repositories.AttendanceRepo>();
             services.AddScoped<Application.Abstractions.IUnitOfWork, Infrastructure.Persistence.UnitOfWork>();
             services.Configure<PayOsSettings>(configuration.GetSection("Payment:PayOS"));
             services.AddScoped<Application.Abstractions.IPaymentGateway, PayOsGateway>();
