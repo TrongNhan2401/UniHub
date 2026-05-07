@@ -14,9 +14,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Mail, Lock, Eye, EyeOff, QrCode, ChevronRight } from "lucide-react-native";
 import { checkinService, tokenStorage } from "../services/api";
+import { useCheckin } from "../context/CheckinContext";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
+  const { refreshWorkshops } = useCheckin();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -36,6 +38,7 @@ export default function LoginScreen() {
       }
 
       await tokenStorage.setItem("checkin_token", token);
+      await refreshWorkshops();
       navigation.replace("Main");
     } catch (error) {
       const message = error?.response?.data?.detail || "Dang nhap khong thanh cong. Vui long kiem tra email/mat khau.";
