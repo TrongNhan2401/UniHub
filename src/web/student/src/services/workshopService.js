@@ -170,6 +170,10 @@ export const registrationService = {
   getMyRegistrations: () => api.get("/registrations/mine"),
 };
 
+export const checkInService = {
+  getByWorkshop: (workshopId) => api.get(`/checkins/workshops/${workshopId}`),
+};
+
 export const paymentService = {
   checkout: (registrationId, idempotencyKey) =>
     api.post(`/payments/registrations/${registrationId}/checkout`, null, {

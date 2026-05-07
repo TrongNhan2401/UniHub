@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 import { ArrowRight, CalendarDays, MapPin, Ticket, Search, X } from "lucide-react";
 import StudentShell from "@/components/StudentShell";
 import QRModal from "@/components/QRModal";
-import { mapRegistrationToUi, registrationService } from "@/services/workshopService";
+import { checkInService, mapRegistrationToUi, registrationService } from "@/services/workshopService";
 
 const regStyles = {
   CONFIRMED: "bg-emerald-100 text-emerald-700",
   PENDING: "bg-amber-100 text-amber-700",
   CANCELLED: "bg-slate-200 text-slate-700",
+  ATTENDED: "bg-blue-100 text-blue-700",
 };
 
 const payStyles = {
@@ -22,6 +23,7 @@ const regLabels = {
   CONFIRMED: "Đã xác nhận",
   PENDING: "Chờ xác nhận",
   CANCELLED: "Đã hủy",
+  ATTENDED: "Đã tham dự",
 };
 
 const payLabels = {
@@ -64,7 +66,32 @@ export default function MyRegistrationsPage() {
       setError("");
       try {
         const registrationsRes = await registrationService.getMyRegistrations();
-        const mapped = (registrationsRes?.data || []).map((r) => mapRegistrationToUi(r));
+        let mapped = (registrationsRes?.data || []).map((r) => mapRegistrationToUi(r));
+
+        const workshopIds = [...new Set(mapped.map((item) => item.workshopId).filter(Boolean))];
+        const attendedRegistrationIds = new Set();
+
+        await Promise.all(
+          workshopIds.map(async (workshopId) => {
+            try {
+              const res = await checkInService.getByWorkshop(workshopId);
+              (res?.data || []).forEach((attendance) => {
+                if (attendance?.registration_id) {
+                  attendedRegistrationIds.add(String(attendance.registration_id).toLowerCase());
+                }
+              });
+            } catch {
+              // Keep page functional even if attendance list cannot be loaded.
+            }
+          }),
+        );
+
+        mapped = mapped.map((item) =>
+          attendedRegistrationIds.has(String(item.id).toLowerCase())
+            ? { ...item, registrationStatus: "ATTENDED" }
+            : item,
+        );
+
         if (active) setItems(mapped);
       } catch (err) {
         if (active) {
@@ -82,8 +109,12 @@ export default function MyRegistrationsPage() {
   }, []);
 
   const filtered = items.filter((item) => `${item.title} ${item.date}`.toLowerCase().includes(query.toLowerCase()));
-  const upcoming = filtered.filter((item) => item.registrationStatus !== "CANCELLED");
-  const history = filtered.filter((item) => item.registrationStatus === "CANCELLED");
+  const upcoming = filtered.filter(
+    (item) => item.registrationStatus !== "CANCELLED" && item.registrationStatus !== "ATTENDED",
+  );
+  const history = filtered.filter(
+    (item) => item.registrationStatus === "CANCELLED" || item.registrationStatus === "ATTENDED",
+  );
 
   return (
     <StudentShell activeTop="Vé của tôi">
@@ -154,7 +185,7 @@ export default function MyRegistrationsPage() {
                     Chi tiết
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
-                  {item.paymentStatus !== "COMPLETED" ? (
+                  {item.paymentStatus !== "COMPLETED" && item.registrationStatus !== "ATTENDED" ? (
                     <button
                       onClick={() => setConfirmItem(item)}
                       className="flex items-center justify-center rounded-lg border border-rose-200 px-3 py-2.5 text-rose-600 hover:bg-rose-50"
@@ -179,7 +210,7 @@ export default function MyRegistrationsPage() {
                 <tr>
                   <th className="px-3 py-2">WORKSHOP</th>
                   <th className="px-3 py-2">NGÀY</th>
-                  <th className="px-3 py-2">ĐĂNG KÝ</th>
+                  <th className="px-3 py-2">TRẠNG THÁI</th>
                   <th className="px-3 py-2">THANH TOÁN</th>
                   <th className="px-3 py-2">MÃ QR</th>
                 </tr>
