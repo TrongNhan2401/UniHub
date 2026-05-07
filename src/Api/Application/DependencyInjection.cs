@@ -11,6 +11,7 @@ namespace Application
             services.AddScoped<IWorkshopService, WorkshopService>();
             services.AddScoped<IRegistrationService, RegistrationService>();
             services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<ICheckInService, CheckInService>();
 
             return services;
         }

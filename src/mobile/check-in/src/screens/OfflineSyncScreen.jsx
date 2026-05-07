@@ -10,8 +10,8 @@ export default function OfflineSyncScreen() {
 
   const pending = useMemo(() => pendingCheckins.filter((p) => p.sync_status === "PENDING"), [pendingCheckins]);
 
-  const onSync = () => {
-    const result = syncNow();
+  const onSync = async () => {
+    const result = await syncNow();
     if (!result.ok) {
       setMessage(result.message);
       return;

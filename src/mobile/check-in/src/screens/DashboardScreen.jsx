@@ -23,8 +23,12 @@ export default function DashboardScreen() {
 
   const todaySuccess = useMemo(() => recentScans.filter((s) => s.result === "SUCCESS").length, [recentScans]);
 
-  const handlePreload = () => {
-    const result = preloadForWorkshop(selectedWorkshopId);
+  const handlePreload = async () => {
+    const result = await preloadForWorkshop(selectedWorkshopId);
+    if (!result.success) {
+      setNotice(result.message || "Khong the preload du lieu.");
+      return;
+    }
     setNotice(`San sang check-in offline cho ${result.total} sinh vien.`);
   };
 

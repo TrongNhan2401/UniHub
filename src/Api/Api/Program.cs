@@ -62,7 +62,11 @@ var allowedOrigins = new List<string>
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
+    "http://localhost:8082",
+    "http://127.0.0.1:8082",
 };
 
 if (!string.IsNullOrWhiteSpace(clientUrl))
@@ -91,9 +95,24 @@ builder.Host.UseSerilog();
 builder.Services.AddInfrastructureDependencies(builder.Configuration);
 builder.Services.AddApplicationServices();
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CanCheckIn", policy =>
+        policy.RequireClaim("permission", "checkin"));
+
+    options.AddPolicy("CanManageWorkshop", policy =>
+        policy.RequireClaim("permission", "manage_workshop"));
+
+    options.AddPolicy("CanViewCheckins", policy =>
+        policy.RequireAssertion(ctx =>
+            ctx.User.HasClaim("permission", "checkin") ||
+            ctx.User.HasClaim("permission", "view_checkins")));
+});
+
 var app = builder.Build();
 
 await SystemRoleSeeder.SeedAsync(app.Services);
+await SeedUserSeeder.SeedAsync(app.Services);
 
 app.UseCors("AllowLocalhost");
 app.UseSerilogRequestLogging();

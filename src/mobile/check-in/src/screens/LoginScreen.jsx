@@ -8,18 +8,45 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Mail, Lock, Eye, EyeOff, QrCode, ChevronRight } from "lucide-react-native";
+import { checkinService, tokenStorage } from "../services/api";
+import { useCheckin } from "../context/CheckinContext";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
+  const { refreshWorkshops } = useCheckin();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleLogin = () => navigation.replace("Main");
+  const handleLogin = async () => {
+    if (submitting) return;
+
+    try {
+      setSubmitting(true);
+      const response = await checkinService.login({ email, password });
+      const token = response?.data?.accessToken;
+
+      if (!token) {
+        Alert.alert("Dang nhap that bai", "Khong nhan duoc token tu server.");
+        return;
+      }
+
+      await tokenStorage.setItem("checkin_token", token);
+      await refreshWorkshops();
+      navigation.replace("Main");
+    } catch (error) {
+      const message = error?.response?.data?.detail || "Dang nhap khong thanh cong. Vui long kiem tra email/mat khau.";
+      Alert.alert("Dang nhap that bai", message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8fafc" }}>
@@ -83,8 +110,14 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             {/* Primary CTA */}
-            <TouchableOpacity style={s.loginBtn} onPress={handleLogin} activeOpacity={0.85}>
-              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Dang nhap</Text>
+            <TouchableOpacity
+              style={[s.loginBtn, submitting && { opacity: 0.7 }]}
+              onPress={handleLogin}
+              activeOpacity={0.85}
+            >
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
+                {submitting ? "Dang xu ly..." : "Dang nhap"}
+              </Text>
               <ChevronRight size={18} color="#fff" strokeWidth={2.5} />
             </TouchableOpacity>
           </View>

@@ -10,6 +10,7 @@ namespace Application.Abstractions
         ISyncTaskRepo SyncTasks { get; }
         IRegistrationRepo Registrations { get; }
         IPaymentRepo Payments { get; }
+        IAttendanceRepo Attendances { get; }
 
         Task<int> SaveChangesAsync();
         Task BeginTransactionAsync();

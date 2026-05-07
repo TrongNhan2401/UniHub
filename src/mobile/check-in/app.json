@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Cần quyền camera để quét mã QR check-in."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,13 +22,14 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["android.permission.CAMERA"]
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": ["expo-secure-store"],
+    "plugins": ["expo-secure-store", "expo-camera"],
     "experiments": {
       "reactCompiler": true
     }
