@@ -18,7 +18,7 @@ namespace Infrastructure.Services
             _configuration = configuration;
         }
 
-        public string GenerateToken(AppUser user)
+        public string GenerateToken(AppUser user, IEnumerable<Claim>? additionalClaims = null)
         {
             var issuer = _configuration["Jwt:Issuer"]
                 ?? throw new InvalidOperationException("Missing configuration key: Jwt:Issuer");
@@ -30,6 +30,7 @@ namespace Infrastructure.Services
             var displayName = !string.IsNullOrWhiteSpace(user.FullName)
                 ? user.FullName
                 : user.UserName ?? user.Email ?? "Unknown User";
+
             var role = MapRole(user.Role);
 
             var claims = new List<Claim>
@@ -43,6 +44,11 @@ namespace Infrastructure.Services
                 new(ClaimTypes.Role, role),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
+
+            if (additionalClaims is not null)
+            {
+                claims.AddRange(additionalClaims);
+            }
 
             var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
             var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);

@@ -91,6 +91,20 @@ builder.Host.UseSerilog();
 builder.Services.AddInfrastructureDependencies(builder.Configuration);
 builder.Services.AddApplicationServices();
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CanCheckIn", policy =>
+        policy.RequireClaim("permission", "checkin"));
+
+    options.AddPolicy("CanManageWorkshop", policy =>
+        policy.RequireClaim("permission", "manage_workshop"));
+
+    options.AddPolicy("CanViewCheckins", policy =>
+        policy.RequireAssertion(ctx =>
+            ctx.User.HasClaim("permission", "checkin") ||
+            ctx.User.HasClaim("permission", "view_checkins")));
+});
+
 var app = builder.Build();
 
 await SystemRoleSeeder.SeedAsync(app.Services);

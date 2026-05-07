@@ -23,6 +23,7 @@ namespace Api.Controllers
         /// Check-in sinh viên bằng QR code (online).
         /// Staff quét QR và gọi endpoint này để ghi nhận attendance.
         /// </summary>
+        [Authorize(Policy = "CanCheckIn")]
         [HttpPost]
         public async Task<IActionResult> CheckIn([FromBody] CheckInRequestDto request)
         {
