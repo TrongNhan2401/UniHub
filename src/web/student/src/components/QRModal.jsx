@@ -9,8 +9,8 @@ export default function QRModal({ open, onClose, workshop }) {
       <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-start justify-between bg-blue-600 p-4 text-white">
           <div>
-            <h3 className="text-2xl font-semibold">Workshop Check-in</h3>
-            <p className="text-sm text-blue-100">Scan this code at the venue entrance</p>
+            <h3 className="text-2xl font-semibold">Mã QR Check-in</h3>
+            <p className="text-sm text-blue-100">Quét mã này tại cổng vào khu vực workshop</p>
           </div>
           <button onClick={onClose}>
             <X className="h-5 w-5" />
@@ -32,12 +32,12 @@ export default function QRModal({ open, onClose, workshop }) {
           <div>
             <h4 className="text-2xl font-bold">{workshop.title}</h4>
             <p className="mt-1 text-sm text-slate-500">
-              Registration ID: <span className="font-semibold text-blue-700">{workshop.qrCode}</span>
+              Mã đăng ký: <span className="font-semibold text-blue-700">{workshop.qrCode}</span>
             </p>
           </div>
 
           <button onClick={onClose} className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white">
-            Dong
+            Đóng
           </button>
         </div>
       </div>

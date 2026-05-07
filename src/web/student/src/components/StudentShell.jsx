@@ -1,101 +1,95 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Bell, CalendarDays, Compass, LogOut, Search, User } from "lucide-react";
+import { Bell, LogOut, Search, User } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
-const sideItems = [
-  { label: "Kham pha workshop", icon: Compass, to: "/" },
-  { label: "Dang ky cua toi", icon: CalendarDays, to: "/my-registrations" },
-];
-
 const topItems = [
-  { label: "Browse", to: "/" },
-  { label: "My Registrations", to: "/my-registrations" },
+  { label: "Khám phá", to: "/" },
+  { label: "Vé của tôi", to: "/my-registrations" },
 ];
 
-export default function StudentShell({ children, activeTop = "Browse" }) {
-  const activeSide = activeTop === "My Registrations" ? "Dang ky cua toi" : "Kham pha workshop";
+const footerColumns = [
+  {
+    title: "NỀN TẢNG",
+    items: ["Tìm workshop", "Trở thành diễn giả", "Đối tác trường học"],
+  },
+  {
+    title: "TÀI NGUYÊN",
+    items: ["Lộ trình học", "Lịch sự kiện", "Chứng chỉ"],
+  },
+  {
+    title: "HỖ TRỢ",
+    items: ["Trung tâm trợ giúp", "Điều khoản sử dụng", "Chính sách riêng tư"],
+  },
+];
+
+export default function StudentShell({ children, activeTop = "Khám phá" }) {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="flex min-h-screen">
-        <aside className="hidden w-64 border-r bg-white lg:flex lg:flex-col">
-          <div className="px-6 py-6">
-            <p className="text-2xl font-bold text-blue-600">UniHub Student</p>
-            <p className="text-sm text-slate-500">Workshop Portal</p>
-          </div>
-
-          <nav className="flex-1 px-3">
-            {sideItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.label}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium ${
-                      isActive || item.label === activeSide
-                        ? "border-l-4 border-blue-600 bg-blue-50 text-blue-700"
-                        : "text-slate-600 hover:bg-slate-100"
-                    }`
-                  }
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </NavLink>
-              );
-            })}
+    <div className="min-h-screen bg-[#f4f2fb] text-slate-900">
+      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-[#f4f2fb]/95 backdrop-blur">
+        <div className="mx-auto flex h-16 w-full max-w-[1240px] items-center gap-4 px-4 lg:px-6">
+          <p className="text-3xl font-extrabold tracking-tight text-blue-600">UniHub</p>
+          <nav className="hidden gap-7 md:flex">
+            {topItems.map((item) => (
+              <NavLink
+                key={item.label}
+                to={item.to}
+                className={`text-sm transition-colors ${
+                  item.label === activeTop
+                    ? "border-b-2 border-blue-600 pb-1 font-semibold text-blue-600"
+                    : "text-slate-700 hover:text-blue-600"
+                }`}
+              >
+                {item.label}
+              </NavLink>
+            ))}
           </nav>
-
-          <div className="border-t p-3">
-            <button
-              onClick={logout}
-              className="flex w-full items-center gap-2 rounded-lg px-4 py-3 text-sm text-slate-600 hover:bg-slate-100"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
+          <div className="ml-auto hidden items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-2 md:flex">
+            <Search className="h-4 w-4 text-slate-400" />
+            <input className="w-[220px] bg-transparent text-sm outline-none" placeholder="Tìm workshop, diễn giả..." />
           </div>
-        </aside>
+          <button className="rounded-full p-2 text-slate-600 transition hover:bg-slate-200/70">
+            <Bell className="h-4 w-4" />
+          </button>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+            <User className="h-4 w-4" />
+          </div>
+          <p className="hidden text-sm font-medium text-slate-700 lg:block">{user?.name || "Sinh viên"}</p>
+          <button
+            onClick={logout}
+            className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-600 md:flex"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Đăng xuất
+          </button>
+        </div>
+      </header>
 
-        <main className="flex-1">
-          <header className="sticky top-0 z-20 border-b bg-white/95 backdrop-blur">
-            <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-4 px-4 lg:px-8">
-              <p className="text-xl font-extrabold text-blue-600">UniHub</p>
-              <nav className="hidden gap-6 md:flex">
-                {topItems.map((item) => (
-                  <NavLink
-                    key={item.label}
-                    to={item.to}
-                    className={`text-sm ${
-                      item.label === activeTop
-                        ? "border-b-2 border-blue-600 pb-1 font-semibold text-blue-600"
-                        : "text-slate-600"
-                    }`}
-                  >
-                    {item.label}
-                  </NavLink>
+      <main className="mx-auto w-full max-w-[1240px] px-4 py-6 lg:px-6">{children}</main>
+
+      <footer className="mt-16 border-t border-slate-200 bg-[#ebe8f5]">
+        <div className="mx-auto grid w-full max-w-[1240px] gap-8 px-4 py-10 md:grid-cols-[1.4fr_1fr_1fr_1fr] lg:px-6">
+          <div>
+            <p className="text-2xl font-bold text-blue-700">UniHub</p>
+            <p className="mt-3 max-w-xs text-sm text-slate-600">
+              Nền tảng kết nối sinh viên với workshop thực hành, tăng tốc kỹ năng nghề nghiệp.
+            </p>
+          </div>
+          {footerColumns.map((group) => (
+            <div key={group.title}>
+              <p className="text-xs font-bold tracking-[0.2em] text-slate-500">{group.title}</p>
+              <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                {group.items.map((item) => (
+                  <li key={item}>{item}</li>
                 ))}
-              </nav>
-              <div className="ml-auto hidden items-center rounded-full border bg-slate-50 px-3 py-2 md:flex md:w-[320px]">
-                <Search className="mr-2 h-4 w-4 text-slate-400" />
-                <input className="w-full bg-transparent text-sm outline-none" placeholder="Search workshops..." />
-              </div>
-              <button className="p-2 text-slate-600">
-                <Bell className="h-4 w-4" />
-              </button>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700">
-                <User className="h-4 w-4" />
-              </div>
-              <p className="hidden text-sm font-medium text-slate-600 lg:block">{user?.name || "Student"}</p>
+              </ul>
             </div>
-          </header>
-
-          <div className="mx-auto max-w-[1400px] px-4 py-6 lg:px-8">{children}</div>
-        </main>
-      </div>
+          ))}
+        </div>
+      </footer>
     </div>
   );
 }

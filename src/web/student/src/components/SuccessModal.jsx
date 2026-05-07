@@ -11,14 +11,14 @@ export default function SuccessModal({ open, onClose, workshop }) {
         <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
           <CheckCircle2 className="h-10 w-10 text-emerald-600" />
         </div>
-        <h3 className="text-center text-4xl font-bold">Dang ky thanh cong</h3>
+        <h3 className="text-center text-4xl font-bold">Đăng ký thành công</h3>
         <p className="mx-auto mt-4 max-w-md text-center text-slate-600">
-          Ban da dang ky workshop <span className="font-semibold text-blue-700">{workshop?.title || ""}</span>. He thong
-          da gui thong bao xac nhan qua app va email.
+          Bạn đã đăng ký workshop <span className="font-semibold text-blue-700">{workshop?.title || ""}</span>. Hệ thống
+          đã gửi thông báo xác nhận qua ứng dụng và email.
         </p>
 
         <div className="mt-6 rounded-xl bg-slate-100 p-4">
-          <p className="text-xs uppercase tracking-widest text-slate-500">Thong tin workshop</p>
+          <p className="text-xs uppercase tracking-widest text-slate-500">Thông tin workshop</p>
           <p className="mt-2 font-semibold">
             {workshop?.dateLabel} · {workshop?.timeLabel}
           </p>
@@ -31,14 +31,14 @@ export default function SuccessModal({ open, onClose, workshop }) {
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 font-semibold text-white"
           >
             <Eye className="h-4 w-4" />
-            Xem dang ky cua toi
+            Xem vé của tôi
           </Link>
           <button
             onClick={onClose}
             className="flex w-full items-center justify-center gap-2 rounded-lg border py-3 font-semibold text-blue-700"
           >
             <CalendarDays className="h-4 w-4" />
-            Dong
+            Đóng
           </button>
         </div>
       </div>
