@@ -55,15 +55,28 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-var clientUrl = builder.Configuration["ClientUrl"] ?? "http://localhost:5173";
+var clientUrl = builder.Configuration["ClientUrl"];
+var allowedOrigins = new List<string>
+{
+    "http://localhost:5125",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+};
+
+if (!string.IsNullOrWhiteSpace(clientUrl))
+{
+    allowedOrigins.Add(clientUrl);
+}
+
+allowedOrigins = allowedOrigins.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:5125",   // Backend or Swagger UI
-                 clientUrl    // Vite frontend
-            )
+        policy.WithOrigins(allowedOrigins.ToArray())
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
