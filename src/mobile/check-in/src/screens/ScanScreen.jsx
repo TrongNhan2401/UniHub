@@ -10,8 +10,8 @@ export default function ScanScreen() {
   const { isOnline, selectedWorkshop, processQr } = useCheckin();
   const [qrInput, setQrInput] = useState("REG-1001");
 
-  const onScan = () => {
-    const result = processQr(qrInput);
+  const onScan = async () => {
+    const result = await processQr(qrInput);
     navigation.navigate("Result", { result, workshop: selectedWorkshop });
   };
 

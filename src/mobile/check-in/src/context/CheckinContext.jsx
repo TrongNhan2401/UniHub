@@ -1,99 +1,234 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { checkinService } from "../services/api";
 
 const CheckinContext = createContext(null);
 
-const WORKSHOPS = [
-  {
-    id: 5,
-    title: "AI Basics for Students",
-    room: "Hall B-12",
-    start: "08:30",
-  },
-  {
-    id: 6,
-    title: "Career CV Clinic",
-    room: "Lab 402",
-    start: "14:00",
-  },
-];
-
-const REGISTRATIONS = {
-  5: [
-    { registration_id: 1001, qr_code: "REG-1001", student_name: "Nguyen Van A", student_id: "SV2024001" },
-    { registration_id: 1002, qr_code: "REG-1002", student_name: "Tran Thi B", student_id: "SV2024002" },
-    { registration_id: 1003, qr_code: "REG-1003", student_name: "Le Quang C", student_id: "SV2024003" },
-  ],
-  6: [
-    { registration_id: 2001, qr_code: "REG-2001", student_name: "Pham Gia D", student_id: "SV2023001" },
-    { registration_id: 2002, qr_code: "REG-2002", student_name: "Hoang Minh E", student_id: "SV2023002" },
-  ],
+const STORAGE_KEYS = {
+  selectedWorkshopId: "checkin_selected_workshop_id",
+  cachedRegistrations: "checkin_cached_registrations",
+  pendingCheckins: "checkin_pending_checkins",
+  recentScans: "checkin_recent_scans",
+  deviceId: "checkin_device_id",
 };
 
-function buildSyncKey(deviceId, registrationId, checkedInAt) {
-  const datePart = checkedInAt.slice(0, 10);
-  return `${deviceId}:REG-${registrationId}:${datePart}`;
-}
+const FALLBACK_WORKSHOP = {
+  id: "",
+  title: "Chua co workshop",
+  room: "-",
+  start: "-",
+};
 
-function parseRegistrationId(qrRaw) {
-  const value = String(qrRaw || "")
+function normalizeQr(value) {
+  return String(value || "")
     .trim()
     .toUpperCase();
-  const matched = /^REG-(\d+)$/.exec(value);
-  if (!matched) return null;
-  return Number(matched[1]);
+}
+
+function toIso(value) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return new Date().toISOString();
+  }
+  return parsed.toISOString();
+}
+
+function toDisplayTime(value) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "-";
+  }
+  return parsed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function mapWorkshop(item) {
+  return {
+    id: String(item?.id || ""),
+    title: item?.title || "Workshop",
+    room: item?.room || "-",
+    start: toDisplayTime(item?.startTime),
+  };
+}
+
+function mapRegistration(item, workshopId) {
+  return {
+    registration_id: String(item?.registration_id || item?.registrationId || ""),
+    qr_code: normalizeQr(item?.qr_code || item?.qrCode),
+    student_name: item?.student_name || item?.studentName || "Sinh vien",
+    student_id: item?.student_id || item?.studentId || "",
+    student_email: item?.student_email || item?.studentEmail || "",
+    workshop_id: String(workshopId || item?.workshop_id || item?.workshopId || ""),
+    cached_at: new Date().toISOString(),
+  };
+}
+
+function toArray(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+}
+
+function buildSyncKey(deviceId, qrCode, checkedInAt) {
+  const datePart = toIso(checkedInAt).slice(0, 10);
+  return `${deviceId}:${qrCode}:${datePart}`;
+}
+
+function mapApiError(error) {
+  const code = error?.response?.data?.code || error?.response?.data?.extensions?.code;
+  const detail = error?.response?.data?.detail;
+
+  if (detail) {
+    return { code, message: detail };
+  }
+
+  return {
+    code,
+    message: "Khong the ket noi den server. Vui long thu lai.",
+  };
+}
+
+async function loadJson(key, fallback) {
+  const raw = await AsyncStorage.getItem(key);
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
 }
 
 export function CheckinProvider({ children }) {
   const [isOnline, setIsOnline] = useState(true);
-  const [selectedWorkshopId, setSelectedWorkshopId] = useState(WORKSHOPS[0].id);
+  const [deviceId, setDeviceId] = useState("DEVICE-LOCAL");
+  const [workshops, setWorkshops] = useState([]);
+  const [selectedWorkshopId, setSelectedWorkshopId] = useState("");
   const [cachedRegistrations, setCachedRegistrations] = useState([]);
   const [pendingCheckins, setPendingCheckins] = useState([]);
   const [recentScans, setRecentScans] = useState([]);
   const [lastSyncSummary, setLastSyncSummary] = useState(null);
 
-  const selectedWorkshop = useMemo(
-    () => WORKSHOPS.find((w) => w.id === selectedWorkshopId) || WORKSHOPS[0],
-    [selectedWorkshopId],
-  );
+  useEffect(() => {
+    let mounted = true;
 
-  const preloadForWorkshop = (workshopId) => {
-    const rows = REGISTRATIONS[workshopId] || [];
-    setSelectedWorkshopId(workshopId);
-    setCachedRegistrations(
-      rows.map((r) => ({
-        ...r,
-        workshop_id: workshopId,
-        cached_at: new Date().toISOString(),
-      })),
-    );
-    return { success: true, total: rows.length };
-  };
+    const init = async () => {
+      const [storedWorkshopId, storedCache, storedPending, storedRecent, storedDeviceId] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.selectedWorkshopId),
+        loadJson(STORAGE_KEYS.cachedRegistrations, []),
+        loadJson(STORAGE_KEYS.pendingCheckins, []),
+        loadJson(STORAGE_KEYS.recentScans, []),
+        AsyncStorage.getItem(STORAGE_KEYS.deviceId),
+      ]);
+
+      if (!mounted) return;
+
+      const nextDeviceId = storedDeviceId || `DEVICE-${Date.now()}`;
+      setDeviceId(nextDeviceId);
+      setSelectedWorkshopId(storedWorkshopId || "");
+      setCachedRegistrations(Array.isArray(storedCache) ? storedCache : []);
+      setPendingCheckins(Array.isArray(storedPending) ? storedPending : []);
+      setRecentScans(Array.isArray(storedRecent) ? storedRecent : []);
+
+      if (!storedDeviceId) {
+        await AsyncStorage.setItem(STORAGE_KEYS.deviceId, nextDeviceId);
+      }
+
+      await refreshWorkshops(storedWorkshopId || "");
+    };
+
+    init();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem(STORAGE_KEYS.selectedWorkshopId, selectedWorkshopId || "");
+  }, [selectedWorkshopId]);
+
+  useEffect(() => {
+    AsyncStorage.setItem(STORAGE_KEYS.cachedRegistrations, JSON.stringify(cachedRegistrations));
+  }, [cachedRegistrations]);
+
+  useEffect(() => {
+    AsyncStorage.setItem(STORAGE_KEYS.pendingCheckins, JSON.stringify(pendingCheckins));
+  }, [pendingCheckins]);
+
+  useEffect(() => {
+    AsyncStorage.setItem(STORAGE_KEYS.recentScans, JSON.stringify(recentScans));
+  }, [recentScans]);
+
+  async function refreshWorkshops(preferredWorkshopId = "") {
+    try {
+      const response = await checkinService.getWorkshops({ pageNumber: 1, pageSize: 100 });
+      const mapped = toArray(response.data)
+        .map(mapWorkshop)
+        .filter((w) => w.id);
+
+      setWorkshops(mapped);
+
+      if (!mapped.length) {
+        setSelectedWorkshopId("");
+        return;
+      }
+
+      const preferred = preferredWorkshopId || selectedWorkshopId;
+      const found = mapped.some((w) => w.id === preferred);
+      setSelectedWorkshopId(found ? preferred : mapped[0].id);
+    } catch {
+      setWorkshops([]);
+    }
+  }
+
+  const selectedWorkshop = useMemo(() => {
+    return workshops.find((w) => w.id === selectedWorkshopId) || workshops[0] || FALLBACK_WORKSHOP;
+  }, [selectedWorkshopId, workshops]);
 
   const markRecent = (record) => {
     setRecentScans((prev) => [record, ...prev].slice(0, 20));
   };
 
-  const processQr = (qrRaw) => {
-    const now = new Date().toISOString();
-    const registrationId = parseRegistrationId(qrRaw);
-    if (!registrationId) {
-      return { ok: false, status: "INVALID", message: "QR khong hop le. Dinh dang dung: REG-xxxx" };
+  const preloadForWorkshop = async (workshopId) => {
+    if (!workshopId) {
+      return { success: false, total: 0, message: "Chua chon workshop." };
     }
 
-    const found = cachedRegistrations.find((r) => r.registration_id === registrationId);
-    if (!found) {
-      return {
-        ok: false,
-        status: "NOT_IN_WORKSHOP",
-        message: "QR khong thuoc workshop dang check-in hoac chua preload du lieu.",
-      };
+    try {
+      const response = await checkinService.preloadRegistrations(workshopId);
+      const rows = toArray(response.data)
+        .map((item) => mapRegistration(item, workshopId))
+        .filter((r) => r.registration_id && r.qr_code);
+
+      setSelectedWorkshopId(String(workshopId));
+      setCachedRegistrations(rows);
+
+      return { success: true, total: rows.length };
+    } catch (error) {
+      const mappedError = mapApiError(error);
+      return { success: false, total: 0, message: mappedError.message };
     }
+  };
+
+  const processQr = async (qrRaw) => {
+    const now = new Date().toISOString();
+    const qrCode = normalizeQr(qrRaw);
+
+    if (!qrCode) {
+      return { ok: false, status: "INVALID", message: "QR khong hop le." };
+    }
+
+    const found = cachedRegistrations.find(
+      (r) => normalizeQr(r.qr_code) === qrCode && String(r.workshop_id) === String(selectedWorkshop.id),
+    );
 
     const duplicateInPending = pendingCheckins.some(
-      (p) => p.registration_id === registrationId && p.sync_status !== "FAILED",
+      (p) => String(p.registration_id) === String(found?.registration_id) && p.sync_status !== "FAILED",
     );
-    const duplicateInRecent = recentScans.some((r) => r.registration_id === registrationId && r.result === "SUCCESS");
-    if (duplicateInPending || duplicateInRecent) {
+    const duplicateInRecent = recentScans.some(
+      (r) => String(r.registration_id) === String(found?.registration_id) && r.result === "SUCCESS",
+    );
+
+    if (found && (duplicateInPending || duplicateInRecent)) {
       return {
         ok: false,
         status: "ALREADY_CHECKED",
@@ -103,28 +238,82 @@ export function CheckinProvider({ children }) {
     }
 
     if (isOnline) {
-      const successRecord = {
-        registration_id: registrationId,
-        student_name: found.student_name,
-        student_id: found.student_id,
-        checked_in_at: now,
-        workshop_id: selectedWorkshop.id,
-        result: "SUCCESS",
-        mode: "ONLINE",
-      };
-      markRecent(successRecord);
+      try {
+        if (found?.registration_id) {
+          const validate = await checkinService.validateRegistration(found.registration_id, selectedWorkshop.id);
+          if (validate.data?.already_checked_in) {
+            return {
+              ok: false,
+              status: "ALREADY_CHECKED",
+              message: "Sinh vien nay da check-in truoc do.",
+              payload: {
+                registration_id: found.registration_id,
+                student_name: validate.data.student_name || found.student_name,
+                student_id: validate.data.student_id || found.student_id,
+              },
+            };
+          }
+        }
+
+        const payloadQr = found?.qr_code || qrCode;
+        const checkinResponse = await checkinService.checkin({ qr_code: payloadQr });
+        const payload = checkinResponse.data || {};
+
+        const successRecord = {
+          registration_id: String(payload.registration_id || found?.registration_id || ""),
+          student_name: found?.student_name || "Sinh vien",
+          student_id: found?.student_id || "",
+          checked_in_at: payload.checked_in_at || now,
+          workshop_id: String(payload.workshop_id || selectedWorkshop.id),
+          result: "SUCCESS",
+          mode: "ONLINE",
+        };
+
+        markRecent(successRecord);
+
+        return {
+          ok: true,
+          status: "SUCCESS",
+          message: `${successRecord.student_name} check-in thanh cong (online).`,
+          payload: successRecord,
+        };
+      } catch (error) {
+        const mappedError = mapApiError(error);
+        if (mappedError.code === "already_checked_in") {
+          return {
+            ok: false,
+            status: "ALREADY_CHECKED",
+            message: mappedError.message,
+          };
+        }
+
+        if (mappedError.code === "registration_not_found") {
+          return {
+            ok: false,
+            status: "NOT_FOUND",
+            message: mappedError.message,
+          };
+        }
+
+        return {
+          ok: false,
+          status: "FAILED",
+          message: mappedError.message,
+        };
+      }
+    }
+
+    if (!found) {
       return {
-        ok: true,
-        status: "SUCCESS",
-        message: `${found.student_name} check-in thanh cong (online).`,
-        payload: successRecord,
+        ok: false,
+        status: "NOT_IN_WORKSHOP",
+        message: "QR khong thuoc workshop dang check-in hoac chua preload du lieu.",
       };
     }
 
-    const deviceId = "DEVICE-ABC";
-    const syncKey = buildSyncKey(deviceId, registrationId, now);
+    const syncKey = buildSyncKey(deviceId, qrCode, now);
     const pending = {
-      registration_id: registrationId,
+      registration_id: found.registration_id,
       workshop_id: selectedWorkshop.id,
       device_id: deviceId,
       checked_in_at: now,
@@ -136,7 +325,7 @@ export function CheckinProvider({ children }) {
 
     setPendingCheckins((prev) => [pending, ...prev]);
     markRecent({
-      registration_id: registrationId,
+      registration_id: found.registration_id,
       student_name: found.student_name,
       student_id: found.student_id,
       checked_in_at: now,
@@ -153,7 +342,7 @@ export function CheckinProvider({ children }) {
     };
   };
 
-  const syncNow = () => {
+  const syncNow = async () => {
     if (!isOnline) {
       return { ok: false, message: "Dang offline. Khong the dong bo." };
     }
@@ -165,22 +354,43 @@ export function CheckinProvider({ children }) {
       return { ok: true, summary };
     }
 
-    const summary = {
-      total: queue.length,
-      inserted: queue.length,
-      duplicates: 0,
-      failed: 0,
-    };
+    try {
+      const response = await checkinService.sync(
+        queue.map((item) => ({
+          registration_id: item.registration_id,
+          workshop_id: item.workshop_id,
+          device_id: item.device_id,
+          checked_in_at: toIso(item.checked_in_at),
+          sync_key: item.sync_key,
+        })),
+      );
 
-    setPendingCheckins([]);
-    setLastSyncSummary(summary);
-    return { ok: true, summary };
+      const summary = response.data || {
+        total: queue.length,
+        inserted: 0,
+        duplicates: 0,
+        failed: queue.length,
+      };
+
+      const removableSyncKeys = new Set(
+        (summary.results || [])
+          .filter((result) => result.status === "inserted" || result.status === "duplicate")
+          .map((result) => result.sync_key),
+      );
+
+      setPendingCheckins((prev) => prev.filter((item) => !removableSyncKeys.has(item.sync_key)));
+      setLastSyncSummary(summary);
+      return { ok: true, summary };
+    } catch (error) {
+      const mappedError = mapApiError(error);
+      return { ok: false, message: mappedError.message };
+    }
   };
 
   const value = {
     isOnline,
     setIsOnline,
-    workshops: WORKSHOPS,
+    workshops,
     selectedWorkshop,
     selectedWorkshopId,
     setSelectedWorkshopId,
@@ -191,6 +401,7 @@ export function CheckinProvider({ children }) {
     preloadForWorkshop,
     processQr,
     syncNow,
+    refreshWorkshops,
   };
 
   return <CheckinContext.Provider value={value}>{children}</CheckinContext.Provider>;

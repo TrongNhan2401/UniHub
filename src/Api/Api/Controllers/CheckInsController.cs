@@ -38,11 +38,12 @@ namespace Api.Controllers
             {
                 return result.Error.Code switch
                 {
-                    "CheckIn.RegistrationNotFound" => ProblemResponse(StatusCodes.Status404NotFound, "Khong tim thay tai nguyen.", result.Error.Message),
-                    "CheckIn.RegistrationNotConfirmed" => ProblemResponse(StatusCodes.Status409Conflict, "Xung dot du lieu.", result.Error.Message),
-                    "CheckIn.AlreadyCheckedIn" => ProblemResponse(StatusCodes.Status409Conflict, "Xung dot du lieu.", result.Error.Message),
-                    "CheckIn.InvalidQrCode" => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message),
-                    _ => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message)
+                    "CheckIn.RegistrationNotFound" => ProblemResponse(StatusCodes.Status404NotFound, "Khong tim thay tai nguyen.", result.Error.Message, "registration_not_found"),
+                    "CheckIn.RegistrationNotConfirmed" => ProblemResponse(StatusCodes.Status409Conflict, "Xung dot du lieu.", result.Error.Message, "not_confirmed"),
+                    "CheckIn.AlreadyCheckedIn" => ProblemResponse(StatusCodes.Status409Conflict, "Xung dot du lieu.", result.Error.Message, "already_checked_in"),
+                    "CheckIn.WorkshopCancelled" => ProblemResponse(StatusCodes.Status409Conflict, "Xung dot du lieu.", result.Error.Message, "workshop_cancelled"),
+                    "CheckIn.InvalidQrCode" => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_qr"),
+                    _ => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_request")
                 };
             }
 
@@ -65,7 +66,80 @@ namespace Api.Controllers
 
             if (result.IsFailure)
             {
-                return ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message);
+                return ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_request");
+            }
+
+            return Ok(result.Value);
+        }
+
+        /// <summary>
+        /// Preload danh sach registration da confirmed cua workshop.
+        /// Mobile dung de check-in offline khi mat mang.
+        /// </summary>
+        [Authorize(Policy = "CanCheckIn")]
+        [HttpGet("workshops/{workshopId:guid}/registrations")]
+        public async Task<IActionResult> GetConfirmedRegistrations(Guid workshopId)
+        {
+            var result = await _checkInService.GetConfirmedRegistrationsByWorkshopAsync(workshopId);
+
+            if (result.IsFailure)
+            {
+                return result.Error.Code switch
+                {
+                    "CheckIn.InvalidRequest" => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_request"),
+                    _ => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_request")
+                };
+            }
+
+            return Ok(result.Value);
+        }
+
+        /// <summary>
+        /// Validate registration thuoc workshop, dung cho flow scan online truoc khi check-in.
+        /// </summary>
+        [Authorize(Policy = "CanCheckIn")]
+        [HttpGet("registrations/{registrationId:guid}/validate")]
+        public async Task<IActionResult> ValidateRegistration(Guid registrationId, [FromQuery(Name = "workshop_id")] Guid workshopId)
+        {
+            var result = await _checkInService.ValidateRegistrationAsync(registrationId, workshopId);
+
+            if (result.IsFailure)
+            {
+                return result.Error.Code switch
+                {
+                    "CheckIn.InvalidRequest" => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_request"),
+                    "CheckIn.RegistrationNotFound" => ProblemResponse(StatusCodes.Status404NotFound, "Khong tim thay tai nguyen.", result.Error.Message, "registration_not_found"),
+                    "CheckIn.RegistrationNotConfirmed" => ProblemResponse(StatusCodes.Status409Conflict, "Xung dot du lieu.", result.Error.Message, "not_confirmed"),
+                    "CheckIn.WorkshopMismatch" => ProblemResponse(StatusCodes.Status409Conflict, "Xung dot du lieu.", result.Error.Message, "workshop_mismatch"),
+                    "CheckIn.WorkshopCancelled" => ProblemResponse(StatusCodes.Status409Conflict, "Xung dot du lieu.", result.Error.Message, "workshop_cancelled"),
+                    _ => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_request")
+                };
+            }
+
+            return Ok(result.Value);
+        }
+
+        /// <summary>
+        /// Dong bo batch check-in offline len server.
+        /// </summary>
+        [Authorize(Policy = "CanCheckIn")]
+        [HttpPost("sync")]
+        public async Task<IActionResult> SyncOffline([FromBody] OfflineSyncRequestDto request)
+        {
+            if (!TryGetCurrentUserId(out var staffUserId))
+            {
+                return ProblemResponse(StatusCodes.Status401Unauthorized, "Chua xac thuc.", "Token khong hop le.", "unauthorized");
+            }
+
+            var result = await _checkInService.SyncOfflineAsync(request, staffUserId);
+
+            if (result.IsFailure)
+            {
+                return result.Error.Code switch
+                {
+                    "CheckIn.InvalidRequest" => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_request"),
+                    _ => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_request")
+                };
             }
 
             return Ok(result.Value);
@@ -79,7 +153,7 @@ namespace Api.Controllers
             return Guid.TryParse(userIdValue, out userId);
         }
 
-        private ObjectResult ProblemResponse(int statusCode, string title, string detail)
+        private ObjectResult ProblemResponse(int statusCode, string title, string detail, string? code = null)
         {
             var problem = new ProblemDetails
             {
@@ -89,6 +163,10 @@ namespace Api.Controllers
                 Type = $"https://httpstatuses.com/{statusCode}"
             };
             problem.Extensions["traceId"] = HttpContext.TraceIdentifier;
+            if (!string.IsNullOrWhiteSpace(code))
+            {
+                problem.Extensions["code"] = code;
+            }
 
             return StatusCode(statusCode, problem);
         }

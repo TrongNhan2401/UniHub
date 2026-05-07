@@ -34,5 +34,19 @@ namespace Infrastructure.Persistence.Repositories
                 .OrderByDescending(a => a.CheckedInAt)
                 .ToListAsync();
         }
+
+        public async Task<List<Attendance>> GetByRegistrationIdsAsync(IEnumerable<Guid> registrationIds)
+        {
+            var ids = registrationIds.Distinct().ToList();
+            if (ids.Count == 0)
+            {
+                return new List<Attendance>();
+            }
+
+            return await _context.Attendances
+                .AsNoTracking()
+                .Where(a => ids.Contains(a.RegistrationId))
+                .ToListAsync();
+        }
     }
 }

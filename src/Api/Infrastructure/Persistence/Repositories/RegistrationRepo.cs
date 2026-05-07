@@ -95,9 +95,29 @@ namespace Infrastructure.Persistence.Repositories
 
         public async Task<Registration?> GetByQrCodeAsync(string qrCode)
         {
+            var normalizedQr = qrCode.Trim();
+
             return await _context.Registrations
                 .Include(r => r.Workshop)
-                .FirstOrDefaultAsync(r => r.QrCode == qrCode);
+                .FirstOrDefaultAsync(r => r.QrCode != null && EF.Functions.ILike(r.QrCode, normalizedQr));
+        }
+
+        public async Task<List<Registration>> GetConfirmedByWorkshopAsync(Guid workshopId)
+        {
+            return await _context.Registrations
+                .AsNoTracking()
+                .Include(r => r.User)
+                .Where(r => r.WorkshopId == workshopId && r.Status == Domain.RegistrationStatus.Confirmed)
+                .OrderBy(r => r.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<Registration?> GetByIdForCheckInAsync(Guid registrationId)
+        {
+            return await _context.Registrations
+                .Include(r => r.User)
+                .Include(r => r.Workshop)
+                .FirstOrDefaultAsync(r => r.Id == registrationId);
         }
     }
 }
