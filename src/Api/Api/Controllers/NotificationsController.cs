@@ -1,6 +1,7 @@
 using Application.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.ComponentModel.DataAnnotations;
 
 namespace Api.Controllers
@@ -8,6 +9,7 @@ namespace Api.Controllers
     [ApiController]
     [Route("api/notifications")]
     [Authorize]
+    [EnableRateLimiting("ApiByToken")]
     public class NotificationsController : ControllerBase
     {
         private readonly INotificationService _notification;

@@ -7,6 +7,7 @@ using Domain.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -38,6 +39,7 @@ namespace Api.Controllers
 
         [HttpPost("signup")]
         [AllowAnonymous]
+        [EnableRateLimiting("AuthByIp")]
         public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
         {
             var result = await _authService.SignUpAsync(request);
@@ -68,6 +70,7 @@ namespace Api.Controllers
 
         [HttpPost("signin")]
         [AllowAnonymous]
+        [EnableRateLimiting("AuthByIp")]
         public async Task<IActionResult> SignIn([FromBody] SignInRequest request)
         {
             var result = await _authService.SignInAsync(request);

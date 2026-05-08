@@ -3,7 +3,10 @@ using Infrastructure;
 using Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 
 using Serilog;
 
@@ -94,6 +97,60 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 builder.Services.AddInfrastructureDependencies(builder.Configuration);
 builder.Services.AddApplicationServices();
+
+builder.Services.AddRateLimiter(options =>
+{
+    // Policy 1: AuthByIp — Fixed Window giới hạn theo IP cho auth endpoints
+    options.AddPolicy("AuthByIp", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
+    // Policy 2: ApiByToken — Token Bucket per user (sub claim) cho authenticated endpoints
+    options.AddPolicy("ApiByToken", httpContext =>
+    {
+        var partitionKey = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? httpContext.Connection.RemoteIpAddress?.ToString()
+            ?? "anon";
+        return RateLimitPartition.GetTokenBucketLimiter(
+            partitionKey: partitionKey,
+            factory: _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 120,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(10),
+                TokensPerPeriod = 10,
+                AutoReplenishment = true,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.Headers.RetryAfter = "60";
+        Log.Warning(
+            "Rate limit rejected. Path: {Path}, Method: {Method}, IP: {IP}",
+            context.HttpContext.Request.Path,
+            context.HttpContext.Request.Method,
+            context.HttpContext.Connection.RemoteIpAddress);
+        context.HttpContext.Response.ContentType = "application/problem+json";
+        await context.HttpContext.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = StatusCodes.Status429TooManyRequests,
+            Title = "Qua nhieu yeu cau.",
+            Detail = "Vui long thu lai sau.",
+            Type = "https://httpstatuses.com/429",
+            Extensions = { ["traceId"] = context.HttpContext.TraceIdentifier }
+        }, cancellationToken);
+    };
+});
 
 builder.Services.AddAuthorization(options =>
 {
@@ -202,6 +259,7 @@ else
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 
