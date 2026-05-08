@@ -1,7 +1,8 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Bell, LogOut, Search, User } from "lucide-react";
+import { LogOut, Search, User } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import NotificationBell from "@/components/NotificationBell";
 
 const topItems = [
   { label: "Khám phá", to: "/" },
@@ -51,9 +52,7 @@ export default function StudentShell({ children, activeTop = "Khám phá" }) {
             <Search className="h-4 w-4 text-slate-400" />
             <input className="w-[220px] bg-transparent text-sm outline-none" placeholder="Tìm workshop, diễn giả..." />
           </div>
-          <button className="rounded-full p-2 text-slate-600 transition hover:bg-slate-200/70">
-            <Bell className="h-4 w-4" />
-          </button>
+          <NotificationBell />
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700">
             <User className="h-4 w-4" />
           </div>
