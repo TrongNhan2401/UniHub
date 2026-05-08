@@ -4,6 +4,7 @@ import LoginPage from "@/pages/LoginPage";
 import WorkshopListPage from "@/pages/WorkshopListPage";
 import WorkshopDetailPage from "@/pages/WorkshopDetailPage";
 import MyRegistrationsPage from "@/pages/MyRegistrationsPage";
+import NotificationsPage from "@/pages/NotificationsPage";
 import { useAuthStore } from "@/store/authStore";
 
 function ProtectedRoute({ children }) {
@@ -36,6 +37,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <MyRegistrationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <NotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications/:notificationId"
+        element={
+          <ProtectedRoute>
+            <NotificationsPage />
           </ProtectedRoute>
         }
       />

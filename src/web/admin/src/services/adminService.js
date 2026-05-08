@@ -15,3 +15,7 @@ export const registrationService = {
   getAll: (params) => api.get("/registrations", { params }),
   exportCsv: (workshopId) => api.get(`/registrations/export`, { params: { workshopId }, responseType: "blob" }),
 };
+
+export const notificationService = {
+  sendTestEmail: (toEmail, toName) => api.post("/notifications/test-email", { toEmail, toName }),
+};

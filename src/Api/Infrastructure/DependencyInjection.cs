@@ -135,6 +135,27 @@ namespace Infrastructure
 
             services.AddHostedService<Infrastructure.BackgroundJobs.SyncBackgroundService>();
 
+            // ── Notification (Strategy Pattern) ──────────────────────────────
+            services.Configure<Infrastructure.Options.EmailSettings>(configuration.GetSection("Email"));
+            services.Configure<Infrastructure.Options.TelegramSettings>(configuration.GetSection("Telegram"));
+
+            // Đăng ký EmailChannel — luôn bật
+            services.AddScoped<Application.Abstractions.INotificationChannel,
+                Infrastructure.Services.Notifications.EmailNotificationChannel>();
+
+            // Đăng ký TelegramChannel — chỉ bật khi Telegram:Enabled = true
+            var telegramEnabled = configuration.GetValue<bool>("Telegram:Enabled");
+            if (telegramEnabled)
+            {
+                services.AddHttpClient<Infrastructure.Services.Notifications.TelegramNotificationChannel>();
+                services.AddScoped<Application.Abstractions.INotificationChannel,
+                    Infrastructure.Services.Notifications.TelegramNotificationChannel>();
+            }
+
+            // Context tập hợp tất cả kênh → fan-out
+            services.AddScoped<Application.Abstractions.INotificationService,
+                Infrastructure.Services.Notifications.NotificationService>();
+
             return services;
         }
     }

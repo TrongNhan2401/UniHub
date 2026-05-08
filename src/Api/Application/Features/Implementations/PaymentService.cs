@@ -13,11 +13,13 @@ namespace Application.Features.Implementations
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPaymentGateway _paymentGateway;
+        private readonly INotificationService _notification;
 
-        public PaymentService(IUnitOfWork unitOfWork, IPaymentGateway paymentGateway)
+        public PaymentService(IUnitOfWork unitOfWork, IPaymentGateway paymentGateway, INotificationService notification)
         {
             _unitOfWork = unitOfWork;
             _paymentGateway = paymentGateway;
+            _notification = notification;
         }
 
         public async Task<Result<CreateCheckoutResponseDto>> CreateCheckoutAsync(Guid userId, Guid registrationId, string? idempotencyKey)
@@ -194,6 +196,24 @@ namespace Application.Features.Implementations
 
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitTransactionAsync();
+
+                // Gửi thông báo xác nhận thanh toán (fire-and-forget)
+                if (isSuccess && registration.QrCode is not null)
+                {
+                    var regWithUser = await _unitOfWork.Registrations.GetByIdForCheckInAsync(registration.Id);
+                    if (regWithUser?.User is not null && regWithUser.Workshop is not null)
+                    {
+                        var amount = (long)payment.Amount;
+                        _ = _notification.SendPaymentConfirmedAsync(
+                            userEmail: regWithUser.User.Email ?? string.Empty,
+                            userName: regWithUser.User.FullName ?? regWithUser.User.UserName ?? string.Empty,
+                            workshopTitle: regWithUser.Workshop.Title,
+                            workshopRoom: regWithUser.Workshop.Room ?? "-",
+                            workshopStartTime: regWithUser.Workshop.StartTime,
+                            qrCode: registration.QrCode,
+                            amountPaid: amount);
+                    }
+                }
             }
             catch
             {

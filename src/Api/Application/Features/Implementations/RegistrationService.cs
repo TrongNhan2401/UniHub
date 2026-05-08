@@ -10,10 +10,12 @@ namespace Application.Features.Implementations
     public class RegistrationService : IRegistrationService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notification;
 
-        public RegistrationService(IUnitOfWork unitOfWork)
+        public RegistrationService(IUnitOfWork unitOfWork, INotificationService notification)
         {
             _unitOfWork = unitOfWork;
+            _notification = notification;
         }
 
         /// <summary>
@@ -106,6 +108,22 @@ namespace Application.Features.Implementations
 
                 // Commit transaction: release pessimistic lock, write changes to DB
                 await _unitOfWork.CommitTransactionAsync();
+
+                // Gửi thông báo xác nhận (fire-and-forget: không block response nếu lỗi email)
+                if (workshop.IsFree && registration.QrCode is not null)
+                {
+                    var regWithUser = await _unitOfWork.Registrations.GetByIdForCheckInAsync(registration.Id);
+                    if (regWithUser?.User is not null)
+                    {
+                        _ = _notification.SendRegistrationConfirmedAsync(
+                            userEmail: regWithUser.User.Email ?? string.Empty,
+                            userName: regWithUser.User.FullName ?? regWithUser.User.UserName ?? string.Empty,
+                            workshopTitle: workshop.Title,
+                            workshopRoom: workshop.Room ?? "-",
+                            workshopStartTime: workshop.StartTime,
+                            qrCode: registration.QrCode);
+                    }
+                }
 
                 return Result.Success(ToDto(registration, workshop.Title, workshop.IsFree));
             }
