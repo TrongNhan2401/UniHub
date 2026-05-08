@@ -123,7 +123,11 @@ namespace Infrastructure
             services.AddScoped<Application.Abstractions.Repositories.IAttendanceRepo, Infrastructure.Persistence.Repositories.AttendanceRepo>();
             services.AddScoped<Application.Abstractions.IUnitOfWork, Infrastructure.Persistence.UnitOfWork>();
             services.Configure<PayOsSettings>(configuration.GetSection("Payment:PayOS"));
-            services.AddScoped<Application.Abstractions.IPaymentGateway, PayOsGateway>();
+            var useMockPayment = configuration.GetValue<bool>("Payment:UseMock");
+            if (useMockPayment)
+                services.AddScoped<Application.Abstractions.IPaymentGateway, MockPaymentGateway>();
+            else
+                services.AddScoped<Application.Abstractions.IPaymentGateway, PayOsGateway>();
 
             services.Configure<Infrastructure.Storage.CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
             services.AddScoped<Application.Abstractions.IUploadService, Infrastructure.Storage.CloudinaryUploadService>();

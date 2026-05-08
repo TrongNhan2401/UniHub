@@ -15,10 +15,12 @@ namespace Api.Controllers
     public class PaymentsController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
+        private readonly string _clientUrl;
 
-        public PaymentsController(IPaymentService paymentService)
+        public PaymentsController(IPaymentService paymentService, IConfiguration configuration)
         {
             _paymentService = paymentService;
+            _clientUrl = configuration["ClientUrl"] ?? "http://localhost:3000";
         }
 
         [HttpPost("registrations/{registrationId:guid}/checkout")]
@@ -30,7 +32,9 @@ namespace Api.Controllers
             }
 
             var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
-            var result = await _paymentService.CreateCheckoutAsync(userId, registrationId, idempotencyKey);
+            var origin = Request.Headers.Origin.ToString();
+            var clientBaseUrl = ResolveClientBaseUrl(origin);
+            var result = await _paymentService.CreateCheckoutAsync(userId, registrationId, idempotencyKey, clientBaseUrl);
 
             if (result.IsFailure)
             {
@@ -149,6 +153,27 @@ namespace Api.Controllers
                 ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             return Guid.TryParse(userIdValue, out userId);
+        }
+
+        private string ResolveClientBaseUrl(string? origin)
+        {
+            if (string.IsNullOrWhiteSpace(origin))
+            {
+                return _clientUrl;
+            }
+
+            if (!Uri.TryCreate(origin.Trim(), UriKind.Absolute, out var originUri))
+            {
+                return _clientUrl;
+            }
+
+            // If request comes from Swagger/API origin, keep redirect target as configured client URL.
+            if (string.Equals(originUri.Authority, Request.Host.Value, StringComparison.OrdinalIgnoreCase))
+            {
+                return _clientUrl;
+            }
+
+            return originUri.GetLeftPart(UriPartial.Authority);
         }
 
         private ObjectResult ProblemResponse(int statusCode, string title, string detail)

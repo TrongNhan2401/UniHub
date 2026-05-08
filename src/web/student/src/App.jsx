@@ -5,6 +5,7 @@ import WorkshopListPage from "@/pages/WorkshopListPage";
 import WorkshopDetailPage from "@/pages/WorkshopDetailPage";
 import MyRegistrationsPage from "@/pages/MyRegistrationsPage";
 import NotificationsPage from "@/pages/NotificationsPage";
+import PaymentResultPage from "@/pages/PaymentResultPage";
 import { useAuthStore } from "@/store/authStore";
 
 function ProtectedRoute({ children }) {
@@ -56,6 +57,9 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      {/* Payment return routes — không cần ProtectedRoute vì PayOS redirect về trực tiếp */}
+      <Route path="/payment/result" element={<PaymentResultPage />} />
+      <Route path="/payment/cancel" element={<PaymentResultPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

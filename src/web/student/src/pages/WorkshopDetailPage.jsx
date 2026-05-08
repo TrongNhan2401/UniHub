@@ -67,9 +67,8 @@ export default function WorkshopDetailPage() {
       const registerKey = generateIdempotencyKey();
       const { data: reg } = await registrationService.register(workshop.id, registerKey);
 
-      setMyRegistration(reg);
-
       if (reg?.payment_status === "NOT_REQUIRED") {
+        setMyRegistration(reg);
         setOpenSuccess(true);
         return;
       }
@@ -77,10 +76,14 @@ export default function WorkshopDetailPage() {
       const checkoutKey = generateIdempotencyKey();
       const { data: checkout } = await paymentService.checkout(reg.id, checkoutKey);
       if (checkout?.checkout_url) {
+        // Lưu context để PaymentResultPage có thể quay về đúng workshop
+        sessionStorage.setItem("paymentWorkshopId", workshop.id);
+        sessionStorage.setItem("paymentRegistrationId", reg.id);
         window.location.href = checkout.checkout_url;
         return;
       }
 
+      setMyRegistration(reg);
       setError("Đã tạo đăng ký thành công nhưng chưa lấy được liên kết thanh toán.");
     } catch (err) {
       setError(err?.response?.data?.detail || err?.message || "Đăng ký thất bại.");
@@ -106,6 +109,10 @@ export default function WorkshopDetailPage() {
   }
 
   const canRegister = !myRegistration && workshop.status === "OPEN" && workshop.slotsLeft > 0;
+  const hasPendingPayment =
+    myRegistration &&
+    myRegistration.payment_status &&
+    !["COMPLETED", "NOT_REQUIRED"].includes(myRegistration.payment_status);
   const agenda = buildAgenda(workshop.startTime, workshop.endTime, workshop.aboutPoints);
   const remainPercent = Math.max(8, Math.round((workshop.slotsLeft / Math.max(1, workshop.capacity)) * 100));
 
@@ -207,14 +214,18 @@ export default function WorkshopDetailPage() {
                   <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3">
                     <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
                     <div>
-                      <p className="text-sm font-semibold text-emerald-700">Bạn đã đăng ký workshop này</p>
+                      <p className="text-sm font-semibold text-emerald-700">
+                        {hasPendingPayment ? "Bạn đã tạo đăng ký, đang chờ thanh toán" : "Bạn đã đăng ký workshop này"}
+                      </p>
                       <p className="text-xs text-emerald-600">
                         Trạng thái:{" "}
-                        {myRegistration.status === "CONFIRMED"
-                          ? "Đã xác nhận"
-                          : myRegistration.status === "PENDING"
-                            ? "Chờ xác nhận"
-                            : myRegistration.status}
+                        {hasPendingPayment
+                          ? "Chờ thanh toán"
+                          : myRegistration.status === "CONFIRMED"
+                            ? "Đã xác nhận"
+                            : myRegistration.status === "PENDING"
+                              ? "Chờ xác nhận"
+                              : myRegistration.status}
                       </p>
                     </div>
                   </div>
