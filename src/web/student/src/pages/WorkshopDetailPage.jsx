@@ -77,6 +77,9 @@ export default function WorkshopDetailPage() {
       const checkoutKey = generateIdempotencyKey();
       const { data: checkout } = await paymentService.checkout(reg.id, checkoutKey);
       if (checkout?.checkout_url) {
+        // Lưu context để PaymentResultPage có thể quay về đúng workshop
+        sessionStorage.setItem("paymentWorkshopId", workshop.id);
+        sessionStorage.setItem("paymentRegistrationId", reg.id);
         window.location.href = checkout.checkout_url;
         return;
       }

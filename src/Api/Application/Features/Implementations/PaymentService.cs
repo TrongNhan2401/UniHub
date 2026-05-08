@@ -22,7 +22,7 @@ namespace Application.Features.Implementations
             _notification = notification;
         }
 
-        public async Task<Result<CreateCheckoutResponseDto>> CreateCheckoutAsync(Guid userId, Guid registrationId, string? idempotencyKey)
+        public async Task<Result<CreateCheckoutResponseDto>> CreateCheckoutAsync(Guid userId, Guid registrationId, string? idempotencyKey, string? clientBaseUrl)
         {
             var registration = await _unitOfWork.Registrations.GetByIdWithWorkshopAsync(registrationId);
             if (registration is null)
@@ -76,13 +76,16 @@ namespace Application.Features.Implementations
             var now = DateTime.UtcNow;
             var orderCode = GenerateOrderCode();
             var safeDescription = BuildSafeDescription(registrationId);
+            var normalizedClientBaseUrl = NormalizeClientBaseUrl(clientBaseUrl);
+            var registrationIdParam = Uri.EscapeDataString(registrationId.ToString());
+            var workshopIdParam = Uri.EscapeDataString(registration.WorkshopId.ToString());
             var gatewayRequest = new PaymentGatewayCreateLinkRequestDto
             {
                 OrderCode = orderCode,
                 Amount = Convert.ToInt32(decimal.Round(registration.Workshop.Price, 0, MidpointRounding.AwayFromZero)),
                 Description = safeDescription,
-                ReturnUrl = $"http://localhost:5173/payment/result?registrationId={registrationId}",
-                CancelUrl = $"http://localhost:5173/payment/cancel?registrationId={registrationId}"
+                ReturnUrl = $"{normalizedClientBaseUrl}/payment/result?registrationId={registrationIdParam}&workshopId={workshopIdParam}",
+                CancelUrl = $"{normalizedClientBaseUrl}/payment/cancel?registrationId={registrationIdParam}&workshopId={workshopIdParam}"
             };
 
             var gatewayResult = await _paymentGateway.CreatePaymentLinkAsync(gatewayRequest);
@@ -369,6 +372,20 @@ namespace Application.Features.Implementations
         {
             var text = $"REG-{registrationId:N}";
             return text.Length <= 25 ? text : text[..25];
+        }
+
+        private static string NormalizeClientBaseUrl(string? clientBaseUrl)
+        {
+            var fallback = "http://localhost:3000";
+            if (string.IsNullOrWhiteSpace(clientBaseUrl))
+            {
+                return fallback;
+            }
+
+            var normalized = clientBaseUrl.Trim().TrimEnd('/');
+            return Uri.TryCreate(normalized, UriKind.Absolute, out var absoluteUri)
+                ? absoluteUri.GetLeftPart(UriPartial.Authority)
+                : fallback;
         }
 
         private static long GenerateOrderCode()
