@@ -20,7 +20,9 @@ namespace Infrastructure.Options
         /// <summary>Tên người gửi hiển thị, ví dụ: UniHub Workshop</summary>
         public string FromName { get; set; } = "UniHub Workshop";
 
-        /// <summary>Bật/tắt SSL (true cho port 465, false cho port 587 với STARTTLS)</summary>
-        public bool EnableSsl { get; set; } = false;
+        /// <summary>
+        /// Bật TLS khi gửi SMTP. Với Gmail port 587 (STARTTLS) vẫn cần bật true.
+        /// </summary>
+        public bool EnableSsl { get; set; } = true;
     }
 }

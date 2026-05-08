@@ -36,9 +36,12 @@ namespace Infrastructure.Services.Notifications
 
             try
             {
+                // Port 587 (submission) requires STARTTLS on most SMTP providers (including Gmail).
+                var enableSsl = _settings.EnableSsl || _settings.SmtpPort == 587;
+
                 using var client = new SmtpClient(_settings.SmtpHost, _settings.SmtpPort)
                 {
-                    EnableSsl = _settings.EnableSsl,
+                    EnableSsl = enableSsl,
                     Credentials = new NetworkCredential(_settings.Username, _settings.Password),
                     DeliveryMethod = SmtpDeliveryMethod.Network,
                 };

@@ -1,12 +1,24 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Bell, CircleHelp, Grid2x2, Compass, CalendarDays, Award, Settings, LogOut, User, ChevronDown } from "lucide-react";
+import {
+  Bell,
+  CircleHelp,
+  Grid2x2,
+  Compass,
+  CalendarDays,
+  Award,
+  Settings,
+  LogOut,
+  User,
+  ChevronDown,
+} from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 const sideItems = [
   { label: "Dashboard", icon: Grid2x2, to: "/" },
   { label: "Danh sách workshops", icon: Compass, to: "/workshops" },
   { label: "Lịch trình", icon: CalendarDays, to: "/calendar" },
+  { label: "Thông báo", icon: Bell, to: "/notifications" },
 ];
 
 export default function AdminShell({ children, activeTop = "Quản lý Workshop" }) {
@@ -37,9 +49,10 @@ export default function AdminShell({ children, activeTop = "Quản lý Workshop"
                 to={item.to}
                 end={item.to === "/"}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all ${isActive
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all ${
+                    isActive
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`
                 }
               >
@@ -75,16 +88,15 @@ export default function AdminShell({ children, activeTop = "Quản lý Workshop"
                   <p className="text-xs font-bold text-slate-900 leading-tight">Admin User</p>
                   <p className="text-[10px] font-medium text-slate-500 uppercase leading-tight">Quản trị viên</p>
                 </div>
-                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isUserMenuOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               {/* Dropdown Menu */}
               {isUserMenuOpen && (
                 <>
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setIsUserMenuOpen(false)}
-                  />
+                  <div className="fixed inset-0 z-10" onClick={() => setIsUserMenuOpen(false)} />
                   <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl bg-white p-2 shadow-2xl ring-1 ring-slate-900/5 animate-in fade-in zoom-in-95 duration-200 z-20">
                     <div className="px-3 py-2 mb-2 border-b border-slate-50">
                       <p className="text-sm font-bold text-slate-900">Admin Account</p>
@@ -111,9 +123,7 @@ export default function AdminShell({ children, activeTop = "Quản lý Workshop"
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto bg-slate-50/50 p-6">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto bg-slate-50/50 p-6">{children}</main>
       </div>
     </div>
   );

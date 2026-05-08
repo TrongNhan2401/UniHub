@@ -7,6 +7,7 @@ import CalendarPage from "@/pages/CalendarPage";
 import { useAuthStore } from "@/store/authStore";
 import AdminSignInPage from "./pages/AdminSignInPage";
 import WorkshopDetailPage from "./pages/WorkshopDetailPage";
+import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -43,6 +44,14 @@ export default function App() {
       />
       <Route path="/workshop/:id" element={<WorkshopDetailPage />} />
       <Route path="/sign-in" element={<AdminSignInPage />} />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <NotificationSettingsPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
