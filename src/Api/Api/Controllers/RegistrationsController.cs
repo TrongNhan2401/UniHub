@@ -3,6 +3,7 @@ using Application.Features.Interfaces;
 using Domain.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -11,6 +12,7 @@ namespace Api.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [EnableRateLimiting("ApiByToken")]
     public class RegistrationsController : ControllerBase
     {
         private readonly IRegistrationService _registrationService;

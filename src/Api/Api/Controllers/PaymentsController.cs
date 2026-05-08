@@ -2,6 +2,7 @@ using Application.DTOs.Payment;
 using Application.Features.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -10,6 +11,7 @@ namespace Api.Controllers
     [ApiController]
     [Route("api/payments")]
     [Authorize]
+    [EnableRateLimiting("ApiByToken")]
     public class PaymentsController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
