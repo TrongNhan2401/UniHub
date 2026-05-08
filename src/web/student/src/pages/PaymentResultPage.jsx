@@ -120,9 +120,7 @@ export default function PaymentResultPage() {
               </p>
             )}
             {paymentDetail && returnWorkshopId && (
-              <p className="mt-2 text-sm text-blue-700">
-                Đang chuyển về trang workshop trong {redirectSeconds}s...
-              </p>
+              <p className="mt-2 text-sm text-blue-700">Đang chuyển về trang workshop trong {redirectSeconds}s...</p>
             )}
             {!loadingDetail && !paymentDetail && (
               <p className="mt-2 text-sm text-amber-700">
