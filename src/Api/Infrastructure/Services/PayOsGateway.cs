@@ -53,11 +53,11 @@ namespace Infrastructure.Services
                             OrderCode = request.OrderCode,
                             Amount = request.Amount,
                             Description = request.Description,
-                            ReturnUrl = string.IsNullOrWhiteSpace(request.ReturnUrl) 
-                                ? _settings.ReturnUrl 
+                            ReturnUrl = string.IsNullOrWhiteSpace(request.ReturnUrl)
+                                ? _settings.ReturnUrl
                                 : request.ReturnUrl,
-                            CancelUrl = string.IsNullOrWhiteSpace(request.CancelUrl) 
-                                ? _settings.CancelUrl 
+                            CancelUrl = string.IsNullOrWhiteSpace(request.CancelUrl)
+                                ? _settings.CancelUrl
                                 : request.CancelUrl
                         },
                         new RequestOptions<CreatePaymentLinkRequest>
@@ -74,7 +74,7 @@ namespace Infrastructure.Services
                         "[PAYMENT] PayOS unavailable - Circuit Breaker opened. " +
                         "OrderCode: {OrderCode}. User will see graceful error message.",
                         request.OrderCode);
-                    
+
                     return Result.Failure<PaymentGatewayCreateLinkResultDto>(
                         new Error(
                             "Payment.ServiceUnavailable",
@@ -89,7 +89,7 @@ namespace Infrastructure.Services
                 if (string.IsNullOrWhiteSpace(checkoutUrl))
                 {
                     return Result.Failure<PaymentGatewayCreateLinkResultDto>(
-                        new Error("Payment.GatewayInvalidResponse", 
+                        new Error("Payment.GatewayInvalidResponse",
                             "PayOS tra ve du lieu khong hop le (thieu checkoutUrl)."));
                 }
 
@@ -107,9 +107,9 @@ namespace Infrastructure.Services
                     "OrderCode: {OrderCode}. Exception: {Exception}",
                     request.OrderCode,
                     ex.Message);
-                
+
                 return Result.Failure<PaymentGatewayCreateLinkResultDto>(
-                    new Error("Payment.GatewayUnavailable", 
+                    new Error("Payment.GatewayUnavailable",
                         $"Không thể tạo link thanh toán PayOS: {ex.Message}"));
             }
         }

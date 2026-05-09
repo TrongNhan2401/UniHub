@@ -123,13 +123,19 @@ namespace Infrastructure
             services.AddScoped<Application.Abstractions.Repositories.IAttendanceRepo, Infrastructure.Persistence.Repositories.AttendanceRepo>();
             services.AddScoped<Application.Abstractions.IUnitOfWork, Infrastructure.Persistence.UnitOfWork>();
             services.Configure<PayOsSettings>(configuration.GetSection("Payment:PayOS"));
-            
+
             // ── Circuit Breaker cho Payment Gateway ──────────────────────────
             services.AddSingleton<Infrastructure.Services.Resilience.PaymentCircuitBreakerPolicy>();
-            
+
             var useMockPayment = configuration.GetValue<bool>("Payment:UseMock");
+            var mockMode = configuration.GetValue<string>("Payment:MockMode");
             if (useMockPayment)
-                services.AddScoped<Application.Abstractions.IPaymentGateway, MockPaymentGateway>();
+            {
+                if (string.Equals(mockMode, "Failure", StringComparison.OrdinalIgnoreCase))
+                    services.AddScoped<Application.Abstractions.IPaymentGateway, MockPaymentGatewayFailure>();
+                else
+                    services.AddScoped<Application.Abstractions.IPaymentGateway, MockPaymentGateway>();
+            }
             else
                 services.AddScoped<Application.Abstractions.IPaymentGateway, PayOsGateway>();
 

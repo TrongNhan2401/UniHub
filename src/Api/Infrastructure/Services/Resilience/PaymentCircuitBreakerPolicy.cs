@@ -48,7 +48,7 @@ namespace Infrastructure.Services.Resilience
             lock (_lockObject)
             {
                 CheckCircuitStateTransition();
-                
+
                 if (_state == CircuitBreakerState.Open)
                 {
                     throw new InvalidOperationException(
@@ -59,7 +59,7 @@ namespace Infrastructure.Services.Resilience
             try
             {
                 var result = await action();
-                
+
                 lock (_lockObject)
                 {
                     // Thành công → reset failure count
@@ -69,11 +69,11 @@ namespace Infrastructure.Services.Resilience
                             "[CIRCUIT BREAKER] Payment gateway circuit CLOSED - Payment service recovered");
                         _state = CircuitBreakerState.Closed;
                     }
-                    
+
                     _failureCount = 0;
                     _lastFailureTime = DateTime.MinValue;
                 }
-                
+
                 return result;
             }
             catch (Exception ex)
@@ -87,7 +87,7 @@ namespace Infrastructure.Services.Resilience
                     {
                         _state = CircuitBreakerState.Open;
                         _circuitOpenTime = DateTime.UtcNow;
-                        
+
                         _logger.LogWarning(
                             "[CIRCUIT BREAKER] Payment gateway circuit OPENED. " +
                             "Failure count: {FailureCount}. Will attempt recovery after {Duration}s. " +
@@ -134,7 +134,7 @@ namespace Infrastructure.Services.Resilience
             if (_state == CircuitBreakerState.Open)
             {
                 var timeSinceCircuitOpened = DateTime.UtcNow - _circuitOpenTime;
-                
+
                 if (timeSinceCircuitOpened >= _durationOfBreak)
                 {
                     _state = CircuitBreakerState.HalfOpen;
