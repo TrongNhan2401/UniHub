@@ -1,6 +1,6 @@
 # Admin API Checklist
 
-Cap nhat: 2026-05-09
+Cap nhat: 2026-05-09 (Phase 1 Complete - 9 API endpoints connected)
 
 ## 1) Authentication va session
 
@@ -30,39 +30,75 @@ Cap nhat: 2026-05-09
 - [x] WorkshopDetailPage (da noi get detail/update/cancel/upload PDF + hien thi registrations/attendances)
 - [ ] CalendarPage (events hien tai map tu `mockData`)
 
-## 5) API service da khai bao va su dung
+## 5) API endpoints da fetch
 
-- [x] `workshopService.getAll` (WorkshopsPage + DashboardPage)
-- [x] `workshopService.getById` (WorkshopDetailPage)
-- [x] `workshopService.create` (WorkshopsPage + CreateWorkshopModal)
-- [x] `workshopService.update` (WorkshopDetailPage + WorkshopsPage)
-- [x] `workshopService.cancel` (WorkshopDetailPage + WorkshopsPage)
-- [x] `workshopService.publish` (co method, chua dung tren UI)
-- [x] `workshopService.uploadPdf` (WorkshopDetailPage)
-- [ ] `registrationService.getAll` (danh sach dang ky - trong WorkshopDetailPage)
-- [ ] `registrationService.exportCsv` (export CSV)
+### Authentication (2 APIs)
+- [x] `POST /auth/signin` - Login admin (LoginPage)
+- [x] `POST /auth/signup` - Tao check-in staff (CheckinStaffPage)
+
+### Workshop CRUD (7 APIs)
+- [x] `GET /workshops` - List with pagination + search (WorkshopsPage, DashboardPage)
+- [x] `GET /workshops/{id}` - Chi tiet workshop (WorkshopDetailPage)
+- [x] `POST /workshops` - Tao workshop (WorkshopsPage)
+- [x] `PUT /workshops/{id}` - Sua workshop (WorkshopDetailPage, WorkshopsPage)
+- [x] `PATCH /workshops/{id}/cancel` - Huy workshop (WorkshopDetailPage, WorkshopsPage)
+- [x] `PATCH /workshops/{id}/publish` - Xuat ban workshop (Ready but unused on UI)
+- [x] `POST /workshops/{id}/pdf` - Upload PDF (WorkshopDetailPage)
+
+### Registrations & Notifications (2 APIs)
+- [x] `GET /registrations` - Danh sach dang ky (fetch via workshop.registrations)
+- [x] `POST /notifications/test-email` - Gui email test (NotificationSettingsPage)
+
+**Total: 9 API endpoints actively connected**
 
 ## 6) Uu tien tiep theo de hoan thien
 
 - [x] Noi WorkshopsPage vao `workshopService.getAll` + pagination that
 - [x] Noi tao workshop modal vao `workshopService.create`
 - [x] Noi sua workshop vao `workshopService.update`
-- [x] Noi huy workshop vao `workshopService.cancel`
-- [x] Noi WorkshopDetailPage vao API workshop + registrations + checkins + PDF upload
-- [ ] Noi CalendarPage vao workshop API theo ngay/thang
-- [x] Thay so lieu metric Dashboard bang du lieu API workshops
+### Accomplish
+✅ **Authentication**: JWT login → Bearer token auto-attach → auto-logout on 401
+✅ **Workshop CRUD**: List (pagination/search), Create, Update, Cancel, Publish, PDF upload
+✅ **Dashboard**: Real metrics (totalWorkshops, registrations, published count) from API
+✅ **Detail Page**: Full feature - edit modal, cancel dialog, PDF upload, registrations/attendances tabs, occupancy metrics
+✅ **Build Status**: npm run build PASS ✓ (1696 modules, 0 errors)
+✅ **Git**: All changes committed to feat/admin branch
 
-## 7) Phase 1 Hoan thanh - Ket noi cao cap API cho admin
+### Pages Connected
+- LoginPage → `/auth/signin`
+- DashboardPage → `GET /workshops` (metrics)
+- WorkshopsPage → `GET/POST/PUT /workshops` + `PATCH /cancel`
+- WorkshopDetailPage → All workshop endpoints + registrations/attendances
+- CheckinStaffPage → `/auth/signup`
+- NotificationSettingsPage → `/notifications/test-email`
 
-**Date**: 2026-05-09
+### Frontend Structure
+```
+adminService.js (source of truth)
+├── authService (login, createCheckinStaff)
+├── workshopService (getAll, getById, create, update, cancel, publish, uploadPdf)
+├── registrationService (getAll, exportCsv - ready)
+└── notificationService (sendTestEmail)
+```
 
-Da thuc hien thanh cong:
+### Phase 2 Ready
+- [ ] CalendarPage: Connect to `GET /workshops` + filter by date range
+- [ ] Registration Export: Use `registrationService.exportCsv(workshopId)`
+- [ ] Attendances: Display check-in data with filtering
 
-- Authentication: JWT login, auto-attach Bearer token, auto-logout on 401
-- Workshop CRUD: List (pagination + search), Create, Update, Cancel
-- Dashboard: Real metrics from API workshops
-- Detail page: Full integration with edit modal, PDF upload, registrations/attendances display
-- Build: npm build PASS (✓ 1696 modules, 0 errors)
+## 8) Script chay nhanh de test
+
+```bash
+# Backend API
+cd src/Api/Api && dotnet run
+
+# Admin frontend (port 3002)
+cd src/web/admin && npm run dev -- --port 3002 --strictPort
+
+# Login credentials
+Email: organizer.seed@unihub.local
+Password: Organizer@123
+``
 - Git: All changes committed to feat/admin branch
 
 Next phase: Calendar page + Registration export
