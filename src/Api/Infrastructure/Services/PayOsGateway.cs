@@ -2,6 +2,8 @@ using Application.Abstractions;
 using Application.DTOs.Payment;
 using Domain.Shared;
 using Infrastructure.Options;
+using Infrastructure.Services.Resilience;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PayOS;
 using PayOS.Models;
@@ -16,10 +18,17 @@ namespace Infrastructure.Services
     {
         private readonly PayOSClient _client;
         private readonly PayOsSettings _settings;
+        private readonly PaymentCircuitBreakerPolicy _circuitBreaker;
+        private readonly ILogger<PayOsGateway> _logger;
 
-        public PayOsGateway(IOptions<PayOsSettings> settings)
+        public PayOsGateway(
+            IOptions<PayOsSettings> settings,
+            PaymentCircuitBreakerPolicy circuitBreaker,
+            ILogger<PayOsGateway> logger)
         {
             _settings = settings.Value;
+            _circuitBreaker = circuitBreaker;
+            _logger = logger;
 
             _client = new PayOSClient(new PayOSOptions
             {
@@ -35,17 +44,43 @@ namespace Infrastructure.Services
         {
             try
             {
-                var response = await _client.PaymentRequests.CreateAsync(new CreatePaymentLinkRequest
+                // Wrap PayOS call với Circuit Breaker
+                // Nếu PayOS bị lỗi 5 lần liên tiếp → circuit mở → trả graceful error
+                var response = await _circuitBreaker.ExecuteAsyncWithFallback(
+                    action: async () => await _client.PaymentRequests.CreateAsync(
+                        new CreatePaymentLinkRequest
+                        {
+                            OrderCode = request.OrderCode,
+                            Amount = request.Amount,
+                            Description = request.Description,
+                            ReturnUrl = string.IsNullOrWhiteSpace(request.ReturnUrl) 
+                                ? _settings.ReturnUrl 
+                                : request.ReturnUrl,
+                            CancelUrl = string.IsNullOrWhiteSpace(request.CancelUrl) 
+                                ? _settings.CancelUrl 
+                                : request.CancelUrl
+                        },
+                        new RequestOptions<CreatePaymentLinkRequest>
+                        {
+                            CancellationToken = cancellationToken
+                        }),
+                    fallbackValue: null
+                );
+
+                // Nếu circuit mở → response sẽ null
+                if (response == null)
                 {
-                    OrderCode = request.OrderCode,
-                    Amount = request.Amount,
-                    Description = request.Description,
-                    ReturnUrl = string.IsNullOrWhiteSpace(request.ReturnUrl) ? _settings.ReturnUrl : request.ReturnUrl,
-                    CancelUrl = string.IsNullOrWhiteSpace(request.CancelUrl) ? _settings.CancelUrl : request.CancelUrl
-                }, new RequestOptions<CreatePaymentLinkRequest>
-                {
-                    CancellationToken = cancellationToken
-                });
+                    _logger.LogWarning(
+                        "[PAYMENT] PayOS unavailable - Circuit Breaker opened. " +
+                        "OrderCode: {OrderCode}. User will see graceful error message.",
+                        request.OrderCode);
+                    
+                    return Result.Failure<PaymentGatewayCreateLinkResultDto>(
+                        new Error(
+                            "Payment.ServiceUnavailable",
+                            "Hệ thống thanh toán tạm thời không khả dụng. " +
+                            "Vui lòng thử lại sau vài phút. Workshop vẫn còn chỗ, đăng ký sẽ được lưu."));
+                }
 
                 var raw = JsonSerializer.Serialize(response);
                 var checkoutUrl = ExtractString(raw, "checkoutUrl", "checkout_url");
@@ -53,7 +88,9 @@ namespace Infrastructure.Services
 
                 if (string.IsNullOrWhiteSpace(checkoutUrl))
                 {
-                    return Result.Failure<PaymentGatewayCreateLinkResultDto>(new Error("Payment.GatewayInvalidResponse", "PayOS tra ve du lieu khong hop le (thieu checkoutUrl)."));
+                    return Result.Failure<PaymentGatewayCreateLinkResultDto>(
+                        new Error("Payment.GatewayInvalidResponse", 
+                            "PayOS tra ve du lieu khong hop le (thieu checkoutUrl)."));
                 }
 
                 return Result.Success(new PaymentGatewayCreateLinkResultDto
@@ -65,7 +102,15 @@ namespace Infrastructure.Services
             }
             catch (Exception ex)
             {
-                return Result.Failure<PaymentGatewayCreateLinkResultDto>(new Error("Payment.GatewayUnavailable", $"Khong the tao link thanh toan PayOS: {ex.Message}"));
+                _logger.LogError(
+                    "[PAYMENT] Unexpected error during CreatePaymentLink. " +
+                    "OrderCode: {OrderCode}. Exception: {Exception}",
+                    request.OrderCode,
+                    ex.Message);
+                
+                return Result.Failure<PaymentGatewayCreateLinkResultDto>(
+                    new Error("Payment.GatewayUnavailable", 
+                        $"Không thể tạo link thanh toán PayOS: {ex.Message}"));
             }
         }
 
