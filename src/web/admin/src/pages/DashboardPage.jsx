@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { MoreVertical } from "lucide-react";
+import { AlarmClock, CalendarDays, ClipboardList, GraduationCap, MoreVertical, Search, Users } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
 import { recentRegistrations, upcomingDeadlines, weeklyData } from "@/data/mockData";
 import { workshopService } from "@/services/adminService";
@@ -67,6 +67,12 @@ const statusLabels = {
   PENDING: "ĐANG CHỜ",
 };
 
+const deadlineIcons = {
+  1: AlarmClock,
+  2: CalendarDays,
+  3: ClipboardList,
+};
+
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -108,19 +114,19 @@ export default function DashboardPage() {
           label="TỔNG WORKSHOP"
           value={loading ? "..." : String(metrics.totalWorkshops)}
           delta={loading ? undefined : "API"}
-          icon="🎓"
+          icon={GraduationCap}
         />
         <MetricCard
           label="TỔNG LƯỢT ĐĂNG KÝ"
           value={loading ? "..." : metrics.totalRegistrations.toLocaleString("vi-VN")}
           delta={loading ? undefined : "API"}
-          icon="👥"
+          icon={Users}
         />
         <MetricCard
           label="WORKSHOP ĐÃ XUẤT BẢN"
           value={loading ? "..." : String(metrics.publishedWorkshops)}
           tag={loading ? undefined : "API"}
-          icon="📋"
+          icon={ClipboardList}
         />
       </div>
 
@@ -146,7 +152,9 @@ export default function DashboardPage() {
           <div className="mt-4 space-y-4">
             {upcomingDeadlines.map((item) => (
               <div key={item.id} className="flex items-start gap-3">
-                <span className="mt-0.5 text-lg">{item.icon}</span>
+                <span className="mt-0.5 text-lg text-slate-500">
+                  {React.createElement(deadlineIcons[item.id] || CalendarDays, { size: 18 })}
+                </span>
                 <div>
                   <p className="text-sm font-semibold">{item.title}</p>
                   <p className="text-xs text-slate-500">{item.sub}</p>
@@ -167,7 +175,7 @@ export default function DashboardPage() {
         <div className="mb-4 flex items-center justify-between">
           <p className="text-2xl font-semibold">Đăng ký gần đây</p>
           <div className="flex w-52 items-center rounded-lg border px-3 py-2">
-            <span className="mr-2 text-slate-400">🔍</span>
+            <Search className="mr-2 h-4 w-4 text-slate-400" />
             <input className="w-full text-sm outline-none" placeholder="Lọc người dùng..." />
           </div>
         </div>
@@ -220,12 +228,14 @@ export default function DashboardPage() {
   );
 }
 
-function MetricCard({ label, value, delta, tag, icon }) {
+function MetricCard({ label, value, delta, tag, icon: Icon }) {
   return (
     <div className="rounded-xl border bg-white p-5">
       <div className="flex items-start justify-between">
         <p className="text-xs tracking-widest text-slate-500">{label}</p>
-        <span className="text-xl">{icon}</span>
+        <span className="text-slate-500">
+          <Icon className="h-5 w-5" />
+        </span>
       </div>
       <p className="mt-2 text-4xl font-bold">{value}</p>
       {delta && <p className="mt-1 text-sm font-medium text-emerald-600">{delta}</p>}
