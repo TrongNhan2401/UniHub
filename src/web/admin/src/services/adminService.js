@@ -1,7 +1,7 @@
 import api from "./api";
 
 export const authService = {
-  login: (data) => api.post("/auth/login", data),
+  login: (email, password) => api.post("/auth/signin", { email, password }),
   createCheckinStaff: (data) =>
     api.post("/auth/signup", {
       ...data,
