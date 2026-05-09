@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import AdminSignInPage from "./pages/AdminSignInPage";
 import WorkshopDetailPage from "./pages/WorkshopDetailPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
+import CheckinStaffPage from "./pages/CheckinStaffPage";
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -49,6 +50,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <NotificationSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/checkin-staff"
+        element={
+          <ProtectedRoute>
+            <CheckinStaffPage />
           </ProtectedRoute>
         }
       />

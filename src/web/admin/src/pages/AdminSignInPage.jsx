@@ -17,8 +17,8 @@ export default function AdminSignInPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-      <div className="w-full max-w-[440px] space-y-8 rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[#f4f2fb] p-4">
+      <div className="w-full max-w-[440px] space-y-8 rounded-3xl border border-slate-200/80 bg-white p-10 shadow-sm">
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">

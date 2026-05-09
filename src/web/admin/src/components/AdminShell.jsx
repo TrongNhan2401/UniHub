@@ -1,23 +1,13 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import {
-  Bell,
-  CircleHelp,
-  Grid2x2,
-  Compass,
-  CalendarDays,
-  Award,
-  Settings,
-  LogOut,
-  User,
-  ChevronDown,
-} from "lucide-react";
+import { Bell, Grid2x2, Compass, CalendarDays, Settings, LogOut, User, ChevronDown, QrCode } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 const sideItems = [
   { label: "Dashboard", icon: Grid2x2, to: "/" },
   { label: "Danh sách workshops", icon: Compass, to: "/workshops" },
   { label: "Lịch trình", icon: CalendarDays, to: "/calendar" },
+  { label: "Staff check-in", icon: QrCode, to: "/checkin-staff" },
   { label: "Thông báo", icon: Bell, to: "/notifications" },
 ];
 
@@ -32,9 +22,9 @@ export default function AdminShell({ children, activeTop = "Quản lý Workshop"
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-900 font-sans">
+    <div className="flex min-h-screen bg-[#f4f2fb] text-slate-900 font-sans">
       {/* Sidebar */}
-      <aside className="hidden w-60 flex-col border-r bg-white lg:flex">
+      <aside className="hidden w-60 flex-col border-r border-slate-200/80 bg-white lg:flex">
         <div className="px-5 py-5">
           <p className="text-xl font-bold tracking-tight text-slate-900">UniHub Admin</p>
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Cổng Quản trị</p>
@@ -51,7 +41,7 @@ export default function AdminShell({ children, activeTop = "Quản lý Workshop"
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all ${
                     isActive
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-200/70"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`
                 }
@@ -67,7 +57,7 @@ export default function AdminShell({ children, activeTop = "Quản lý Workshop"
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="sticky top-0 z-40 border-b bg-white/80 backdrop-blur-md">
+        <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-[#f4f2fb]/95 backdrop-blur-md">
           <div className="flex h-16 items-center justify-between px-6">
             <div className="flex items-center gap-4">
               <p className="text-2xl font-black text-blue-600 tracking-tighter">UniHub</p>
@@ -79,10 +69,10 @@ export default function AdminShell({ children, activeTop = "Quản lý Workshop"
               {/* User Avatar Button */}
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className={`flex items-center gap-2 rounded-full p-1 pr-3 transition-all hover:bg-slate-100 active:scale-95 ${isUserMenuOpen ? "bg-slate-100 ring-4 ring-slate-100" : ""}`}
+                className={`flex items-center gap-2 rounded-full p-1 pr-3 transition-all hover:bg-white active:scale-95 ${isUserMenuOpen ? "bg-white ring-4 ring-blue-100/50" : ""}`}
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-slate-200 to-slate-300 shadow-sm border border-white">
-                  <User className="h-5 w-5 text-slate-600" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-blue-200 shadow-sm border border-white">
+                  <User className="h-5 w-5 text-blue-700" />
                 </div>
                 <div className="text-left hidden md:block">
                   <p className="text-xs font-bold text-slate-900 leading-tight">Admin User</p>
@@ -123,7 +113,7 @@ export default function AdminShell({ children, activeTop = "Quản lý Workshop"
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto bg-slate-50/50 p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-[#f4f2fb] p-6">{children}</main>
       </div>
     </div>
   );
