@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit3, FileText, History, Save, Upload, X } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
-import { workshopService } from "@/services/adminService";
+import { checkinService, workshopService } from "@/services/adminService";
 
 function toDateTimeLabel(value) {
   if (!value) return "-";
@@ -59,14 +59,44 @@ export default function AdminWorkshopDetailPage() {
   const [message, setMessage] = useState("");
   const [workshop, setWorkshop] = useState(null);
   const [editFormData, setEditFormData] = useState(null);
+  const [checkins, setCheckins] = useState([]);
 
   const loadDetail = async () => {
     if (!id) return;
     setLoading(true);
     setError("");
     try {
-      const { data } = await workshopService.getById(id);
+      const [detailRes, checkinsRes, registrationsRes] = await Promise.all([
+        workshopService.getById(id),
+        checkinService.getByWorkshop(id).catch(() => ({ data: [] })),
+        checkinService.getRegistrationsByWorkshop(id).catch(() => ({ data: [] })),
+      ]);
+
+      const data = detailRes?.data;
+      const checkinItems = Array.isArray(checkinsRes?.data) ? checkinsRes.data : [];
+      const registrationItems = Array.isArray(registrationsRes?.data) ? registrationsRes.data : [];
+
+      const registrationMap = registrationItems.reduce((acc, item) => {
+        const key = item?.registration_id || item?.registrationId;
+        if (key) acc[key] = item;
+        return acc;
+      }, {});
+
+      const normalizedCheckins = checkinItems.map((item) => {
+        const registrationId = item?.registration_id || item?.registrationId;
+        const matchedReg = registrationMap[registrationId];
+        return {
+          attendanceId: item?.attendance_id || item?.attendanceId,
+          registrationId,
+          userId: item?.user_id || item?.userId,
+          userEmail: matchedReg?.student_email || matchedReg?.studentEmail || "-",
+          status: "CHECKED_IN",
+          checkedInAt: item?.checked_in_at || item?.checkedInAt,
+        };
+      });
+
       setWorkshop(data);
+      setCheckins(normalizedCheckins);
       setEditFormData({
         ...data,
         startTime: toLocalInput(data?.startTime),
@@ -92,11 +122,11 @@ export default function AdminWorkshopDetailPage() {
 
   const checkinRate = useMemo(() => {
     if (!workshop) return 0;
-    const attendances = workshop.attendances?.length || 0;
+    const attendances = checkins.length;
     const regs = Number(workshop.registeredCount || 0);
     if (!regs) return 0;
     return (attendances / regs) * 100;
-  }, [workshop]);
+  }, [workshop, checkins]);
 
   const handleSaveWorkshop = async () => {
     if (!id || !editFormData) return;
@@ -204,7 +234,7 @@ export default function AdminWorkshopDetailPage() {
             <TabButton
               active={activeTab === "checkins"}
               onClick={() => setActiveTab("checkins")}
-              label={`Check-in (${workshop.attendances?.length || 0})`}
+              label={`Check-in (${checkins.length})`}
               icon={<History size={18} />}
             />
           </div>
@@ -277,7 +307,7 @@ export default function AdminWorkshopDetailPage() {
               {activeTab === "checkins" ? (
                 <SimpleTable
                   headers={["User", "Email", "Trang thai", "Thoi gian check-in"]}
-                  rows={(workshop.attendances || []).map((a) => [
+                  rows={checkins.map((a) => [
                     String(a.userId || "-").slice(0, 8),
                     a.userEmail || "-",
                     a.status || "-",
@@ -300,7 +330,7 @@ export default function AdminWorkshopDetailPage() {
               </div>
               <div className="rounded-2xl border bg-white p-6">
                 <p className="text-xs uppercase text-slate-500">Check-in</p>
-                <p className="text-3xl font-black text-slate-900">{workshop.attendances?.length || 0}</p>
+                <p className="text-3xl font-black text-slate-900">{checkins.length}</p>
                 <p className="mt-2 text-sm text-slate-500">Ty le check-in: {checkinRate.toFixed(1)}%</p>
               </div>
             </aside>

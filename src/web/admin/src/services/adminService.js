@@ -2,6 +2,7 @@ import api from "./api";
 
 export const authService = {
   login: (email, password) => api.post("/auth/signin", { email, password }),
+  me: () => api.get("/auth/me"),
   createCheckinStaff: (data) =>
     api.post("/auth/signup", {
       ...data,
@@ -26,4 +27,9 @@ export const registrationService = {
 
 export const notificationService = {
   sendTestEmail: (toEmail, toName) => api.post("/notifications/test-email", { toEmail, toName }),
+};
+
+export const checkinService = {
+  getByWorkshop: (workshopId) => api.get(`/checkins/workshops/${workshopId}`),
+  getRegistrationsByWorkshop: (workshopId) => api.get(`/checkins/workshops/${workshopId}/registrations`),
 };

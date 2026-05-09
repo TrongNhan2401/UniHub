@@ -18,7 +18,25 @@ export default function LoginPage() {
     try {
       const response = await authService.login(email, password);
       if (response?.data?.accessToken) {
-        setAuth(response.data.accessToken, response.data.user);
+        const accessToken = response.data.accessToken;
+        setAuth(accessToken, response.data.user);
+
+        try {
+          const meResponse = await authService.me();
+          const me = meResponse?.data;
+          if (me?.id) {
+            setAuth(accessToken, {
+              id: me.id,
+              email: me.email,
+              fullName: me.fullName,
+              studentId: me.studentId,
+              role: me.role,
+            });
+          }
+        } catch {
+          // Keep fallback user data from signin response when /auth/me fails.
+        }
+
         navigate("/");
       }
     } catch (err) {
