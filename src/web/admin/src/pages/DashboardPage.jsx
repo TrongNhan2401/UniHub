@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { MoreVertical } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
 import { recentRegistrations, upcomingDeadlines, weeklyData } from "@/data/mockData";
+import { workshopService } from "@/services/adminService";
 
 // ─── Biểu đồ sparkline đơn giản ──────────────────────────────────────
 function TrendChart({ data }) {
@@ -67,15 +68,60 @@ const statusLabels = {
 };
 
 export default function DashboardPage() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [workshops, setWorkshops] = useState([]);
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const { data } = await workshopService.getAll({ pageNumber: 1, pageSize: 100 });
+        setWorkshops(data?.items || []);
+      } catch (err) {
+        setError(err?.response?.data?.detail || err?.response?.data?.message || "Không tải được số liệu dashboard.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, []);
+
+  const metrics = useMemo(() => {
+    const totalWorkshops = workshops.length;
+    const totalRegistrations = workshops.reduce((sum, w) => sum + (Number(w.registeredCount) || 0), 0);
+    const publishedWorkshops = workshops.filter((w) => w.status === "Published").length;
+    return { totalWorkshops, totalRegistrations, publishedWorkshops };
+  }, [workshops]);
+
   return (
     <AdminShell activeTop="Bảng điều khiển">
       <h1 className="text-4xl font-bold">Phân tích Workshop</h1>
       <p className="mt-1 text-slate-500">Các chỉ số hiệu suất và xu hướng đăng ký theo thời gian thực.</p>
 
+      {error ? <p className="mt-4 rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-700">{error}</p> : null}
+
       <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <MetricCard label="TỔNG WORKSHOP" value="42" delta="+12%" icon="🎓" />
-        <MetricCard label="TỔNG LƯỢT ĐĂNG KÝ" value="1,284" delta="+8%" icon="👥" />
-        <MetricCard label="LƯỢT CHECK-IN HIỆN TẠI" value="156" tag="TRỰC TIẾP" icon="📋" />
+        <MetricCard
+          label="TỔNG WORKSHOP"
+          value={loading ? "..." : String(metrics.totalWorkshops)}
+          delta={loading ? undefined : "API"}
+          icon="🎓"
+        />
+        <MetricCard
+          label="TỔNG LƯỢT ĐĂNG KÝ"
+          value={loading ? "..." : metrics.totalRegistrations.toLocaleString("vi-VN")}
+          delta={loading ? undefined : "API"}
+          icon="👥"
+        />
+        <MetricCard
+          label="WORKSHOP ĐÃ XUẤT BẢN"
+          value={loading ? "..." : String(metrics.publishedWorkshops)}
+          tag={loading ? undefined : "API"}
+          icon="📋"
+        />
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-[1fr_300px]">
@@ -154,7 +200,9 @@ export default function DashboardPage() {
                   </td>
                   <td className="px-4 py-3">{r.workshop}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded px-2 py-1 text-xs font-bold ${statusStyles[r.status]}`}>{statusLabels[r.status]}</span>
+                    <span className={`rounded px-2 py-1 text-xs font-bold ${statusStyles[r.status]}`}>
+                      {statusLabels[r.status]}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-slate-500">{r.date}</td>
                   <td className="px-4 py-3">

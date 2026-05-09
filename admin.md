@@ -57,6 +57,7 @@ Cap nhat: 2026-05-09
 **Date**: 2026-05-09
 
 Da thuc hien thanh cong:
+
 - Authentication: JWT login, auto-attach Bearer token, auto-logout on 401
 - Workshop CRUD: List (pagination + search), Create, Update, Cancel
 - Dashboard: Real metrics from API workshops

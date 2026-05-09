@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X, Calendar, MapPin, Users, Clock, CreditCard, Image as ImageIcon, Upload, Info } from "lucide-react";
 
-export default function CreateWorkshopModal({ isOpen, onClose }) {
+export default function CreateWorkshopModal({ isOpen, onClose, onSubmit, loading = false, error = "" }) {
   const [formData, setFormData] = useState({
     title: "",
     speaker: "",
@@ -13,26 +13,22 @@ export default function CreateWorkshopModal({ isOpen, onClose }) {
     totalSlots: 100,
     isFree: true,
     price: 0,
-    status: "Draft"
+    status: "Draft",
   });
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Creating workshop:", formData);
-    // In a real app, this would call an API
-    onClose();
+    if (loading) return;
+    onSubmit?.(formData);
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
-        onClick={onClose}
-      />
-      
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
+
       {/* Modal Content */}
       <div className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all animate-in fade-in zoom-in duration-300">
         {/* Header */}
@@ -41,7 +37,7 @@ export default function CreateWorkshopModal({ isOpen, onClose }) {
             <h2 className="text-xl font-bold text-slate-900">Tạo Workshop Mới</h2>
             <p className="text-sm text-slate-500">Điền thông tin chi tiết để lên lịch sự kiện mới.</p>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
           >
@@ -189,12 +185,16 @@ export default function CreateWorkshopModal({ isOpen, onClose }) {
                   </button>
                 </div>
               </div>
-              
+
               {!formData.isFree && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Lệ phí (VNĐ)</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">
+                    Lệ phí (VNĐ)
+                  </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">₫</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">
+                      ₫
+                    </span>
                     <input
                       type="number"
                       placeholder="0"
@@ -213,7 +213,8 @@ export default function CreateWorkshopModal({ isOpen, onClose }) {
                 <Info className="h-4 w-4 text-blue-500" />
               </div>
               <p className="text-xs text-blue-700 leading-relaxed">
-                <span className="font-bold">Xử lý AI:</span> Sau khi bạn tải lên file PDF giới thiệu, AI của chúng tôi sẽ tự động tạo bản tóm tắt cho trang chi tiết workshop.
+                <span className="font-bold">Xử lý AI:</span> Sau khi bạn tải lên file PDF giới thiệu, AI của chúng tôi
+                sẽ tự động tạo bản tóm tắt cho trang chi tiết workshop.
               </p>
             </div>
           </div>
@@ -229,11 +230,13 @@ export default function CreateWorkshopModal({ isOpen, onClose }) {
             </button>
             <button
               type="submit"
+              disabled={loading}
               className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]"
             >
-              Tạo Workshop
+              {loading ? "Đang tạo..." : "Tạo Workshop"}
             </button>
           </div>
+          {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
         </form>
       </div>
     </div>

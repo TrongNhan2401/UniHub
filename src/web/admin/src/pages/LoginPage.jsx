@@ -59,11 +59,7 @@ export default function LoginPage() {
             {loading ? "Dang nhap..." : "Dang nhap"}
           </button>
         </form>
-        {error && (
-          <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-            {error}
-          </div>
-        )}
+        {error && <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}
       </div>
     </div>
   );

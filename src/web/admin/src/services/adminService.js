@@ -11,9 +11,12 @@ export const authService = {
 
 export const workshopService = {
   getAll: (params) => api.get("/workshops", { params }),
+  getById: (id) => api.get(`/workshops/${id}`),
   create: (data) => api.post("/workshops", data),
   update: (id, data) => api.put(`/workshops/${id}`, data),
-  delete: (id) => api.delete(`/workshops/${id}`),
+  cancel: (id) => api.patch(`/workshops/${id}/cancel`),
+  publish: (id) => api.patch(`/workshops/${id}/publish`),
+  uploadPdf: (id, formData) => api.post(`/workshops/${id}/pdf`, formData),
 };
 
 export const registrationService = {
