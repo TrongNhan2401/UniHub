@@ -7,10 +7,10 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  CheckCircle2,
   GraduationCap,
   Users,
   ClipboardList,
-  CheckCircle2,
 } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
 import { workshops } from "@/data/mockData";
@@ -41,14 +41,37 @@ export default function WorkshopsPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-5xl font-bold tracking-tight">Quản lý Workshop</h1>
-          <p className="mt-1 text-slate-500">Kiểm soát và theo dõi tất cả các workshop học thuật trong khuôn viên trường.</p>
+          <p className="mt-1 text-slate-500">
+            Kiểm soát và theo dõi tất cả các workshop học thuật trong khuôn viên trường.
+          </p>
         </div>
-        <button 
+        <button
           onClick={() => setIsCreateModalOpen(true)}
           className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]"
         >
           + Thêm Workshop Mới
         </button>
+      </div>
+
+      <div className="mb-6 grid gap-4 md:grid-cols-3">
+        <StatCard
+          icon={<GraduationCap className="h-6 w-6 text-blue-600" />}
+          label="TỔNG WORKSHOP"
+          value="142"
+          bg="bg-blue-50"
+        />
+        <StatCard
+          icon={<Users className="h-6 w-6 text-emerald-600" />}
+          label="LƯỢT ĐĂNG KÝ"
+          value="2,840"
+          bg="bg-emerald-50"
+        />
+        <StatCard
+          icon={<ClipboardList className="h-6 w-6 text-amber-600" />}
+          label="CHỜ PHÊ DUYỆT"
+          value="18"
+          bg="bg-amber-50"
+        />
       </div>
 
       <div className="rounded-xl border bg-white shadow-sm">
@@ -139,36 +162,12 @@ export default function WorkshopsPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <StatCard
-          icon={<GraduationCap className="h-6 w-6 text-blue-600" />}
-          label="TỔNG WORKSHOP"
-          value="142"
-          bg="bg-blue-50"
-        />
-        <StatCard
-          icon={<Users className="h-6 w-6 text-emerald-600" />}
-          label="LƯỢT ĐĂNG KÝ"
-          value="2,840"
-          bg="bg-emerald-50"
-        />
-        <StatCard
-          icon={<ClipboardList className="h-6 w-6 text-amber-600" />}
-          label="CHỜ PHÊ DUYỆT"
-          value="18"
-          bg="bg-amber-50"
-        />
-      </div>
-
-      <div className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-800/90 px-4 py-2.5 text-sm text-white">
+      <div className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2.5 text-sm text-white">
         <CheckCircle2 className="h-4 w-4 text-emerald-400" />
         Bảng điều khiển tự động đồng bộ với lịch trình chính.
       </div>
 
-      <CreateWorkshopModal 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
-      />
+      <CreateWorkshopModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </AdminShell>
   );
 }
