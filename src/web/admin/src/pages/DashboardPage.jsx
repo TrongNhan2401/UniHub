@@ -25,7 +25,8 @@ function toRelativeDeadlineLabel(startTime) {
   const diffMs = start.getTime() - now.getTime();
   const diffHours = Math.round(diffMs / (1000 * 60 * 60));
 
-  if (diffHours < 0) return `Đã bắt đầu lúc ${start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`;
+  if (diffHours < 0)
+    return `Đã bắt đầu lúc ${start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`;
   if (diffHours <= 24) return `Bắt đầu sau ${diffHours} giờ`;
 
   const diffDays = Math.round(diffHours / 24);
@@ -44,7 +45,9 @@ function getInitialsFromEmail(email) {
 }
 
 function normalizeStatus(raw) {
-  const value = String(raw || "").trim().toUpperCase();
+  const value = String(raw || "")
+    .trim()
+    .toUpperCase();
   if (!value) return "PENDING";
   return value;
 }
@@ -121,7 +124,14 @@ function TrendChart({ data }) {
         />
       ))}
       <polygon points={`${px},${H - py} ${line} ${W - px},${H - py}`} fill="url(#gradAdmin)" />
-      <polyline points={line} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline
+        points={line}
+        fill="none"
+        stroke="#3b82f6"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       {pts.map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r="4" fill="#3b82f6" />
       ))}
@@ -177,9 +187,7 @@ export default function DashboardPage() {
           allWorkshops.map((w) => workshopService.getById(w.id).catch(() => null)),
         );
 
-        const details = detailResponses
-          .map((res) => res?.data)
-          .filter(Boolean);
+        const details = detailResponses.map((res) => res?.data).filter(Boolean);
 
         if (!ignore) {
           setWorkshops(allWorkshops);
@@ -273,7 +281,12 @@ export default function DashboardPage() {
       }));
 
     const filtered = q
-      ? rows.filter((r) => r.name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || r.workshop.toLowerCase().includes(q))
+      ? rows.filter(
+          (r) =>
+            r.name.toLowerCase().includes(q) ||
+            r.email.toLowerCase().includes(q) ||
+            r.workshop.toLowerCase().includes(q),
+        )
       : rows;
 
     return filtered.slice(0, 8);
@@ -287,9 +300,24 @@ export default function DashboardPage() {
       {error ? <p className="mt-4 rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-700">{error}</p> : null}
 
       <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <MetricCard label="TỔNG WORKSHOP" value={loading ? "..." : String(metrics.totalWorkshops)} delta={loading ? undefined : "API"} icon={GraduationCap} />
-        <MetricCard label="TỔNG LƯỢT ĐĂNG KÝ" value={loading ? "..." : metrics.totalRegistrations.toLocaleString("vi-VN")} delta={loading ? undefined : "API"} icon={Users} />
-        <MetricCard label="WORKSHOP ĐÃ XUẤT BẢN" value={loading ? "..." : String(metrics.publishedWorkshops)} tag={loading ? undefined : "API"} icon={ClipboardList} />
+        <MetricCard
+          label="TỔNG WORKSHOP"
+          value={loading ? "..." : String(metrics.totalWorkshops)}
+          delta={loading ? undefined : "API"}
+          icon={GraduationCap}
+        />
+        <MetricCard
+          label="TỔNG LƯỢT ĐĂNG KÝ"
+          value={loading ? "..." : metrics.totalRegistrations.toLocaleString("vi-VN")}
+          delta={loading ? undefined : "API"}
+          icon={Users}
+        />
+        <MetricCard
+          label="WORKSHOP ĐÃ XUẤT BẢN"
+          value={loading ? "..." : String(metrics.publishedWorkshops)}
+          tag={loading ? undefined : "API"}
+          icon={ClipboardList}
+        />
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-[1fr_300px]">
@@ -322,7 +350,11 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-sm font-semibold">{item.title}</p>
                     <p className="text-xs text-slate-500">{item.sub}</p>
-                    {item.tag ? <span className={`mt-1 inline-block rounded px-2 py-0.5 text-xs font-bold ${item.tagColor}`}>{item.tag}</span> : null}
+                    {item.tag ? (
+                      <span className={`mt-1 inline-block rounded px-2 py-0.5 text-xs font-bold ${item.tagColor}`}>
+                        {item.tag}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               ))
@@ -370,7 +402,11 @@ export default function DashboardPage() {
                   <tr key={r.id} className="border-t">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${r.color}`}>{r.initials}</div>
+                        <div
+                          className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${r.color}`}
+                        >
+                          {r.initials}
+                        </div>
                         <div>
                           <p className="font-medium">{r.name}</p>
                           <p className="text-xs text-slate-500">{r.email}</p>
@@ -379,7 +415,9 @@ export default function DashboardPage() {
                     </td>
                     <td className="px-4 py-3">{r.workshop}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded px-2 py-1 text-xs font-bold ${statusStyles[r.status] || statusStyles.PENDING}`}>
+                      <span
+                        className={`rounded px-2 py-1 text-xs font-bold ${statusStyles[r.status] || statusStyles.PENDING}`}
+                      >
                         {statusLabels[r.status] || r.status}
                       </span>
                     </td>
@@ -411,7 +449,9 @@ function MetricCard({ label, value, delta, tag, icon: Icon }) {
       </div>
       <p className="mt-2 text-4xl font-bold">{value}</p>
       {delta ? <p className="mt-1 text-sm font-medium text-emerald-600">{delta}</p> : null}
-      {tag ? <span className="mt-1 inline-block rounded bg-red-500 px-2 py-0.5 text-xs font-bold text-white">{tag}</span> : null}
+      {tag ? (
+        <span className="mt-1 inline-block rounded bg-red-500 px-2 py-0.5 text-xs font-bold text-white">{tag}</span>
+      ) : null}
     </div>
   );
 }
