@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import NetInfo from "@react-native-community/netinfo";
 import { checkinService } from "../services/api";
 
 const CheckinContext = createContext(null);
@@ -158,6 +159,39 @@ export function CheckinProvider({ children }) {
     AsyncStorage.setItem(STORAGE_KEYS.recentScans, JSON.stringify(recentScans));
   }, [recentScans]);
 
+  // NetInfo listener - auto detect network state changes
+  const prevOnlineRef = useRef(true);
+
+  useEffect(() => {
+    // Subscribe tới NetInfo state changes
+    const unsubscribe = NetInfo.addEventListener(({ isConnected, isInternetReachable }) => {
+      const isOnlineNow = isConnected && isInternetReachable !== false;
+      setIsOnline(isOnlineNow);
+      prevOnlineRef.current = isOnlineNow;
+    });
+
+    // Lấy trạng thái ban đầu
+    NetInfo.fetch().then(({ isConnected, isInternetReachable }) => {
+      const isOnlineNow = isConnected && isInternetReachable !== false;
+      setIsOnline(isOnlineNow);
+      prevOnlineRef.current = isOnlineNow;
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Auto-sync khi từ offline chuyển sang online
+  useEffect(() => {
+    if (isOnline && pendingCheckins.length > 0) {
+      // Delay 500ms để tránh race condition khi mạng vừa kết nối
+      const timer = setTimeout(() => {
+        syncNow();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline, pendingCheckins.length]);
+
   async function refreshWorkshops(preferredWorkshopId = "") {
     try {
       const response = await checkinService.getWorkshops({ pageNumber: 1, pageSize: 100 });
@@ -186,6 +220,51 @@ export function CheckinProvider({ children }) {
 
   const markRecent = (record) => {
     setRecentScans((prev) => [record, ...prev].slice(0, 20));
+  };
+
+  const syncNow = async () => {
+    if (!isOnline) {
+      return { ok: false, message: "Dang offline. Khong the dong bo." };
+    }
+
+    const queue = pendingCheckins.filter((p) => p.sync_status === "PENDING");
+    if (!queue.length) {
+      const summary = { total: 0, inserted: 0, duplicates: 0, failed: 0 };
+      setLastSyncSummary(summary);
+      return { ok: true, summary };
+    }
+
+    try {
+      const response = await checkinService.sync(
+        queue.map((item) => ({
+          registration_id: item.registration_id,
+          workshop_id: item.workshop_id,
+          device_id: item.device_id,
+          checked_in_at: toIso(item.checked_in_at),
+          sync_key: item.sync_key,
+        })),
+      );
+
+      const summary = response.data || {
+        total: queue.length,
+        inserted: 0,
+        duplicates: 0,
+        failed: queue.length,
+      };
+
+      const removableSyncKeys = new Set(
+        (summary.results || [])
+          .filter((result) => result.status === "inserted" || result.status === "duplicate")
+          .map((result) => result.sync_key),
+      );
+
+      setPendingCheckins((prev) => prev.filter((item) => !removableSyncKeys.has(item.sync_key)));
+      setLastSyncSummary(summary);
+      return { ok: true, summary };
+    } catch (error) {
+      const mappedError = mapApiError(error);
+      return { ok: false, message: mappedError.message };
+    }
   };
 
   const preloadForWorkshop = async (workshopId) => {
@@ -340,51 +419,6 @@ export function CheckinProvider({ children }) {
       message: `${found.student_name} da duoc luu offline, cho dong bo.`,
       payload: pending,
     };
-  };
-
-  const syncNow = async () => {
-    if (!isOnline) {
-      return { ok: false, message: "Dang offline. Khong the dong bo." };
-    }
-
-    const queue = pendingCheckins.filter((p) => p.sync_status === "PENDING");
-    if (!queue.length) {
-      const summary = { total: 0, inserted: 0, duplicates: 0, failed: 0 };
-      setLastSyncSummary(summary);
-      return { ok: true, summary };
-    }
-
-    try {
-      const response = await checkinService.sync(
-        queue.map((item) => ({
-          registration_id: item.registration_id,
-          workshop_id: item.workshop_id,
-          device_id: item.device_id,
-          checked_in_at: toIso(item.checked_in_at),
-          sync_key: item.sync_key,
-        })),
-      );
-
-      const summary = response.data || {
-        total: queue.length,
-        inserted: 0,
-        duplicates: 0,
-        failed: queue.length,
-      };
-
-      const removableSyncKeys = new Set(
-        (summary.results || [])
-          .filter((result) => result.status === "inserted" || result.status === "duplicate")
-          .map((result) => result.sync_key),
-      );
-
-      setPendingCheckins((prev) => prev.filter((item) => !removableSyncKeys.has(item.sync_key)));
-      setLastSyncSummary(summary);
-      return { ok: true, summary };
-    } catch (error) {
-      const mappedError = mapApiError(error);
-      return { ok: false, message: mappedError.message };
-    }
   };
 
   const value = {
