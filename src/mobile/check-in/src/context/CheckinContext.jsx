@@ -15,7 +15,7 @@ const STORAGE_KEYS = {
 
 const FALLBACK_WORKSHOP = {
   id: "",
-  title: "Chua co workshop",
+  title: "Chưa có workshop",
   room: "-",
   start: "-",
 };
@@ -84,7 +84,7 @@ function mapApiError(error) {
 
   return {
     code,
-    message: "Khong the ket noi den server. Vui long thu lai.",
+    message: "Không thể kết nối đến máy chủ. Vui lòng thử lại.",
   };
 }
 
@@ -224,7 +224,7 @@ export function CheckinProvider({ children }) {
 
   const syncNow = async () => {
     if (!isOnline) {
-      return { ok: false, message: "Dang offline. Khong the dong bo." };
+      return { ok: false, message: "Đang ngoại tuyến. Không thể đồng bộ." };
     }
 
     const queue = pendingCheckins.filter((p) => p.sync_status === "PENDING");
@@ -269,7 +269,7 @@ export function CheckinProvider({ children }) {
 
   const preloadForWorkshop = async (workshopId) => {
     if (!workshopId) {
-      return { success: false, total: 0, message: "Chua chon workshop." };
+      return { success: false, total: 0, message: "Chưa chọn workshop." };
     }
 
     try {
@@ -293,7 +293,7 @@ export function CheckinProvider({ children }) {
     const qrCode = normalizeQr(qrRaw);
 
     if (!qrCode) {
-      return { ok: false, status: "INVALID", message: "QR khong hop le." };
+      return { ok: false, status: "INVALID", message: "Mã QR không hợp lệ." };
     }
 
     const found = cachedRegistrations.find(
@@ -311,7 +311,7 @@ export function CheckinProvider({ children }) {
       return {
         ok: false,
         status: "ALREADY_CHECKED",
-        message: "Sinh vien nay da duoc quet truoc do.",
+        message: "Sinh viên này đã được quét trước đó.",
         payload: found,
       };
     }
@@ -324,7 +324,7 @@ export function CheckinProvider({ children }) {
             return {
               ok: false,
               status: "ALREADY_CHECKED",
-              message: "Sinh vien nay da check-in truoc do.",
+              message: "Sinh viên này đã check-in trước đó.",
               payload: {
                 registration_id: found.registration_id,
                 student_name: validate.data.student_name || found.student_name,
@@ -340,7 +340,7 @@ export function CheckinProvider({ children }) {
 
         const successRecord = {
           registration_id: String(payload.registration_id || found?.registration_id || ""),
-          student_name: found?.student_name || "Sinh vien",
+          student_name: found?.student_name || "Sinh viên",
           student_id: found?.student_id || "",
           checked_in_at: payload.checked_in_at || now,
           workshop_id: String(payload.workshop_id || selectedWorkshop.id),
@@ -353,7 +353,7 @@ export function CheckinProvider({ children }) {
         return {
           ok: true,
           status: "SUCCESS",
-          message: `${successRecord.student_name} check-in thanh cong (online).`,
+          message: `${successRecord.student_name} check-in thành công (trực tuyến).`,
           payload: successRecord,
         };
       } catch (error) {
@@ -386,7 +386,7 @@ export function CheckinProvider({ children }) {
       return {
         ok: false,
         status: "NOT_IN_WORKSHOP",
-        message: "QR khong thuoc workshop dang check-in hoac chua preload du lieu.",
+        message: "Mã QR không thuộc workshop đang check-in hoặc chưa tải trước dữ liệu.",
       };
     }
 
@@ -416,7 +416,7 @@ export function CheckinProvider({ children }) {
     return {
       ok: true,
       status: "PENDING_SYNC",
-      message: `${found.student_name} da duoc luu offline, cho dong bo.`,
+      message: `${found.student_name} đã được lưu ngoại tuyến, chờ đồng bộ.`,
       payload: pending,
     };
   };

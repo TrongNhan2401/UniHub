@@ -26,10 +26,10 @@ export default function DashboardScreen() {
   const handlePreload = async () => {
     const result = await preloadForWorkshop(selectedWorkshopId);
     if (!result.success) {
-      setNotice(result.message || "Khong the preload du lieu.");
+      setNotice(result.message || "Không thể tải trước dữ liệu.");
       return;
     }
-    setNotice(`San sang check-in offline cho ${result.total} sinh vien.`);
+    setNotice(`Sẵn sàng check-in offline cho ${result.total} sinh viên.`);
   };
 
   const openScanner = () => {
@@ -46,7 +46,7 @@ export default function DashboardScreen() {
       <View style={s.header}>
         <View>
           <Text style={s.brand}>UniHub Check-in</Text>
-          <Text style={s.headerSub}>Nhan su check-in tai cua phong</Text>
+          <Text style={s.headerSub}>Nhân sự check-in tại cửa phòng</Text>
         </View>
         <TouchableOpacity style={s.statusBadge} onPress={() => setIsOnline(!isOnline)}>
           {isOnline ? <ToggleRight size={18} color="#16a34a" /> : <ToggleLeft size={18} color="#ea580c" />}
@@ -58,7 +58,7 @@ export default function DashboardScreen() {
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24 }}>
         <View style={s.block}>
-          <Text style={s.blockTitle}>1) Chon workshop dang check-in</Text>
+          <Text style={s.blockTitle}>1) Chọn workshop đang check-in</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
             {workshops.map((w) => (
               <TouchableOpacity
@@ -73,34 +73,34 @@ export default function DashboardScreen() {
             ))}
           </View>
           <Text style={s.workshopMeta}>
-            Phong: {selectedWorkshop.room} · Bat dau: {selectedWorkshop.start}
+            Phòng: {selectedWorkshop.room} · Bắt đầu: {selectedWorkshop.start}
           </Text>
         </View>
 
         <View style={s.block}>
-          <Text style={s.blockTitle}>2) Preload de san sang offline</Text>
+          <Text style={s.blockTitle}>2) Tải trước dữ liệu để sẵn sàng offline</Text>
           <TouchableOpacity style={s.preloadBtn} onPress={handlePreload}>
             <Download size={17} color="#fff" />
-            <Text style={s.preloadTxt}>Lay danh sach registration da xac nhan</Text>
+            <Text style={s.preloadTxt}>Lấy danh sách đăng ký đã xác nhận</Text>
           </TouchableOpacity>
           {notice ? <Text style={s.notice}>{notice}</Text> : null}
         </View>
 
         <TouchableOpacity style={s.scanBtn} onPress={openScanner}>
           <QrCode size={24} color="#fff" />
-          <Text style={s.scanTxt}>Quet QR check-in</Text>
+          <Text style={s.scanTxt}>Quét mã QR check-in</Text>
         </TouchableOpacity>
 
         <View style={s.statsRow}>
-          <StatCard title="Cached" value={String(cachedRegistrations.length)} Icon={Users} tone="blue" />
-          <StatCard title="Pending Sync" value={String(pendingCheckins.length)} Icon={CloudOff} tone="orange" />
-          <StatCard title="Online Success" value={String(todaySuccess)} Icon={CheckCircle2} tone="green" />
+          <StatCard title="Đã tải trước" value={String(cachedRegistrations.length)} Icon={Users} tone="blue" />
+          <StatCard title="Chờ đồng bộ" value={String(pendingCheckins.length)} Icon={CloudOff} tone="orange" />
+          <StatCard title="Thành công online" value={String(todaySuccess)} Icon={CheckCircle2} tone="green" />
         </View>
 
         <View style={s.block}>
-          <Text style={s.blockTitle}>Recent</Text>
+          <Text style={s.blockTitle}>Lượt quét gần đây</Text>
           {!recentScans.length ? (
-            <Text style={s.empty}>Chua co luot quet nao trong phien nay.</Text>
+            <Text style={s.empty}>Chưa có lượt quét nào trong phiên này.</Text>
           ) : (
             recentScans.slice(0, 5).map((row) => (
               <View key={`${row.registration_id}-${row.checked_in_at}`} style={s.recentRow}>
