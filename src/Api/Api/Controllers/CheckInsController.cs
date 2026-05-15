@@ -44,9 +44,9 @@ namespace Api.Controllers
         /// Lấy danh sách tất cả staff check-in.
         /// </summary>
         [HttpGet("staff")]
-        public async Task<IActionResult> GetAllStaff()
+        public async Task<IActionResult> GetAllStaff([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var result = await _checkInService.GetAllCheckinStaffAsync();
+            var result = await _checkInService.GetAllCheckinStaffAsync(pageNumber, pageSize);
             if (result.IsFailure)
             {
                 return ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_request");
