@@ -1,4 +1,4 @@
-﻿using Application.Abstractions;
+using Application.Abstractions;
 using Application.Features.Auth;
 using Application.Features.Interfaces;
 using Domain;
@@ -14,15 +14,18 @@ namespace Application.Features.Implementations
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly IJwtTokenService _jwtTokenService;
+        private readonly INotificationService _notificationService;
 
         public AuthService(
             UserManager<AppUser> userManager,
             RoleManager<IdentityRole<Guid>> roleManager,
-            IJwtTokenService jwtTokenService)
+            IJwtTokenService jwtTokenService,
+            INotificationService notificationService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _jwtTokenService = jwtTokenService;
+            _notificationService = notificationService;
         }
 
         public async Task<Result<SignUpResponse>> SignUpAsync(SignUpRequest request)
@@ -42,7 +45,7 @@ namespace Application.Features.Implementations
                 return Result.Failure<SignUpResponse>(
                     new Error("Auth.EmailExists", "Email da ton tai."));
             }
-
+            Console.WriteLine(roleText);
             var user = new AppUser(
                 request.Email,
                 request.FullName,
@@ -80,6 +83,66 @@ namespace Application.Features.Implementations
             }
 
             var roleText = MapRoleText(user.Role);
+            var isAdmin = await _userManager.IsInRoleAsync(user, "ORGANIZER");
+
+            if (isAdmin)
+            {
+                roleText = "ORGANIZER";
+            }
+
+            // [2FA] Nếu là Admin, yêu cầu OTP
+            if (isAdmin)
+            {
+                var otp = new Random().Next(100000, 999999).ToString();
+                user.TwoFactorCode = otp;
+                user.TwoFactorExpiry = DateTime.UtcNow.AddMinutes(5);
+                await _userManager.UpdateAsync(user);
+
+                // Gửi OTP qua email (fire-and-forget)
+                _ = _notificationService.SendOtpAsync(user.Email!, user.FullName, otp);
+
+                return Result.Success(new SignInResponse(
+                    AccessToken: null,
+                    TokenType: null,
+                    UserId: user.Id,
+                    Email: user.Email!,
+                    FullName: user.FullName,
+                    StudentId: user.StudentId,
+                    Role: null,
+                    RequiresTwoFactor: true));
+            }
+
+            var roleClaims = await GetRoleClaimsAsync(user);
+            var accessToken = _jwtTokenService.GenerateToken(user, roleClaims);
+
+            return Result.Success(new SignInResponse(accessToken, "Bearer", user.Id, user.Email!, user.FullName, user.StudentId, roleText));
+        }
+
+        public async Task<Result<SignInResponse>> VerifyOtpAsync(VerifyOtpRequest request)
+        {
+            var user = await _userManager.FindByEmailAsync(request.Email.Trim());
+            if (user is null)
+            {
+                return Result.Failure<SignInResponse>(new Error("Auth.UserNotFound", "Khong tim thay nguoi dung."));
+            }
+
+            if (user.TwoFactorCode != request.Otp || user.TwoFactorExpiry < DateTime.UtcNow)
+            {
+                return Result.Failure<SignInResponse>(new Error("Auth.InvalidOtp", "Ma OTP khong dung hoac da het han."));
+            }
+
+            // Clear OTP after success
+            user.TwoFactorCode = null;
+            user.TwoFactorExpiry = null;
+            await _userManager.UpdateAsync(user);
+
+            var roleText = MapRoleText(user.Role);
+            var isAdmin = await _userManager.IsInRoleAsync(user, "ORGANIZER");
+            if (isAdmin)
+            {
+                roleText = "ORGANIZER";
+            }
+
             var roleClaims = await GetRoleClaimsAsync(user);
             var accessToken = _jwtTokenService.GenerateToken(user, roleClaims);
 
@@ -96,6 +159,11 @@ namespace Application.Features.Implementations
             }
 
             var roleText = MapRoleText(user.Role);
+            var isAdmin = await _userManager.IsInRoleAsync(user, "ADMIN");
+            if (isAdmin)
+            {
+                roleText = "ADMIN";
+            }
 
             return Result.Success(new MeResponse(user.Id, user.Email!, user.FullName, user.StudentId, roleText));
         }

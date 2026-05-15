@@ -29,6 +29,8 @@ export const notificationService = {
 export const checkinService = {
   getByWorkshop: (workshopId) => api.get(`/checkins/workshops/${workshopId}`),
   getRegistrationsByWorkshop: (workshopId) => api.get(`/checkins/workshops/${workshopId}/registrations`),
+  getAllStaff: (params) => api.get("/checkins/staff", { params }),
+  createStaff: (data) => api.post("/checkins/signup-staff", data),
 };
 
 export const syncService = {

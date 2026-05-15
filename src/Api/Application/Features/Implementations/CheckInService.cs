@@ -5,14 +5,11 @@ using Domain;
 using Domain.Entities;
 using Domain.Shared;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Implementations
 {
     public class CheckInService : ICheckInService
     {
-        private const string CheckInStaffRoleName = "CHECKIN_STAFF";
-
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
@@ -45,51 +42,14 @@ namespace Application.Features.Implementations
             }
 
             // Đảm bảo role tồn tại và gán role
-            if (!await _roleManager.RoleExistsAsync(CheckInStaffRoleName))
+            var roleName = UserRole.CheckInStaff.ToString().ToUpperInvariant();
+            if (!await _roleManager.RoleExistsAsync(roleName))
             {
-                await _roleManager.CreateAsync(new IdentityRole<Guid>(CheckInStaffRoleName));
+                await _roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
             }
-            await _userManager.AddToRoleAsync(user, CheckInStaffRoleName);
+            await _userManager.AddToRoleAsync(user, roleName);
 
             return Result.Success(user.Id);
-        }
-
-        public async Task<Result<PagedResult<CheckinStaffDto>>> GetAllCheckinStaffAsync(int pageNumber, int pageSize)
-        {
-            try
-            {
-                if (pageNumber < 1 || pageSize < 1)
-                {
-                    return Result.Failure<PagedResult<CheckinStaffDto>>(new Error("CheckIn.InvalidRequest", "pageNumber va pageSize phai lon hon 0."));
-                }
-
-                var query = _userManager.Users
-                    .AsNoTracking()
-                    .Where(u => u.Role == UserRole.CheckInStaff)
-                    .OrderByDescending(u => u.CreatedAt);
-
-                var totalCount = await query.CountAsync();
-                var staffUsers = await query
-                    .Skip((pageNumber - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
-
-                var staffList = staffUsers
-                    .Select(u => new CheckinStaffDto
-                    {
-                        Id = u.Id,
-                        Email = u.Email ?? string.Empty,
-                        FullName = u.FullName,
-                        CreatedAt = u.CreatedAt
-                    })
-                    .ToList();
-
-                return Result.Success(new PagedResult<CheckinStaffDto>(staffList, totalCount, pageNumber, pageSize));
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure<PagedResult<CheckinStaffDto>>(new Error("CheckIn.GetStaffFailed", $"Loi khi lay danh sach staff: {ex.Message}"));
-            }
         }
 
         public async Task<Result<CheckInResponseDto>> CheckInAsync(string qrCode, Guid staffUserId)
@@ -369,6 +329,28 @@ namespace Application.Features.Implementations
             }
 
             return Result.Success(response);
+        }
+        public async Task<Result<PagedResult<CheckinStaffDto>>> GetAllCheckinStaffAsync(int pageNumber, int pageSize)
+        {
+            var query = _userManager.Users
+                .Where(u => u.Role == UserRole.CheckInStaff)
+                .OrderByDescending(u => u.CreatedAt);
+
+            var totalCount = query.Count();
+            var items = query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new CheckinStaffDto
+                {
+                    Id = u.Id,
+                    Email = u.Email!,
+                    FullName = u.FullName,
+                    CreatedAt = u.CreatedAt
+                })
+                .ToList();
+
+            var result = new PagedResult<CheckinStaffDto>(items, totalCount, pageNumber, pageSize);
+            return Result.Success(result);
         }
     }
 }

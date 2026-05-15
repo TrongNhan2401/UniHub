@@ -195,13 +195,19 @@ namespace Application.Features.Implementations
                 {
                     var user = await _userManager.Users.FirstOrDefaultAsync(u => u.StudentId == record.StudentId, ct);
                     
-                    string dobPart = record.DateOfBirth?.ToString("ddMMyyyy") ?? "01012000";
+                    DateTime? dob = record.DateOfBirth;
+                    if (dob.HasValue && dob.Value.Kind == DateTimeKind.Unspecified)
+                    {
+                        dob = DateTime.SpecifyKind(dob.Value, DateTimeKind.Utc);
+                    }
+
+                    string dobPart = dob?.ToString("ddMMyyyy") ?? "01012000";
                     string entryPart = record.EntryYear?.ToString() ?? "2024";
                     string password = dobPart + entryPart;
 
                     if (user == null)
                     {
-                        user = new AppUser(record.Email, record.FullName, UserRole.Student, record.StudentId, record.DateOfBirth, record.EntryYear, record.PhoneNumber);
+                        user = new AppUser(record.Email, record.FullName, UserRole.Student, record.StudentId, dob, record.EntryYear, record.PhoneNumber);
                         var result = await _userManager.CreateAsync(user, password);
                         if (!result.Succeeded)
                         {
@@ -213,7 +219,7 @@ namespace Application.Features.Implementations
                         user.FullName = record.FullName;
                         user.Email = record.Email;
                         user.UserName = record.Email;
-                        user.DateOfBirth = record.DateOfBirth;
+                        user.DateOfBirth = dob;
                         user.EntryYear = record.EntryYear;
                         user.PhoneNumber = record.PhoneNumber;
                         

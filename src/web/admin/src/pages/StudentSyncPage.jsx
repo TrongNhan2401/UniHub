@@ -4,9 +4,16 @@ import AdminShell from "@/components/AdminShell";
 import { syncService } from "@/services/adminService";
 
 const statusMap = {
+  0: { label: "Đang chờ", icon: Clock, color: "text-amber-600 bg-amber-50 border-amber-100" },
   "Pending": { label: "Đang chờ", icon: Clock, color: "text-amber-600 bg-amber-50 border-amber-100" },
+
+  1: { label: "Đã lọc", icon: RefreshCw, color: "text-blue-600 bg-blue-50 border-blue-100 animate-spin-slow" },
   "Filtered": { label: "Đang lọc", icon: RefreshCw, color: "text-blue-600 bg-blue-50 border-blue-100 animate-spin-slow" },
+
+  2: { label: "Đã đồng bộ", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
   "Synchronized": { label: "Đã đồng bộ", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+
+  3: { label: "Thất bại", icon: XCircle, color: "text-rose-600 bg-rose-50 border-rose-100" },
   "Failed": { label: "Thất bại", icon: XCircle, color: "text-rose-600 bg-rose-50 border-rose-100" },
 };
 
@@ -96,14 +103,14 @@ export default function StudentSyncPage() {
             <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
               <h3 className="font-bold text-slate-800">Lịch sử đồng bộ</h3>
             </div>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50/80 text-[10px] font-black uppercase tracking-widest text-slate-400">
                   <tr>
                     <th className="px-6 py-4">Trạng thái</th>
                     <th className="px-6 py-4">Tổng số hàng</th>
-                    <th className="px-6 py-4 text-emerald-600">Thành công</th>
+                    <th className="px-6 py-4 text-emerald-600">Chuẩn</th>
                     <th className="px-6 py-4 text-rose-600">Lỗi</th>
                     <th className="px-6 py-4">Ngày tạo</th>
                     <th className="px-6 py-4">Thao tác</th>
@@ -135,13 +142,13 @@ export default function StudentSyncPage() {
                               {status.label}
                             </span>
                             {task.errorMessage && (
-                                <p className="mt-1 text-[10px] text-rose-500 font-medium max-w-[150px] truncate" title={task.errorMessage}>
-                                    {task.errorMessage}
-                                </p>
+                              <p className="mt-1 text-[10px] text-rose-500 font-medium max-w-[150px] truncate" title={task.errorMessage}>
+                                {task.errorMessage}
+                              </p>
                             )}
                           </td>
                           <td className="px-6 py-4 font-bold text-slate-700">
-                             {task.totalRows || 0}
+                            {task.totalRows || 0}
                           </td>
                           <td className="px-6 py-4 text-emerald-600 font-black">
                             {task.successCount || 0}
@@ -154,29 +161,29 @@ export default function StudentSyncPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                                {task.successUrl && (
-                                    <a 
-                                      href={task.successUrl} 
-                                      target="_blank" 
-                                      rel="noreferrer"
-                                      className="text-xs font-bold text-emerald-600 hover:underline"
-                                    >
-                                        Tải Success CSV
-                                    </a>
-                                )}
-                                {task.errorUrl && (
-                                    <a 
-                                      href={task.errorUrl} 
-                                      target="_blank" 
-                                      rel="noreferrer"
-                                      className="text-xs font-bold text-rose-600 hover:underline"
-                                    >
-                                        Tải Error CSV
-                                    </a>
-                                )}
-                                {!task.successUrl && !task.errorUrl && (
-                                    <span className="text-xs text-slate-300 italic">No reports</span>
-                                )}
+                              {task.successUrl && (
+                                <a
+                                  href={task.successUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-xs font-bold text-emerald-600 hover:underline"
+                                >
+                                  Tải Success CSV
+                                </a>
+                              )}
+                              {task.errorUrl && (
+                                <a
+                                  href={task.errorUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-xs font-bold text-rose-600 hover:underline"
+                                >
+                                  Tải Error CSV
+                                </a>
+                              )}
+                              {!task.successUrl && !task.errorUrl && (
+                                <span className="text-xs text-slate-300 italic">No reports</span>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -193,10 +200,10 @@ export default function StudentSyncPage() {
           <div className="rounded-3xl border border-blue-100 bg-blue-50/50 p-6 shadow-sm">
             <h3 className="mb-2 font-bold text-blue-900">Tải lên dữ liệu mới</h3>
             <p className="mb-6 text-sm text-blue-700/80 leading-relaxed">
-              Hệ thống sẽ tự động xử lý file CSV và cập nhật thông tin sinh viên vào cơ sở dữ liệu. 
+              Hệ thống sẽ tự động xử lý file CSV và cập nhật thông tin sinh viên vào cơ sở dữ liệu.
               <strong> Lưu ý:</strong> File phải đúng định dạng CSV chuẩn.
             </p>
-            
+
             <label className={`group flex h-48 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-200 bg-white transition-all hover:border-blue-400 hover:bg-blue-50 ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
               <div className="rounded-full bg-blue-100 p-4 text-blue-600 transition-transform group-hover:scale-110">
                 {uploading ? <RefreshCw className="h-8 w-8 animate-spin" /> : <Upload className="h-8 w-8" />}
@@ -205,10 +212,10 @@ export default function StudentSyncPage() {
                 {uploading ? "Đang tải lên..." : "Nhấp để chọn file CSV"}
               </p>
               <p className="mt-1 text-[11px] font-medium text-slate-400">Dung lượng tối đa: 10MB</p>
-              <input 
-                type="file" 
-                accept=".csv" 
-                className="hidden" 
+              <input
+                type="file"
+                accept=".csv"
+                className="hidden"
                 onChange={handleFileUpload}
                 disabled={uploading}
               />

@@ -1,4 +1,5 @@
 using Application.Abstractions.Repositories;
+using Domain;
 using Domain.Entities;
 using Infrastructure.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
@@ -52,7 +53,7 @@ namespace Infrastructure.Persistence.Repositories
         public async Task<Registration?> GetByUserAndWorkshopAsync(Guid userId, Guid workshopId)
         {
             return await _context.Registrations
-                .FirstOrDefaultAsync(r => r.UserId == userId && r.WorkshopId == workshopId && r.Status != Domain.RegistrationStatus.Cancelled);
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.WorkshopId == workshopId && r.Status != RegistrationStatus.Cancelled);
         }
 
         /// <summary>
@@ -107,7 +108,7 @@ namespace Infrastructure.Persistence.Repositories
             return await _context.Registrations
                 .AsNoTracking()
                 .Include(r => r.User)
-                .Where(r => r.WorkshopId == workshopId && r.Status == Domain.RegistrationStatus.Confirmed)
+                .Where(r => r.WorkshopId == workshopId && r.Status == RegistrationStatus.Confirmed)
                 .OrderBy(r => r.CreatedAt)
                 .ToListAsync();
         }

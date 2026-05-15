@@ -30,9 +30,15 @@ namespace Infrastructure.Persistence.Repositories
             int pageSize, 
             System.DateTime? date = null, 
             string? status = null, 
-            string? sortByTime = null)
+            string? sortByTime = null,
+            bool includeDrafts = true)
         {
             var query = _context.Workshops.AsNoTracking().AsQueryable();
+
+            if (!includeDrafts)
+            {
+                query = query.Where(w => w.Status != WorkshopStatus.Draft);
+            }
 
             if (date.HasValue)
             {
@@ -78,15 +84,22 @@ namespace Infrastructure.Persistence.Repositories
             return (items, totalCount);
         }
 
-        public async Task<Workshop?> GetByIdAsync(Guid id)
+        public async Task<Workshop?> GetByIdAsync(Guid id, bool includeDrafts = true)
         {
-            return await _context.Workshops
+            var query = _context.Workshops
                 .AsNoTracking()
                 .Include(w => w.Registrations)
                     .ThenInclude(r => r.User)
                 .Include(w => w.Attendances)
                     .ThenInclude(a => a.User)
-                .FirstOrDefaultAsync(w => w.Id == id);
+                .AsQueryable();
+
+            if (!includeDrafts)
+            {
+                query = query.Where(w => w.Status != WorkshopStatus.Draft);
+            }
+
+            return await query.FirstOrDefaultAsync(w => w.Id == id);
         }
         public async Task<Workshop?> GetByIdWithTrackingAsync(Guid id)
         {

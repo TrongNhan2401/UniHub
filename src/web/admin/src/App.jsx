@@ -6,13 +6,13 @@ import CalendarPage from "@/pages/CalendarPage";
 import { useAuth } from "@/contexts/AuthContext";
 import AdminSignInPage from "./pages/AdminSignInPage";
 import WorkshopDetailPage from "./pages/WorkshopDetailPage";
-import CheckinStaffPage from "./pages/CheckinStaffPage";
 import StudentSyncPage from "./pages/StudentSyncPage";
+import StaffManagementPage from "./pages/StaffManagementPage";
 
 function ProtectedRoute({ children }) {
   const { token, loading } = useAuth();
   if (loading) return <div>Loading...</div>;
-  return token ? children : <Navigate to="/login" replace />;
+  return token ? children : <Navigate to="/sign-in" replace />;
 }
 
 export default function App() {
@@ -45,18 +45,18 @@ export default function App() {
       <Route path="/workshop/:id" element={<WorkshopDetailPage />} />
       <Route path="/sign-in" element={<AdminSignInPage />} />
       <Route
-        path="/checkin-staff"
-        element={
-          <ProtectedRoute>
-            <CheckinStaffPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/student-sync"
         element={
           <ProtectedRoute>
             <StudentSyncPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff-management"
+        element={
+          <ProtectedRoute>
+            <StaffManagementPage />
           </ProtectedRoute>
         }
       />

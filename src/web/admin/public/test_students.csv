@@ -1,5 +1,0 @@
-StudentId,FullName,Email,PhoneNumber,Faculty,DateOfBirth,EntryYear
-22110111,Bui Quang F,bqf@student.unihub.edu.vn,0999888777,FCS,01/01/2004,2022
-22110222,Dang Thu G,dtg@student.unihub.edu.vn,0333222111,FIT,25/12/2004,2022
-,,,Missing Mandatory Info,,01/01/2000,2024
-21110001,Duplicate StudentId,dup@student.unihub.edu.vn,0000000000,FIT,01/01/2001,2021

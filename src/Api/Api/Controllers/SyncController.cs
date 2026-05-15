@@ -21,6 +21,7 @@ namespace Api.Controllers
         {
             _syncTaskService = syncTaskService;
         }
+        [Authorize(Roles = "ORGANIZER")]
 
         [HttpPost("upload-csv")]
         public async Task<IActionResult> UploadCsv(IFormFile file)
@@ -40,6 +41,7 @@ namespace Api.Controllers
 
             return Accepted(new { taskId = result.Value.Id, message = "File da duoc nhan va dang cho xu ly." });
         }
+        [Authorize(Roles = "ORGANIZER")]
 
         [HttpGet("status/{id}")]
         public async Task<IActionResult> GetStatus(Guid id)
@@ -57,6 +59,7 @@ namespace Api.Controllers
 
             return Ok(result.Value);
         }
+        [Authorize(Roles = "ORGANIZER")]
 
         [HttpGet("tasks")]
         public async Task<IActionResult> GetTasks()

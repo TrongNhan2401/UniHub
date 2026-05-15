@@ -24,7 +24,7 @@ namespace Api.Controllers
         /// <summary>
         /// Đăng ký tài khoản staff check-in mới.
         /// </summary>
-        [AllowAnonymous]
+        [Authorize(Roles = "ORGANIZER")]
         [HttpPost("signup-staff")]
         public async Task<IActionResult> RegisterCheckinStaff([FromBody] CreateCheckinStaffRequestDto request)
         {
@@ -41,9 +41,11 @@ namespace Api.Controllers
         }
 
         /// <summary>
-        /// Lấy danh sách tất cả staff check-in.
+        /// Lấy danh sách tất cả staff check-in (phân trang).
         /// </summary>
         [HttpGet("staff")]
+        [Authorize(Roles = "ORGANIZER")]
+
         public async Task<IActionResult> GetAllStaff([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             var result = await _checkInService.GetAllCheckinStaffAsync(pageNumber, pageSize);

@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
-import { signinApi, signupApi } from "../apis/authApi";
+import { signinApi, signupApi, verifyOtpApi } from "../apis/authApi";
 import { getUserProfileApi } from "../apis/userApi";
 
 const AuthContext = createContext(null);
@@ -48,8 +48,40 @@ export function AuthProvider({ children }) {
         setLoading(true);
         try {
             const response = await signinApi(email, password);
-            // Assuming signinApi returns the token directly or in a specific field
-            // Adjust based on your API response structure
+            if (response.requiresTwoFactor) {
+                return { success: true, requiresTwoFactor: true };
+            }
+
+            const jwt = typeof response === 'string' ? response : response.token || response.accessToken;
+
+            if (!jwt || typeof jwt !== "string") {
+                throw new Error("Invalid token received from server");
+            }
+
+            localStorage.setItem("token", jwt);
+            setToken(jwt);
+
+            const profile = await getUserProfileApi();
+            setUser(profile);
+
+            return { success: true, requiresTwoFactor: false };
+
+        } catch (err) {
+            console.error("Login logic failed:", err);
+            const errorMessage = err.response?.data?.Detail || err.message || "Login failed";
+            return { success: false, error: errorMessage };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /* ===========================
+       VERIFY OTP
+       =========================== */
+    const verifyOtp = async (email, otp) => {
+        setLoading(true);
+        try {
+            const response = await verifyOtpApi(email, otp);
             const jwt = typeof response === 'string' ? response : response.token || response.accessToken;
 
             if (!jwt || typeof jwt !== "string") {
@@ -64,8 +96,8 @@ export function AuthProvider({ children }) {
 
             return { success: true };
         } catch (err) {
-            console.error("Login logic failed:", err);
-            const errorMessage = err.response?.data?.Detail || err.message || "Login failed";
+            console.error("OTP verification failed:", err);
+            const errorMessage = err.response?.data?.Detail || err.message || "Xác thực OTP thất bại";
             return { success: false, error: errorMessage };
         } finally {
             setLoading(false);
@@ -120,6 +152,7 @@ export function AuthProvider({ children }) {
                 token,
                 loading,
                 signin,
+                verifyOtp,
                 signup,
                 logout
             }}

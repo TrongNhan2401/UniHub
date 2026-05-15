@@ -14,6 +14,7 @@ namespace Domain
         Cancelled = 2,
     }
 
+
     public enum RegistrationStatus
     {
         Pending = 0,

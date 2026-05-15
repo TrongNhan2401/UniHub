@@ -43,7 +43,7 @@ namespace Infrastructure.BackgroundJobs
                     _logger.LogError(ex, "Error occurred while processing sync tasks.");
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
         }
     }

@@ -7,8 +7,8 @@ const sideItems = [
   { label: "Dashboard", icon: Grid2x2, to: "/" },
   { label: "Danh sách workshops", icon: Compass, to: "/workshops" },
   { label: "Lịch trình", icon: CalendarDays, to: "/calendar" },
-  { label: "Staff check-in", icon: QrCode, to: "/checkin-staff" },
   { label: "Đồng bộ sinh viên", icon: RefreshCw, to: "/student-sync" },
+  { label: "Quản lý Staff", icon: User, to: "/staff-management" },
 ];
 
 export default function AdminShell({ children, activeTop = "Quản lý Workshop" }) {
@@ -18,7 +18,7 @@ export default function AdminShell({ children, activeTop = "Quản lý Workshop"
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/sign-in");
   };
 
   return (

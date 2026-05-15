@@ -45,13 +45,25 @@ namespace Application.Features.Auth
         string Role);
 
     public sealed record SignInResponse(
-        string AccessToken,
-        string TokenType,
+        string? AccessToken,
+        string? TokenType,
         Guid UserId,
         string Email,
         string FullName,
         string StudentId,
-        string Role);
+        string? Role,
+        bool RequiresTwoFactor = false);
+
+    public sealed class VerifyOtpRequest
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(6, MinimumLength = 6)]
+        public string Otp { get; set; } = string.Empty;
+    }
 
     public sealed record MeResponse(
         Guid Id,

@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlarmClock, CalendarDays, ClipboardList, GraduationCap, MoreVertical, Search, Users } from "lucide-react";
+import { AlarmClock, CalendarDays, ClipboardList, GraduationCap, Search, Users } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
-import { workshopService } from "@/services/adminService";
+import { useDashboard } from "@/hooks/useDashboard";
 
 function toDateTimeLabel(value) {
   if (!value) return "-";
@@ -44,13 +44,6 @@ function getInitialsFromEmail(email) {
   return local.slice(0, 2).toUpperCase() || "NA";
 }
 
-function normalizeStatus(raw) {
-  const value = String(raw || "")
-    .trim()
-    .toUpperCase();
-  if (!value) return "PENDING";
-  return value;
-}
 
 function buildTrendData(registrations) {
   const labels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
@@ -136,13 +129,13 @@ function TrendChart({ data }) {
         <circle key={i} cx={p.x} cy={p.y} r="4" fill="#3b82f6" />
       ))}
       {pts.map((p, i) => (
-        <text 
-          key={`val-${i}`} 
-          x={p.x} 
-          y={p.y - 10} 
-          textAnchor="middle" 
-          fontSize="10" 
-          fontWeight="bold" 
+        <text
+          key={`val-${i}`}
+          x={p.x}
+          y={p.y - 10}
+          textAnchor="middle"
+          fontSize="10"
+          fontWeight="bold"
           fill="#1e40af"
         >
           {safeData[i].value}
@@ -158,83 +151,11 @@ function TrendChart({ data }) {
 }
 
 
+
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [workshops, setWorkshops] = useState([]);
-  const [workshopDetails, setWorkshopDetails] = useState([]);
   const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    let ignore = false;
-
-    const loadDashboard = async () => {
-      setLoading(true);
-      setError("");
-
-      try {
-        const pageSize = 100;
-        const firstRes = await workshopService.getAll({ pageNumber: 1, pageSize });
-        const firstData = firstRes?.data || {};
-        let allWorkshops = firstData.items || [];
-        const totalPages = Number(firstData.totalPages || 1);
-
-        for (let page = 2; page <= totalPages; page += 1) {
-          const res = await workshopService.getAll({ pageNumber: page, pageSize });
-          allWorkshops = allWorkshops.concat(res?.data?.items || []);
-        }
-
-        const detailResponses = await Promise.all(
-          allWorkshops.map((w) => workshopService.getById(w.id).catch(() => null)),
-        );
-
-        const details = detailResponses.map((res) => res?.data).filter(Boolean);
-
-        if (!ignore) {
-          setWorkshops(allWorkshops);
-          setWorkshopDetails(details);
-        }
-      } catch (err) {
-        if (!ignore) {
-          setError(err?.response?.data?.detail || err?.response?.data?.message || "Không tải được số liệu dashboard.");
-        }
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    };
-
-    loadDashboard();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  const metrics = useMemo(() => {
-    const totalWorkshops = workshops.length;
-    const totalRegistrations = workshops.reduce((sum, w) => sum + (Number(w.registeredCount) || 0), 0);
-    const publishedWorkshops = workshops.filter((w) => w.status === "Published").length;
-    return { totalWorkshops, totalRegistrations, publishedWorkshops };
-  }, [workshops]);
-
-  const allRegistrations = useMemo(() => {
-    const registrations = [];
-    workshopDetails.forEach((w) => {
-      const workshopTitle = w?.title || "Workshop";
-      (w?.registrations || []).forEach((r) => {
-        registrations.push({
-          id: r.id,
-          userId: r.userId,
-          userEmail: r.userEmail,
-          status: normalizeStatus(r.status),
-          createdAt: r.createdAt,
-          workshopTitle,
-        });
-      });
-    });
-    return registrations;
-  }, [workshopDetails]);
+  const { loading, error, workshops, metrics, allRegistrations } = useDashboard();
 
   const trendData = useMemo(() => buildTrendData(allRegistrations), [allRegistrations]);
 
@@ -371,15 +292,6 @@ export default function DashboardPage() {
       <div className="mt-5 rounded-xl border bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-2xl font-semibold">Đăng ký gần đây</p>
-          <div className="flex w-72 items-center rounded-lg border px-3 py-2">
-            <Search className="mr-2 h-4 w-4 text-slate-400" />
-            <input
-              className="w-full text-sm outline-none"
-              placeholder="Lọc người dùng, email, workshop..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
         </div>
         <div className="overflow-x-auto rounded-lg border">
           <table className="min-w-full text-left text-sm">

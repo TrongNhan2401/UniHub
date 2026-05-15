@@ -252,9 +252,9 @@ namespace Application.Features.Implementations
             }
         }
 
-        public async Task<Result<PagedResult<WorkshopListDto>>> GetWorkshopsPagedAsync(int pageNumber, int pageSize, DateTime? date = null, string? status = null, string? sortByTime = null)
+        public async Task<Result<PagedResult<WorkshopListDto>>> GetWorkshopsPagedAsync(int pageNumber, int pageSize, DateTime? date = null, string? status = null, string? sortByTime = null, bool includeDrafts = false)
         {
-            var (items, totalCount) = await _unitOfWork.Workshops.GetPagedAsync(pageNumber, pageSize, date, status, sortByTime);
+            var (items, totalCount) = await _unitOfWork.Workshops.GetPagedAsync(pageNumber, pageSize, date, status, sortByTime, includeDrafts);
             
             var dtos = items.Select(w => w.ToListDto()).ToList();
             var pagedResult = new PagedResult<WorkshopListDto>(dtos, totalCount, pageNumber, pageSize);
@@ -262,9 +262,9 @@ namespace Application.Features.Implementations
             return Result.Success(pagedResult);
         }
 
-        public async Task<Result<WorkshopDetailDto>> GetWorkshopDetailAsync(Guid id)
+        public async Task<Result<WorkshopDetailDto>> GetWorkshopDetailAsync(Guid id, bool includeDrafts = false)
         {
-            var workshop = await _unitOfWork.Workshops.GetByIdAsync(id);
+            var workshop = await _unitOfWork.Workshops.GetByIdAsync(id, includeDrafts);
             
             if (workshop == null)
             {

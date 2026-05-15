@@ -6,12 +6,29 @@ import { useNavigate } from "react-router-dom";
 export default function AdminSignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signin, loading: isLoading } = useAuth();
+  const [otp, setOtp] = useState("");
+  const [showOtp, setShowOtp] = useState(false);
+
+  const { signin, verifyOtp, loading: isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSignIn = async (e) => {
     e.preventDefault();
     const result = await signin(email, password);
+    if (result.success) {
+      if (result.requiresTwoFactor) {
+        setShowOtp(true);
+      } else {
+        navigate("/");
+      }
+    } else {
+      alert(result.error);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const result = await verifyOtp(email, otp);
     if (result.success) {
       navigate("/");
     } else {
@@ -28,52 +45,89 @@ export default function AdminSignInPage() {
             <ShieldCheck className="h-9 w-9" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900">UniHub Admin</h1>
-          <p className="mt-2 text-slate-500">Sign in to manage workshops and events</p>
+          <p className="mt-2 text-slate-500">
+            {showOtp ? "Enter the 6-digit code sent to your email" : "Sign in to manage workshops and events"}
+          </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSignIn} className="space-y-5">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
-              <input
-                type="email"
-                required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                placeholder="admin@unihub.edu.vn"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+        {!showOtp ? (
+          <form onSubmit={handleSignIn} className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <input
+                  type="email"
+                  required
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  placeholder="admin@unihub.edu.vn"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-700">Password</label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-slate-700">Password</label>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <input
+                  type="password"
+                  required
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
-              <input
-                type="password"
-                required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 font-bold text-white transition-all hover:bg-blue-700 active:scale-[0.98] disabled:opacity-70"
-          >
-            {isLoading ? "Authenticating..." : "Sign In to Portal"}
-            {!isLoading && <ArrowRight className="h-5 w-5" />}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 font-bold text-white transition-all hover:bg-blue-700 active:scale-[0.98] disabled:opacity-70"
+            >
+              {isLoading ? "Authenticating..." : "Sign In to Portal"}
+              {!isLoading && <ArrowRight className="h-5 w-5" />}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Authentication Code</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  maxLength={6}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 text-center text-2xl tracking-widest outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || otp.length < 6}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 font-bold text-white transition-all hover:bg-blue-700 active:scale-[0.98] disabled:opacity-70"
+            >
+              {isLoading ? "Verifying..." : "Verify Code"}
+              {!isLoading && <ShieldCheck className="h-5 w-5" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowOtp(false)}
+              className="mt-2 w-full text-center text-sm font-medium text-slate-500 hover:text-slate-800"
+            >
+              Back to Sign In
+            </button>
+          </form>
+        )}
 
         {/* Footer info */}
         <p className="text-center text-xs text-slate-400">

@@ -19,6 +19,7 @@ namespace Api.Controllers
         {
             _workshopService = workshopService;
         }
+        [Authorize(Roles = "ORGANIZER")]
 
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] CreateWorkshopDto dto)
@@ -37,6 +38,7 @@ namespace Api.Controllers
             var workshop = result.Value;
             return CreatedAtAction(nameof(GetById), new { id = workshop.Id }, workshop);
         }
+        [Authorize(Roles = "ORGANIZER")]
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] UpdateWorkshopDto dto)
@@ -54,6 +56,7 @@ namespace Api.Controllers
 
             return Ok(result.Value);
         }
+        [Authorize(Roles = "ORGANIZER")]
 
         [HttpPost("{id}/pdf")]
         public async Task<IActionResult> UploadPdf(Guid id, IFormFile file)
@@ -71,6 +74,7 @@ namespace Api.Controllers
 
             return Ok(new { Url = result.Value });
         }
+        [Authorize(Roles = "ORGANIZER")]
 
         [HttpPost("{id}/image")]
         public async Task<IActionResult> UploadImage(Guid id, IFormFile file)
@@ -88,6 +92,7 @@ namespace Api.Controllers
 
             return Ok(new { Url = result.Value });
         }
+        [Authorize(Roles = "ORGANIZER")]
 
         [HttpPatch("{id}/publish")]
         public async Task<IActionResult> Publish(Guid id)
@@ -105,6 +110,7 @@ namespace Api.Controllers
 
             return Ok(result.Value);
         }
+        [Authorize(Roles = "ORGANIZER")]
 
         [HttpPatch("{id}/cancel")]
         public async Task<IActionResult> Cancel(Guid id)
@@ -131,7 +137,8 @@ namespace Api.Controllers
             [FromQuery] string? status = null,
             [FromQuery] string? sortByTime = null)
         {
-            var result = await _workshopService.GetWorkshopsPagedAsync(pageNumber, pageSize, date, status, sortByTime);
+            var isOrganizer = User.IsInRole("ORGANIZER") || User.IsInRole("ADMIN");
+            var result = await _workshopService.GetWorkshopsPagedAsync(pageNumber, pageSize, date, status, sortByTime, isOrganizer);
 
             if (result.IsFailure)
             {
@@ -143,7 +150,8 @@ namespace Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var result = await _workshopService.GetWorkshopDetailAsync(id);
+            var isOrganizer = User.IsInRole("ORGANIZER") || User.IsInRole("ADMIN");
+            var result = await _workshopService.GetWorkshopDetailAsync(id, isOrganizer);
 
             if (result.IsFailure)
             {

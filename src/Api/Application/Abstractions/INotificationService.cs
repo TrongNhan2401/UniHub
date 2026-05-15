@@ -42,5 +42,13 @@ namespace Application.Abstractions
             string workshopRoom,
             DateTime workshopStartTime,
             CancellationToken ct = default);
+        /// <summary>
+        /// Gửi mã OTP xác thực 2FA.
+        /// </summary>
+        Task SendOtpAsync(
+            string userEmail,
+            string userName,
+            string otpCode,
+            CancellationToken ct = default);
     }
 }

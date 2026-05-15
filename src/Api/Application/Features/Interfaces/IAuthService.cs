@@ -1,4 +1,4 @@
-﻿using Application.Features.Auth;
+using Application.Features.Auth;
 using Domain.Shared;
 
 namespace Application.Features.Interfaces
@@ -7,6 +7,7 @@ namespace Application.Features.Interfaces
     {
         Task<Result<SignUpResponse>> SignUpAsync(SignUpRequest request);
         Task<Result<SignInResponse>> SignInAsync(SignInRequest request);
+        Task<Result<SignInResponse>> VerifyOtpAsync(VerifyOtpRequest request);
         Task<Result<MeResponse>> GetMeAsync(Guid userId);
     }
 }

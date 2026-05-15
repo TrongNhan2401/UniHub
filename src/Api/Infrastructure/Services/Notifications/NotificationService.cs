@@ -63,6 +63,19 @@ namespace Infrastructure.Services.Notifications
         }
 
         // ──────────────────────────────────────────────────────────────
+        // 4. Gửi OTP (2FA)
+        // ──────────────────────────────────────────────────────────────
+        public Task SendOtpAsync(
+            string userEmail, string userName, string otpCode,
+            CancellationToken ct = default)
+        {
+            var subject = $"🔒 Mã xác thực đăng nhập (OTP)";
+            var body = BuildOtpHtml(userName, otpCode);
+            return FanOutAsync(userEmail, subject, body, ct);
+        }
+
+        // ──────────────────────────────────────────────────────────────
+
         // Fan-out: gửi qua tất cả kênh song song, lỗi 1 kênh không ảnh hưởng kênh khác
         // ──────────────────────────────────────────────────────────────
         private async Task FanOutAsync(string recipient, string subject, string htmlBody, CancellationToken ct)
@@ -212,6 +225,43 @@ namespace Infrastructure.Services.Notifications
         </td></tr>
         <tr><td style='background:#f9fafb; padding:16px 32px; border-top:1px solid #e5e7eb;'>
           <p style='color:#9ca3af; font-size:12px; margin:0; text-align:center;'>Email này được gửi tự động. Vui lòng không trả lời.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>";
+        }
+
+        private static string BuildOtpHtml(string userName, string otpCode)
+        {
+            return $@"
+<!DOCTYPE html>
+<html lang='vi'>
+<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'></head>
+<body style='font-family: Arial, sans-serif; background:#f4f4f4; margin:0; padding:0;'>
+  <table width='100%' cellpadding='0' cellspacing='0' style='background:#f4f4f4; padding:30px 0;'>
+    <tr><td align='center'>
+      <table width='600' cellpadding='0' cellspacing='0' style='background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);'>
+        <tr><td style='background:#2563eb; padding:28px 32px;'>
+          <h1 style='color:#fff; margin:0; font-size:22px;'>UniHub Admin Portal</h1>
+          <p style='color:#bfdbfe; margin:4px 0 0; font-size:14px;'>Xác thực đăng nhập</p>
+        </td></tr>
+        <tr><td style='padding:32px;'>
+          <p style='color:#374151; font-size:16px; margin:0 0 16px;'>Xin chào <strong>{userName}</strong>,</p>
+          <p style='color:#374151; font-size:15px; margin:0 0 24px;'>
+            Bạn đang yêu cầu đăng nhập vào cổng quản trị UniHub. Vui lòng sử dụng mã xác thực dưới đây để tiếp tục:
+          </p>
+          <div style='background:#f3f4f6; border-radius:8px; padding:24px; text-align:center; margin-bottom:24px;'>
+            <h2 style='color:#111827; font-size:32px; font-weight:700; letter-spacing:8px; margin:0;'>{otpCode}</h2>
+          </div>
+          <p style='color:#ef4444; font-size:14px; margin:0 0 24px;'>
+            Mã này sẽ hết hạn sau 5 phút. Vui lòng không chia sẻ mã này với bất kỳ ai.
+          </p>
+          <p style='color:#6b7280; font-size:13px; margin:0;'>Trân trọng,<br><strong>Hệ thống bảo mật UniHub</strong></p>
+        </td></tr>
+        <tr><td style='background:#f9fafb; padding:16px 32px; border-top:1px solid #e5e7eb;'>
+          <p style='color:#9ca3af; font-size:12px; margin:0; text-align:center;'>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email hoặc liên hệ quản trị viên.</p>
         </td></tr>
       </table>
     </td></tr>

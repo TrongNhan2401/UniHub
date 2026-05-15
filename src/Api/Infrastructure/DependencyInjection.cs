@@ -114,7 +114,8 @@ namespace Infrastructure
                 options.User.RequireUniqueEmail = true;
             })
             .AddRoles<IdentityRole<Guid>>()
-            .AddEntityFrameworkStores<AppDbContext>();
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
 
             services.AddScoped<Application.Abstractions.Repositories.IWorkshopRepo, Infrastructure.Persistence.Repositories.WorkshopRepo>();
             services.AddScoped<Application.Abstractions.Repositories.ISyncTaskRepo, Infrastructure.Persistence.Repositories.SyncTaskRepo>();

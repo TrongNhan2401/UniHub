@@ -13,6 +13,9 @@ namespace Domain.Entities
         public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; private set; }
 
+        public string? TwoFactorCode { get; set; }
+        public DateTime? TwoFactorExpiry { get; set; }
+
         // Navigation
         public ICollection<Registration> Registrations { get; private set; } = new List<Registration>();
         public ICollection<Attendance> Attendances { get; private set; } = new List<Attendance>();

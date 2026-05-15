@@ -85,6 +85,35 @@ namespace Api.Controllers
             {
                 accessToken = data.AccessToken,
                 tokenType = data.TokenType,
+                requiresTwoFactor = data.RequiresTwoFactor,
+                user = new
+                {
+                    id = data.UserId,
+                    email = data.Email,
+                    fullName = data.FullName,
+                    studentId = data.StudentId,
+                    role = data.Role
+                }
+            });
+        }
+
+        [HttpPost("verify-otp")]
+        [AllowAnonymous]
+        [EnableRateLimiting("AuthByIp")]
+        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
+        {
+            var result = await _authService.VerifyOtpAsync(request);
+
+            if (result.IsFailure)
+            {
+                return ProblemResponse(StatusCodes.Status401Unauthorized, "Xac thuc OTP that bai.", result.Error.Message);
+            }
+
+            var data = result.Value;
+            return Ok(new
+            {
+                accessToken = data.AccessToken,
+                tokenType = data.TokenType,
                 user = new
                 {
                     id = data.UserId,
