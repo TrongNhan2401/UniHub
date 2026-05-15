@@ -26,7 +26,7 @@ export default function ResultScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
           <ChevronLeft size={20} color="#334155" />
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Ket qua quet</Text>
+        <Text style={s.headerTitle}>Kết quả quét</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -41,26 +41,26 @@ export default function ResultScreen() {
           )}
           <Text style={[s.heroTitle, { color: colors.fg }]}>
             {status === "SUCCESS"
-              ? "Check-in thanh cong"
+              ? "Check-in thành công"
               : status === "PENDING_SYNC"
-                ? "Da luu offline"
-                : "Check-in that bai"}
+                ? "Đã lưu ngoại tuyến"
+                : "Check-in thất bại"}
           </Text>
-          <Text style={s.heroMsg}>{result?.message || "Khong co ket qua"}</Text>
+          <Text style={s.heroMsg}>{result?.message || "Không có kết quả"}</Text>
         </View>
 
         <View style={s.card}>
           <Text style={s.label}>Workshop</Text>
           <Text style={s.value}>{workshop?.title || "-"}</Text>
-          <Text style={s.sub}>{workshop?.room ? `Phong ${workshop.room}` : ""}</Text>
+          <Text style={s.sub}>{workshop?.room ? `Phòng ${workshop.room}` : ""}</Text>
 
           <View style={s.divider} />
-          <Text style={s.label}>Student</Text>
+          <Text style={s.label}>Sinh viên</Text>
           <Text style={s.value}>{result?.payload?.student_name || "-"}</Text>
           <Text style={s.sub}>{result?.payload?.student_id || "-"}</Text>
 
           <View style={s.divider} />
-          <Text style={s.label}>Registration</Text>
+          <Text style={s.label}>Mã đăng ký</Text>
           <Text style={s.value}>
             {result?.payload?.registration_id ? `REG-${result.payload.registration_id}` : "-"}
           </Text>
@@ -74,11 +74,11 @@ export default function ResultScreen() {
         </View>
 
         <TouchableOpacity style={s.primary} onPress={() => navigation.navigate("Scan")}>
-          <Text style={s.primaryTxt}>Quet tiep</Text>
+          <Text style={s.primaryTxt}>Quét tiếp</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={s.secondary} onPress={() => navigation.navigate("Main", { screen: "Sync" })}>
-          <Text style={s.secondaryTxt}>{ok ? "Mo man hinh Sync" : "Kiem tra hang doi"}</Text>
+          <Text style={s.secondaryTxt}>{ok ? "Mở màn hình đồng bộ" : "Kiểm tra hàng đợi"}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

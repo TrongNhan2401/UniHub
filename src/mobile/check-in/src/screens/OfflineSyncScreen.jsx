@@ -17,7 +17,7 @@ export default function OfflineSyncScreen() {
       return;
     }
     setMessage(
-      `Da dong bo ${result.summary.inserted}/${result.summary.total} ban ghi. Trung lap ${result.summary.duplicates}.`,
+      `Đã đồng bộ ${result.summary.inserted}/${result.summary.total} bản ghi. Trùng lặp ${result.summary.duplicates}.`,
     );
   };
 
@@ -25,8 +25,8 @@ export default function OfflineSyncScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8fafc" }}>
       <View style={s.header}>
         <View>
-          <Text style={s.brand}>Dong bo check-in</Text>
-          <Text style={s.sub}>Batch sync tu queue offline</Text>
+          <Text style={s.brand}>Đồng bộ check-in</Text>
+          <Text style={s.sub}>Đồng bộ theo lô từ hàng đợi ngoại tuyến</Text>
         </View>
         <View style={[s.badge, { backgroundColor: isOnline ? "#dcfce7" : "#ffedd5" }]}>
           {isOnline ? <Wifi size={14} color="#15803d" /> : <WifiOff size={14} color="#c2410c" />}
@@ -38,9 +38,9 @@ export default function OfflineSyncScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 28 }}>
         <View style={s.statsRow}>
-          <StatCard title="Pending" value={String(pending.length)} Icon={CloudOff} tone="orange" />
+          <StatCard title="Chờ đồng bộ" value={String(pending.length)} Icon={CloudOff} tone="orange" />
           <StatCard
-            title="Last Inserted"
+            title="Đồng bộ gần nhất"
             value={String(lastSyncSummary?.inserted || 0)}
             Icon={CheckCircle2}
             tone="green"
@@ -49,15 +49,15 @@ export default function OfflineSyncScreen() {
 
         <TouchableOpacity onPress={onSync} style={[s.syncBtn, !isOnline && { backgroundColor: "#94a3b8" }]}>
           <RefreshCw size={18} color="#fff" />
-          <Text style={s.syncTxt}>{isOnline ? "Sync now" : "Can online de sync"}</Text>
+          <Text style={s.syncTxt}>{isOnline ? "Đồng bộ ngay" : "Cần trực tuyến để đồng bộ"}</Text>
         </TouchableOpacity>
 
         {message ? <Text style={s.msg}>{message}</Text> : null}
 
         <View style={s.card}>
-          <Text style={s.cardTitle}>Pending queue</Text>
+          <Text style={s.cardTitle}>Hàng đợi chờ đồng bộ</Text>
           {!pending.length ? (
-            <Text style={s.empty}>Khong co du lieu cho dong bo.</Text>
+            <Text style={s.empty}>Không có dữ liệu cần đồng bộ.</Text>
           ) : (
             pending.map((p) => (
               <View key={p.sync_key} style={s.row}>

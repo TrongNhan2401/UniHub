@@ -15,9 +15,9 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const TAB_ITEMS = [
-  { name: "Dashboard", label: "Dashboard", Icon: LayoutDashboard },
-  { name: "Scan", label: "Scan", Icon: ScanLine },
-  { name: "Sync", label: "Sync", Icon: RefreshCw },
+  { name: "Dashboard", label: "Tổng quan", Icon: LayoutDashboard },
+  { name: "Scan", label: "Quét QR", Icon: ScanLine },
+  { name: "Sync", label: "Đồng bộ", Icon: RefreshCw },
 ];
 
 function CustomTabBar({ state, navigation }) {

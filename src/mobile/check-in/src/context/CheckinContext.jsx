@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import NetInfo from "@react-native-community/netinfo";
 import { checkinService } from "../services/api";
 
 const CheckinContext = createContext(null);
@@ -14,7 +15,7 @@ const STORAGE_KEYS = {
 
 const FALLBACK_WORKSHOP = {
   id: "",
-  title: "Chua co workshop",
+  title: "Chưa có workshop",
   room: "-",
   start: "-",
 };
@@ -83,7 +84,7 @@ function mapApiError(error) {
 
   return {
     code,
-    message: "Khong the ket noi den server. Vui long thu lai.",
+    message: "Không thể kết nối đến máy chủ. Vui lòng thử lại.",
   };
 }
 
@@ -158,6 +159,39 @@ export function CheckinProvider({ children }) {
     AsyncStorage.setItem(STORAGE_KEYS.recentScans, JSON.stringify(recentScans));
   }, [recentScans]);
 
+  // NetInfo listener - auto detect network state changes
+  const prevOnlineRef = useRef(true);
+
+  useEffect(() => {
+    // Subscribe tới NetInfo state changes
+    const unsubscribe = NetInfo.addEventListener(({ isConnected, isInternetReachable }) => {
+      const isOnlineNow = isConnected && isInternetReachable !== false;
+      setIsOnline(isOnlineNow);
+      prevOnlineRef.current = isOnlineNow;
+    });
+
+    // Lấy trạng thái ban đầu
+    NetInfo.fetch().then(({ isConnected, isInternetReachable }) => {
+      const isOnlineNow = isConnected && isInternetReachable !== false;
+      setIsOnline(isOnlineNow);
+      prevOnlineRef.current = isOnlineNow;
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Auto-sync khi từ offline chuyển sang online
+  useEffect(() => {
+    if (isOnline && pendingCheckins.length > 0) {
+      // Delay 500ms để tránh race condition khi mạng vừa kết nối
+      const timer = setTimeout(() => {
+        syncNow();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline, pendingCheckins.length]);
+
   async function refreshWorkshops(preferredWorkshopId = "") {
     try {
       const response = await checkinService.getWorkshops({ pageNumber: 1, pageSize: 100 });
@@ -188,163 +222,9 @@ export function CheckinProvider({ children }) {
     setRecentScans((prev) => [record, ...prev].slice(0, 20));
   };
 
-  const preloadForWorkshop = async (workshopId) => {
-    if (!workshopId) {
-      return { success: false, total: 0, message: "Chua chon workshop." };
-    }
-
-    try {
-      const response = await checkinService.preloadRegistrations(workshopId);
-      const rows = toArray(response.data)
-        .map((item) => mapRegistration(item, workshopId))
-        .filter((r) => r.registration_id && r.qr_code);
-
-      setSelectedWorkshopId(String(workshopId));
-      setCachedRegistrations(rows);
-
-      return { success: true, total: rows.length };
-    } catch (error) {
-      const mappedError = mapApiError(error);
-      return { success: false, total: 0, message: mappedError.message };
-    }
-  };
-
-  const processQr = async (qrRaw) => {
-    const now = new Date().toISOString();
-    const qrCode = normalizeQr(qrRaw);
-
-    if (!qrCode) {
-      return { ok: false, status: "INVALID", message: "QR khong hop le." };
-    }
-
-    const found = cachedRegistrations.find(
-      (r) => normalizeQr(r.qr_code) === qrCode && String(r.workshop_id) === String(selectedWorkshop.id),
-    );
-
-    const duplicateInPending = pendingCheckins.some(
-      (p) => String(p.registration_id) === String(found?.registration_id) && p.sync_status !== "FAILED",
-    );
-    const duplicateInRecent = recentScans.some(
-      (r) => String(r.registration_id) === String(found?.registration_id) && r.result === "SUCCESS",
-    );
-
-    if (found && (duplicateInPending || duplicateInRecent)) {
-      return {
-        ok: false,
-        status: "ALREADY_CHECKED",
-        message: "Sinh vien nay da duoc quet truoc do.",
-        payload: found,
-      };
-    }
-
-    if (isOnline) {
-      try {
-        if (found?.registration_id) {
-          const validate = await checkinService.validateRegistration(found.registration_id, selectedWorkshop.id);
-          if (validate.data?.already_checked_in) {
-            return {
-              ok: false,
-              status: "ALREADY_CHECKED",
-              message: "Sinh vien nay da check-in truoc do.",
-              payload: {
-                registration_id: found.registration_id,
-                student_name: validate.data.student_name || found.student_name,
-                student_id: validate.data.student_id || found.student_id,
-              },
-            };
-          }
-        }
-
-        const payloadQr = found?.qr_code || qrCode;
-        const checkinResponse = await checkinService.checkin({ qr_code: payloadQr });
-        const payload = checkinResponse.data || {};
-
-        const successRecord = {
-          registration_id: String(payload.registration_id || found?.registration_id || ""),
-          student_name: found?.student_name || "Sinh vien",
-          student_id: found?.student_id || "",
-          checked_in_at: payload.checked_in_at || now,
-          workshop_id: String(payload.workshop_id || selectedWorkshop.id),
-          result: "SUCCESS",
-          mode: "ONLINE",
-        };
-
-        markRecent(successRecord);
-
-        return {
-          ok: true,
-          status: "SUCCESS",
-          message: `${successRecord.student_name} check-in thanh cong (online).`,
-          payload: successRecord,
-        };
-      } catch (error) {
-        const mappedError = mapApiError(error);
-        if (mappedError.code === "already_checked_in") {
-          return {
-            ok: false,
-            status: "ALREADY_CHECKED",
-            message: mappedError.message,
-          };
-        }
-
-        if (mappedError.code === "registration_not_found") {
-          return {
-            ok: false,
-            status: "NOT_FOUND",
-            message: mappedError.message,
-          };
-        }
-
-        return {
-          ok: false,
-          status: "FAILED",
-          message: mappedError.message,
-        };
-      }
-    }
-
-    if (!found) {
-      return {
-        ok: false,
-        status: "NOT_IN_WORKSHOP",
-        message: "QR khong thuoc workshop dang check-in hoac chua preload du lieu.",
-      };
-    }
-
-    const syncKey = buildSyncKey(deviceId, qrCode, now);
-    const pending = {
-      registration_id: found.registration_id,
-      workshop_id: selectedWorkshop.id,
-      device_id: deviceId,
-      checked_in_at: now,
-      sync_key: syncKey,
-      sync_status: "PENDING",
-      student_name: found.student_name,
-      student_id: found.student_id,
-    };
-
-    setPendingCheckins((prev) => [pending, ...prev]);
-    markRecent({
-      registration_id: found.registration_id,
-      student_name: found.student_name,
-      student_id: found.student_id,
-      checked_in_at: now,
-      workshop_id: selectedWorkshop.id,
-      result: "PENDING_SYNC",
-      mode: "OFFLINE",
-    });
-
-    return {
-      ok: true,
-      status: "PENDING_SYNC",
-      message: `${found.student_name} da duoc luu offline, cho dong bo.`,
-      payload: pending,
-    };
-  };
-
   const syncNow = async () => {
     if (!isOnline) {
-      return { ok: false, message: "Dang offline. Khong the dong bo." };
+      return { ok: false, message: "Đang ngoại tuyến. Không thể đồng bộ." };
     }
 
     const queue = pendingCheckins.filter((p) => p.sync_status === "PENDING");
@@ -385,6 +265,160 @@ export function CheckinProvider({ children }) {
       const mappedError = mapApiError(error);
       return { ok: false, message: mappedError.message };
     }
+  };
+
+  const preloadForWorkshop = async (workshopId) => {
+    if (!workshopId) {
+      return { success: false, total: 0, message: "Chưa chọn workshop." };
+    }
+
+    try {
+      const response = await checkinService.preloadRegistrations(workshopId);
+      const rows = toArray(response.data)
+        .map((item) => mapRegistration(item, workshopId))
+        .filter((r) => r.registration_id && r.qr_code);
+
+      setSelectedWorkshopId(String(workshopId));
+      setCachedRegistrations(rows);
+
+      return { success: true, total: rows.length };
+    } catch (error) {
+      const mappedError = mapApiError(error);
+      return { success: false, total: 0, message: mappedError.message };
+    }
+  };
+
+  const processQr = async (qrRaw) => {
+    const now = new Date().toISOString();
+    const qrCode = normalizeQr(qrRaw);
+
+    if (!qrCode) {
+      return { ok: false, status: "INVALID", message: "Mã QR không hợp lệ." };
+    }
+
+    const found = cachedRegistrations.find(
+      (r) => normalizeQr(r.qr_code) === qrCode && String(r.workshop_id) === String(selectedWorkshop.id),
+    );
+
+    const duplicateInPending = pendingCheckins.some(
+      (p) => String(p.registration_id) === String(found?.registration_id) && p.sync_status !== "FAILED",
+    );
+    const duplicateInRecent = recentScans.some(
+      (r) => String(r.registration_id) === String(found?.registration_id) && r.result === "SUCCESS",
+    );
+
+    if (found && (duplicateInPending || duplicateInRecent)) {
+      return {
+        ok: false,
+        status: "ALREADY_CHECKED",
+        message: "Sinh viên này đã được quét trước đó.",
+        payload: found,
+      };
+    }
+
+    if (isOnline) {
+      try {
+        if (found?.registration_id) {
+          const validate = await checkinService.validateRegistration(found.registration_id, selectedWorkshop.id);
+          if (validate.data?.already_checked_in) {
+            return {
+              ok: false,
+              status: "ALREADY_CHECKED",
+              message: "Sinh viên này đã check-in trước đó.",
+              payload: {
+                registration_id: found.registration_id,
+                student_name: validate.data.student_name || found.student_name,
+                student_id: validate.data.student_id || found.student_id,
+              },
+            };
+          }
+        }
+
+        const payloadQr = found?.qr_code || qrCode;
+        const checkinResponse = await checkinService.checkin({ qr_code: payloadQr });
+        const payload = checkinResponse.data || {};
+
+        const successRecord = {
+          registration_id: String(payload.registration_id || found?.registration_id || ""),
+          student_name: found?.student_name || "Sinh viên",
+          student_id: found?.student_id || "",
+          checked_in_at: payload.checked_in_at || now,
+          workshop_id: String(payload.workshop_id || selectedWorkshop.id),
+          result: "SUCCESS",
+          mode: "ONLINE",
+        };
+
+        markRecent(successRecord);
+
+        return {
+          ok: true,
+          status: "SUCCESS",
+          message: `${successRecord.student_name} check-in thành công (trực tuyến).`,
+          payload: successRecord,
+        };
+      } catch (error) {
+        const mappedError = mapApiError(error);
+        if (mappedError.code === "already_checked_in") {
+          return {
+            ok: false,
+            status: "ALREADY_CHECKED",
+            message: mappedError.message,
+          };
+        }
+
+        if (mappedError.code === "registration_not_found") {
+          return {
+            ok: false,
+            status: "NOT_FOUND",
+            message: mappedError.message,
+          };
+        }
+
+        return {
+          ok: false,
+          status: "FAILED",
+          message: mappedError.message,
+        };
+      }
+    }
+
+    if (!found) {
+      return {
+        ok: false,
+        status: "NOT_IN_WORKSHOP",
+        message: "Mã QR không thuộc workshop đang check-in hoặc chưa tải trước dữ liệu.",
+      };
+    }
+
+    const syncKey = buildSyncKey(deviceId, qrCode, now);
+    const pending = {
+      registration_id: found.registration_id,
+      workshop_id: selectedWorkshop.id,
+      device_id: deviceId,
+      checked_in_at: now,
+      sync_key: syncKey,
+      sync_status: "PENDING",
+      student_name: found.student_name,
+      student_id: found.student_id,
+    };
+
+    setPendingCheckins((prev) => [pending, ...prev]);
+    markRecent({
+      registration_id: found.registration_id,
+      student_name: found.student_name,
+      student_id: found.student_id,
+      checked_in_at: now,
+      workshop_id: selectedWorkshop.id,
+      result: "PENDING_SYNC",
+      mode: "OFFLINE",
+    });
+
+    return {
+      ok: true,
+      status: "PENDING_SYNC",
+      message: `${found.student_name} đã được lưu ngoại tuyến, chờ đồng bộ.`,
+      payload: pending,
+    };
   };
 
   const value = {

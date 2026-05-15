@@ -70,7 +70,7 @@ export default function ScanScreen() {
         <View style={s.modeBadge}>
           {isOnline ? <Wifi size={14} color="#16a34a" /> : <WifiOff size={14} color="#ea580c" />}
           <Text style={{ color: isOnline ? "#16a34a" : "#ea580c", fontWeight: "700", marginLeft: 6 }}>
-            {isOnline ? "ONLINE" : "OFFLINE"}
+            {isOnline ? "Trực tuyến" : "Ngoại tuyến"}
           </Text>
         </View>
 
@@ -131,7 +131,7 @@ export default function ScanScreen() {
               disabled={scanning}
             >
               <Text style={s.scanTxt}>
-                {scanning ? "Đang xử lý..." : isOnline ? "Validate & Check-in" : "Lưu offline"}
+                {scanning ? "Đang xử lý..." : isOnline ? "Xác thực và check-in" : "Lưu ngoại tuyến"}
               </Text>
             </TouchableOpacity>
           </View>
