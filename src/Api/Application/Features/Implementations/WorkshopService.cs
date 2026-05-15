@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Application.Features.Implementations
 {
@@ -18,17 +19,20 @@ namespace Application.Features.Implementations
         private readonly IUploadService _uploadService;
         private readonly IPdfService _pdfService;
         private readonly IAiService _aiService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public WorkshopService(
             IUnitOfWork unitOfWork, 
             IUploadService uploadService,
             IPdfService pdfService,
-            IAiService aiService)
+            IAiService aiService,
+            IServiceScopeFactory scopeFactory)
         {
             _unitOfWork = unitOfWork;
             _uploadService = uploadService;
             _pdfService = pdfService;
             _aiService = aiService;
+            _scopeFactory = scopeFactory;
         }
 
         public async Task<Result<WorkshopDto>> CreateWorkshopAsync(CreateWorkshopDto dto, Guid userId)
@@ -198,41 +202,30 @@ namespace Application.Features.Implementations
 
             try
             {
-                // 1. Upload to Cloudinary
-                var pdfUrl = await _uploadService.UploadPdfAsync(file);
-                workshop.SetPdfUrl(pdfUrl);
-
-                // 2. Extract Text for AI
+                // 1. Extract Text for AI directly from the stream
                 using var stream = file.OpenReadStream();
                 var extractedText = await _pdfService.ExtractTextAsync(stream);
 
-                // 3. Save initial PDF URL
-                await _unitOfWork.SaveChangesAsync();
-
-                // 4. Fire and forget AI Summary generation
-                _ = Task.Run(async () =>
+                // 2. Generate AI Summary synchronously
+                try
                 {
-                    try
-                    {
-                        var summary = await _aiService.SummarizeWorkshopAsync(extractedText);
-                        
-                        // We need a fresh unit of work/service or a way to save back
-                        // For simplicity in this demo, we'll use the current one, 
-                        // but in production, use a Scoped service provider.
-                        workshop.SetAiSummary(summary);
-                        await _unitOfWork.SaveChangesAsync();
-                    }
-                    catch (Exception)
-                    {
-                        // Log background error
-                    }
-                });
-
-                return Result.Success(pdfUrl);
+                    var summary = await _aiService.SummarizeWorkshopAsync(extractedText);
+                    workshop.SetAiSummary(summary);
+                    await _unitOfWork.SaveChangesAsync();
+                    
+                    return Result.Success("File processed and AI summary generated successfully.");
+                }
+                catch (Exception ex)
+                {
+                    // If AI fails, we still return success for the upload but note the AI failure
+                    workshop.SetAiSummary($"Lỗi khi tạo tóm tắt: {ex.Message}");
+                    await _unitOfWork.SaveChangesAsync();
+                    return Result.Success("File uploaded, but AI summary generation failed.");
+                }
             }
             catch (Exception ex)
             {
-                return Result.Failure<string>(new Error("Workshop.PdfUploadFailed", ex.Message));
+                return Result.Failure<string>(new Error("Workshop.PdfProcessFailed", ex.Message));
             }
         }
 
@@ -259,9 +252,9 @@ namespace Application.Features.Implementations
             }
         }
 
-        public async Task<Result<PagedResult<WorkshopListDto>>> GetWorkshopsPagedAsync(int pageNumber, int pageSize, DateTime? date = null)
+        public async Task<Result<PagedResult<WorkshopListDto>>> GetWorkshopsPagedAsync(int pageNumber, int pageSize, DateTime? date = null, string? status = null, string? sortByTime = null)
         {
-            var (items, totalCount) = await _unitOfWork.Workshops.GetPagedAsync(pageNumber, pageSize, date);
+            var (items, totalCount) = await _unitOfWork.Workshops.GetPagedAsync(pageNumber, pageSize, date, status, sortByTime);
             
             var dtos = items.Select(w => w.ToListDto()).ToList();
             var pagedResult = new PagedResult<WorkshopListDto>(dtos, totalCount, pageNumber, pageSize);

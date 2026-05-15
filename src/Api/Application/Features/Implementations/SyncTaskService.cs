@@ -136,6 +136,7 @@ namespace Application.Features.Implementations
                     using var successStream = new MemoryStream();
                     using var writer = new StreamWriter(successStream);
                     using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+                    csvWriter.Context.RegisterClassMap<StudentCsvMap>();
                     csvWriter.WriteRecords(successRecords);
                     await writer.FlushAsync();
                     successStream.Position = 0;
@@ -147,6 +148,7 @@ namespace Application.Features.Implementations
                     using var errorStream = new MemoryStream();
                     using var writer = new StreamWriter(errorStream);
                     using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+                    csvWriter.Context.RegisterClassMap<StudentCsvMap>();
                     csvWriter.WriteRecords(errorRecords);
                     await writer.FlushAsync();
                     errorStream.Position = 0;
@@ -268,7 +270,7 @@ namespace Application.Features.Implementations
         public StudentCsvMap()
         {
             AutoMap(CultureInfo.InvariantCulture);
-            Map(m => m.DateOfBirth).TypeConverterOption.Format("dd/MM/yyyy");
+            Map(m => m.DateOfBirth).TypeConverterOption.Format("dd/MM/yyyy", "MM/dd/yyyy HH:mm:ss", "yyyy-MM-dd", "MM/dd/yyyy");
         }
     }
 }

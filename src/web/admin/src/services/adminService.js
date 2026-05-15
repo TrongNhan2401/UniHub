@@ -30,3 +30,9 @@ export const checkinService = {
   getByWorkshop: (workshopId) => api.get(`/checkins/workshops/${workshopId}`),
   getRegistrationsByWorkshop: (workshopId) => api.get(`/checkins/workshops/${workshopId}/registrations`),
 };
+
+export const syncService = {
+  uploadCsv: (formData) => api.post("/sync/upload-csv", formData),
+  getTasks: () => api.get("/sync/tasks"),
+  getStatus: (id) => api.get(`/sync/status/${id}`),
+};

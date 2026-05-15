@@ -38,20 +38,25 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // Basic validation
+    if (!formData.date || !formData.startTime || !formData.endTime) {
+      return;
+    }
+
     try {
       const fd = new FormData();
       fd.append("title", formData.title);
       fd.append("description", formData.description);
       fd.append("speakerName", formData.speakerName);
-      fd.append("speakerBio", formData.speakerBio);
+      fd.append("speakerBio", formData.speakerBio || "");
       fd.append("room", formData.room);
       fd.append("startTime", `${formData.date}T${formData.startTime}`);
       fd.append("endTime", `${formData.date}T${formData.endTime}`);
-      fd.append("totalSlots", String(formData.totalSlots));
+      fd.append("totalSlots", String(Number(formData.totalSlots) || 0));
       fd.append("isFree", String(formData.isFree));
-      fd.append("price", String(formData.isFree ? 0 : formData.price));
-      
+      fd.append("price", String(formData.isFree ? 0 : (Number(formData.price) || 0)));
+
       if (formData.image) {
         fd.append("image", formData.image);
       }
@@ -66,9 +71,9 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300" 
-        onClick={onClose} 
+      <div
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
+        onClick={onClose}
       />
 
       {/* Modal Content */}
@@ -76,8 +81,8 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
         {/* Header */}
         <div className="relative flex items-center justify-between border-b border-slate-100 px-8 py-6 bg-slate-50/50">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Create New Workshop</h2>
-            <p className="text-sm font-medium text-slate-500">Design an engaging learning experience for students.</p>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Tạo Workshop mới</h2>
+            <p className="text-sm font-medium text-slate-500">Thiết kế một trải nghiệm học tập hấp dẫn cho sinh viên.</p>
           </div>
           <button
             onClick={onClose}
@@ -90,12 +95,17 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="overflow-y-auto max-h-[75vh]">
           <div className="p-8 space-y-8">
-            
+
             {/* Error Message */}
             {createMutation.isError && (
               <div className="flex items-center gap-3 rounded-2xl bg-rose-50 p-4 border border-rose-100 text-rose-700 animate-in slide-in-from-top-2">
                 <AlertCircle className="h-5 w-5 shrink-0" />
-                <p className="text-sm font-bold">{createMutation.error?.response?.data?.detail || "Something went wrong. Please check your data."}</p>
+                <div className="text-sm font-bold">
+                  {createMutation.error?.response?.data?.message ||
+                    createMutation.error?.response?.data?.detail ||
+                    (createMutation.error?.response?.data?.errors && Object.values(createMutation.error.response.data.errors).flat().join(", ")) ||
+                    "Something went wrong. Please check your data."}
+                </div>
               </div>
             )}
 
@@ -103,8 +113,8 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
               {/* Left Column: Media & Meta */}
               <div className="lg:col-span-4 space-y-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">Cover Image</label>
-                  <div 
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">Ảnh bìa</label>
+                  <div
                     onClick={() => fileInputRef.current?.click()}
                     className={`relative group cursor-pointer aspect-[4/5] rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center overflow-hidden
                       ${previewUrl ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-blue-400 hover:bg-slate-50'}`}
@@ -121,7 +131,7 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
                         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500 transition-colors">
                           <ImageIcon className="h-6 w-6" />
                         </div>
-                        <p className="text-xs font-bold text-slate-500 group-hover:text-blue-600 uppercase tracking-tighter">Upload Photo</p>
+                        <p className="text-xs font-bold text-slate-500 group-hover:text-blue-600 uppercase tracking-tighter">Tải ảnh lên</p>
                       </div>
                     )}
                   </div>
@@ -129,41 +139,41 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
                 </div>
 
                 <div className="space-y-4 rounded-2xl bg-slate-50 p-5 border border-slate-100">
-                   <div className="flex items-center gap-2 mb-2">
-                      <CreditCard className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm font-black text-slate-700 uppercase tracking-tight">Pricing</span>
-                   </div>
-                   <div className="flex bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, isFree: true, price: 0 })}
-                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.isFree ? "bg-blue-600 text-white shadow-md" : "text-slate-500 hover:text-slate-900"}`}
-                      >
-                        Free
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, isFree: false })}
-                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${!formData.isFree ? "bg-blue-600 text-white shadow-md" : "text-slate-500 hover:text-slate-900"}`}
-                      >
-                        Paid
-                      </button>
-                   </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <CreditCard className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm font-black text-slate-700 uppercase tracking-tight">Pricing</span>
+                  </div>
+                  <div className="flex bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, isFree: true, price: 0 })}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.isFree ? "bg-blue-600 text-white shadow-md" : "text-slate-500 hover:text-slate-900"}`}
+                    >
+                      Free
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, isFree: false })}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${!formData.isFree ? "bg-blue-600 text-white shadow-md" : "text-slate-500 hover:text-slate-900"}`}
+                    >
+                      Paid
+                    </button>
+                  </div>
 
-                   {!formData.isFree && (
+                  {!formData.isFree && (
                     <div className="animate-in fade-in slide-in-from-top-2">
                       <div className="relative">
                         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">₫</span>
                         <input
                           type="number"
-                          placeholder="Price"
+                          placeholder="Giá tiền"
                           className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 py-2.5 text-sm font-bold outline-none focus:border-blue-500 transition-all"
                           value={formData.price}
                           onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                         />
                       </div>
                     </div>
-                   )}
+                  )}
                 </div>
               </div>
 
@@ -172,11 +182,11 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
                 {/* Basic Info */}
                 <div className="grid gap-5">
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Workshop Title</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Tiêu đề Workshop</label>
                     <input
                       required
                       type="text"
-                      placeholder="Enter a catchy title..."
+                      placeholder="Nhập một tiêu đề hấp dẫn..."
                       className="w-full rounded-2xl border border-slate-200 px-5 py-3 text-lg font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all placeholder:text-slate-300"
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -185,7 +195,7 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-slate-400">Speaker Name</label>
+                      <label className="text-xs font-black uppercase tracking-widest text-slate-400">Tên diễn giả</label>
                       <div className="relative">
                         <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input
@@ -199,7 +209,7 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-slate-400">Max Slots</label>
+                      <label className="text-xs font-black uppercase tracking-widest text-slate-400">Số lượng chỗ</label>
                       <input
                         required
                         type="number"
@@ -211,10 +221,10 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Workshop Description</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Mô tả Workshop</label>
                     <textarea
                       rows={4}
-                      placeholder="What will students learn in this session?"
+                      placeholder="Sinh viên sẽ học được gì từ buổi học này?"
                       className="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm font-medium outline-none focus:border-blue-500 transition-all resize-none shadow-sm"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -225,13 +235,13 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
                 {/* Logistics */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-slate-100">
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Location</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Địa điểm</label>
                     <div className="relative">
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <input
                         required
                         type="text"
-                        placeholder="Room A101"
+                        placeholder="Phòng A101"
                         className="w-full rounded-xl border border-slate-200 pl-11 pr-4 py-3 text-sm font-bold outline-none focus:border-blue-500 transition-all shadow-sm"
                         value={formData.room}
                         onChange={(e) => setFormData({ ...formData, room: e.target.value })}
@@ -239,7 +249,7 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Date</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Ngày diễn ra</label>
                     <div className="relative">
                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <input
@@ -255,7 +265,7 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
 
                 <div className="grid grid-cols-2 gap-5">
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Start Time</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Giờ bắt đầu</label>
                     <div className="relative">
                       <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <input
@@ -268,7 +278,7 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">End Time</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Giờ kết thúc</label>
                     <div className="relative">
                       <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <input
@@ -292,7 +302,7 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
               onClick={onClose}
               className="rounded-xl px-6 py-3 text-sm font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-all"
             >
-              Cancel
+              Hủy
             </button>
             <button
               type="submit"
@@ -302,10 +312,10 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
               {createMutation.isPending ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Creating...
+                  Đang tạo...
                 </>
               ) : (
-                "Schedule Workshop"
+                "Lên lịch Workshop"
               )}
             </button>
           </div>

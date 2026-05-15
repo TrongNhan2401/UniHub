@@ -15,9 +15,9 @@ export default function AISummaryPage() {
 
   return (
     <AdminShell activeTop="Browse">
-      <h1 className="text-4xl font-bold">AI Summary Portal</h1>
+      <h1 className="text-4xl font-bold">Cổng Tóm tắt AI</h1>
       <p className="mt-1 text-slate-500">
-        Upload academic materials to generate intelligent summaries and study guides using our advanced AI engine.
+        Tải lên các tài liệu học thuật để tạo tóm tắt thông minh và hướng dẫn học tập bằng công cụ AI tiên tiến của chúng tôi.
       </p>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_320px]">
@@ -36,21 +36,21 @@ export default function AISummaryPage() {
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
               <Upload className="h-7 w-7 text-blue-600" />
             </div>
-            <p className="text-2xl font-semibold text-slate-700">Drag and drop PDF materials</p>
+            <p className="text-2xl font-semibold text-slate-700">Kéo và thả tài liệu PDF vào đây</p>
             <p className="mt-2 text-sm text-slate-500">
-              Support for course syllabi, research papers, and lecture notes (Max 50MB per file)
+              Hỗ trợ đề cương khóa học, bài nghiên cứu và ghi chú bài giảng (Tối đa 50MB mỗi tệp)
             </p>
             <button className="mt-6 rounded-lg bg-blue-600 px-6 py-2.5 font-semibold text-white hover:bg-blue-700">
-              Select Files from Device
+              Chọn tệp từ thiết bị
             </button>
           </div>
 
           {/* Processing queue */}
           <div className="rounded-2xl border bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-xl font-semibold">Current Processing Queue</p>
+              <p className="text-xl font-semibold">Hàng đợi xử lý hiện tại</p>
               <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                {queue.filter((q) => q.state === "processing").length} Active Tasks
+                {queue.filter((q) => q.state === "processing").length} Nhiệm vụ đang chạy
               </span>
             </div>
 
@@ -68,7 +68,7 @@ export default function AISummaryPage() {
                       </div>
                     </div>
                     {item.state === "done" ? (
-                      <button className="text-sm font-semibold text-blue-700">View Result</button>
+                      <button className="text-sm font-semibold text-blue-700">Xem kết quả</button>
                     ) : (
                       <span className="text-sm font-semibold text-slate-600">{item.progress}%</span>
                     )}
@@ -89,14 +89,14 @@ export default function AISummaryPage() {
         <div className="space-y-4">
           {/* Impact card */}
           <div className="rounded-2xl bg-blue-600 p-5 text-white">
-            <p className="mb-3 text-sm font-semibold text-blue-100">Your Impact</p>
+            <p className="mb-3 text-sm font-semibold text-blue-100">Tác động của bạn</p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-blue-200">TIME SAVED</p>
-                <p className="mt-1 text-3xl font-bold">12.5 hrs</p>
+                <p className="text-xs text-blue-200">THỜI GIAN TIẾT KIỆM</p>
+                <p className="mt-1 text-3xl font-bold">12.5 giờ</p>
               </div>
               <div>
-                <p className="text-xs text-blue-200">FILES PROCESSED</p>
+                <p className="text-xs text-blue-200">TỆP ĐÃ XỬ LÝ</p>
                 <p className="mt-1 text-3xl font-bold">48</p>
               </div>
             </div>
@@ -105,8 +105,8 @@ export default function AISummaryPage() {
           {/* Recent summaries */}
           <div className="rounded-2xl border bg-white p-5">
             <div className="mb-3 flex items-center justify-between">
-              <p className="font-semibold">Recent Summaries</p>
-              <button className="text-xs font-semibold text-blue-700 hover:underline">VIEW ALL</button>
+              <p className="font-semibold">Tóm tắt gần đây</p>
+              <button className="text-xs font-semibold text-blue-700 hover:underline">XEM TẤT CẢ</button>
             </div>
             <div className="space-y-2">
               {recentSummaries.map((item) => (
@@ -134,10 +134,10 @@ export default function AISummaryPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4 text-white">
-              <p className="text-xs text-slate-300">PREMIUM FEATURE</p>
-              <p className="mt-1 text-lg font-bold">Interactive Quiz Generator</p>
+              <p className="text-xs text-slate-300">TÍNH NĂNG CAO CẤP</p>
+              <p className="mt-1 text-lg font-bold">Trình tạo câu hỏi tương tác</p>
               <p className="mt-1 text-xs text-slate-300">
-                Turn any summary into a set of practice questions automatically.
+                Tự động biến bất kỳ bản tóm tắt nào thành bộ câu hỏi thực hành.
               </p>
             </div>
           </div>

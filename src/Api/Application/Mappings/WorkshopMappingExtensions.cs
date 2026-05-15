@@ -83,6 +83,8 @@ namespace Application.Mappings
                 Id = r.Id,
                 UserId = r.UserId,
                 UserEmail = r.User?.Email ?? string.Empty,
+                UserFullName = r.User?.FullName ?? string.Empty,
+                StudentId = r.User?.StudentId ?? string.Empty,
                 Status = r.Status.ToString(),
                 CreatedAt = r.CreatedAt
             };
@@ -95,6 +97,8 @@ namespace Application.Mappings
                 Id = a.Id,
                 UserId = a.UserId,
                 UserEmail = a.User?.Email ?? string.Empty,
+                UserFullName = a.User?.FullName ?? string.Empty,
+                StudentId = a.User?.StudentId ?? string.Empty,
                 Status = a.Status.ToString(),
                 CheckedInAt = a.CheckedInAt
             };

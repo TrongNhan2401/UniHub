@@ -124,9 +124,14 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetPaged([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] DateTime? date = null)
+        public async Task<IActionResult> GetPaged(
+            [FromQuery] int pageNumber = 1, 
+            [FromQuery] int pageSize = 10, 
+            [FromQuery] DateTime? date = null,
+            [FromQuery] string? status = null,
+            [FromQuery] string? sortByTime = null)
         {
-            var result = await _workshopService.GetWorkshopsPagedAsync(pageNumber, pageSize, date);
+            var result = await _workshopService.GetWorkshopsPagedAsync(pageNumber, pageSize, date, status, sortByTime);
 
             if (result.IsFailure)
             {

@@ -85,13 +85,14 @@ export default function CalendarPage() {
         return {
           id: w.id,
           title: w.title,
-          speaker: w.speakerName || "Chua cap nhat",
-          room: w.room || "TBA",
+          speaker: w.speakerName || "Chưa cập nhật",
+          room: w.room || "Phòng trống",
           day: start.getDate(),
           month: start.getMonth(),
           year: start.getFullYear(),
           shortTime: start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
           durationHours,
+          imageUrl: w.imageUrl,
         };
       })
       .filter(Boolean);
@@ -210,14 +211,14 @@ export default function CalendarPage() {
                 Workshop Ngày {selectedDate} {monthNames[currentMonth]}
               </h2>
               <span className="text-sm font-bold text-slate-500 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm">
-                {loading ? "Dang tai..." : `${filteredEvents.length} Workshop duoc tim thay`}
+                {loading ? "Đang tải..." : `${filteredEvents.length} Workshop được tìm thấy`}
               </span>
             </div>
 
             {loading ? (
               <div className="bg-white rounded-[2.5rem] border border-slate-200 p-20 flex flex-col items-center justify-center text-center">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Dang tai lich workshop...</h3>
-                <p className="text-slate-500 max-w-xs">Vui long doi trong giay lat.</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Đang tải lịch workshop...</h3>
+                <p className="text-slate-500 max-w-xs">Vui lòng đợi trong giây lát.</p>
               </div>
             ) : filteredEvents.length > 0 ? (
               <div className="grid gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -226,10 +227,10 @@ export default function CalendarPage() {
                     key={event.id}
                     className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl hover:shadow-2xl hover:border-blue-200 transition-all group flex gap-6"
                   >
-                    <div className="w-24 h-24 rounded-2xl bg-slate-100 overflow-hidden shrink-0">
+                    <div className="w-48 h-32 rounded-3xl bg-slate-100 overflow-hidden shrink-0 shadow-lg border-4 border-white">
                       <img
-                        src="https://images.unsplash.com/photo-1591115765373-520b7a08b52f?q=80&w=2070&auto=format&fit=crop"
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                        src={event.imageUrl || import.meta.env.VITE_DEFAULT_WORKSHOP_IMAGE}
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-110 group-hover:scale-100"
                         alt="workshop"
                       />
                     </div>

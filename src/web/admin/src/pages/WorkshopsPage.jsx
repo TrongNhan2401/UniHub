@@ -49,46 +49,38 @@ function toTimeLabel(value) {
 export default function WorkshopsPage() {
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [sortByTime, setSortByTime] = useState("");
   const [query, setQuery] = useState("");
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 10;
 
-  const { data: pagedData, isLoading, refetch } = useWorkshopsList({ pageNumber, pageSize });
-  const cancelMutation = useCancelWorkshop();
-
+  const { data: pagedData, isLoading, refetch } = useWorkshopsList({
+    pageNumber,
+    pageSize,
+    status: statusFilter,
+    sortByTime
+  });
   const filteredItems = useMemo(() => {
-    const items = pagedData?.items || [];
+    let items = pagedData?.items || [];
     const q = query.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter(
-      (w) => (w.title || "").toLowerCase().includes(q) || (w.speakerName || "").toLowerCase().includes(q),
-    );
+    if (q) {
+      items = items.filter(
+        (w) => (w.title || "").toLowerCase().includes(q) || (w.speakerName || "").toLowerCase().includes(q),
+      );
+    }
+    return items;
   }, [pagedData?.items, query]);
 
-  const metrics = useMemo(() => {
-    const total = pagedData?.totalCount || 0;
-    const registrationCount = pagedData?.items?.reduce((sum, w) => sum + (Number(w.registeredCount) || 0), 0) || 0;
-    const draftCount = pagedData?.items?.filter((w) => String(w.status) === "Draft").length || 0;
-    return { total, registrationCount, draftCount };
-  }, [pagedData]);
-
-  const handleCancelWorkshop = async (id) => {
-    // This function is kept for potential future use or for other UI elements
-    // currently not rendered in the main table.
-    if (!id) return;
-    if (window.confirm("Bạn chắc chắn muốn hủy workshop này?")) {
-      await cancelMutation.mutateAsync(id);
-    }
-  };
 
   return (
     <AdminShell activeTop="Quản lý Workshop">
       {/* Page Header */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Workshop Management</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Quản lý Workshop</h1>
           <p className="mt-1.5 text-slate-500 max-w-2xl">
-            Control and monitor academic workshops across the campus with ease.
+            Kiểm soát và theo dõi các buổi workshop học thuật trong khuôn viên trường một cách dễ dàng.
           </p>
         </div>
         <button
@@ -96,7 +88,7 @@ export default function WorkshopsPage() {
           className="group relative flex items-center gap-2 overflow-hidden rounded-xl bg-blue-600 px-6 py-3 font-bold text-white transition-all hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-200 active:scale-95"
         >
           <Plus className="h-5 w-5 transition-transform group-hover:rotate-90" />
-          Create Workshop
+          Tạo Workshop
         </button>
       </div>
 
@@ -104,19 +96,49 @@ export default function WorkshopsPage() {
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md">
         {/* Filters & Search Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/50 p-5">
-          <div className="relative w-full max-w-md group">
+          {/* <div className="relative w-full max-w-md group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <input
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
-              placeholder="Search by title or speaker..."
+              placeholder="Tìm kiếm theo tiêu đề hoặc diễn giả..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-          </div>
-          <div className="flex items-center gap-2.5">
-            <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
-              <Filter className="h-4 w-4" /> Filters
-            </button>
+          </div> */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Trạng thái:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPageNumber(1);
+                }}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-500"
+              >
+                <option value="All">Tất cả</option>
+                <option value="Draft">Bản nháp</option>
+                <option value="Published">Đã xuất bản</option>
+                <option value="Cancelled">Đã hủy</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 border-l pl-3 ml-1">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sắp xếp:</span>
+              <select
+                value={sortByTime}
+                onChange={(e) => {
+                  setSortByTime(e.target.value);
+                  setPageNumber(1);
+                }}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-500"
+              >
+                <option value="">Mặc định</option>
+                <option value="asc">Thời gian (Tăng dần)</option>
+                <option value="desc">Thời gian (Giảm dần)</option>
+              </select>
+            </div>
+
           </div>
         </div>
 
@@ -125,12 +147,12 @@ export default function WorkshopsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/80 text-xs font-bold uppercase tracking-widest text-slate-500">
-                <th className="px-6 py-4">Workshop Info</th>
-                <th className="px-6 py-4">Speaker</th>
-                <th className="px-6 py-4">Schedule</th>
-                <th className="px-6 py-4">Location</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-4">Thông tin Workshop</th>
+                <th className="px-6 py-4">Diễn giả</th>
+                <th className="px-6 py-4">Lịch trình</th>
+                <th className="px-6 py-4">Địa điểm</th>
+                <th className="px-6 py-4 text-center">Trạng thái</th>
+                <th className="px-6 py-4 text-right">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -147,8 +169,8 @@ export default function WorkshopsPage() {
                   <td className="px-6 py-12 text-center" colSpan={6}>
                     <div className="flex flex-col items-center justify-center text-slate-400">
                       <Search className="h-12 w-12 mb-3 opacity-20" />
-                      <p className="font-medium text-slate-500">No workshops found</p>
-                      <p className="text-sm">Try adjusting your filters or search query.</p>
+                      <p className="font-medium text-slate-500">Không tìm thấy workshop nào</p>
+                      <p className="text-sm">Hãy thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm của bạn.</p>
                     </div>
                   </td>
                 </tr>
@@ -161,9 +183,11 @@ export default function WorkshopsPage() {
                   >
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 font-bold">
-                          {item.title.charAt(0).toUpperCase()}
-                        </div>
+                        <img
+                          src={item.imageUrl || import.meta.env.VITE_DEFAULT_WORKSHOP_IMAGE}
+                          alt={item.title}
+                          className="h-10 w-10 shrink-0 rounded-xl object-cover border border-slate-100 shadow-sm"
+                        />
                         <div>
                           <p className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">{item.title}</p>
                           <p className="text-xs text-slate-500 font-mono">ID: {String(item.id).slice(0, 8)}</p>
@@ -189,11 +213,18 @@ export default function WorkshopsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <span
-                        className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-bold ${statusStyles[item.status] || "bg-slate-100 text-slate-700"}`}
-                      >
-                        {statusLabels[item.status] || item.status}
-                      </span>
+                      <div className="flex flex-col gap-1 items-center justify-center">
+                        <span
+                          className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-bold ${statusStyles[item.status] || "bg-slate-100 text-slate-700"}`}
+                        >
+                          {statusLabels[item.status] || item.status}
+                        </span>
+                        {item.endTime && new Date(item.endTime) < new Date() && (
+                          <span className="inline-flex items-center bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded font-black uppercase">
+                            Quá hạn
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-5" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
@@ -219,7 +250,7 @@ export default function WorkshopsPage() {
         {/* Pagination Footer */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/30 p-5">
           <p className="text-sm font-medium text-slate-500">
-            Showing <span className="text-slate-900">{filteredItems.length}</span> of <span className="text-slate-900">{pagedData?.totalCount || 0}</span> workshops
+            Hiển thị <span className="text-slate-900">{filteredItems.length}</span> trong số <span className="text-slate-900">{pagedData?.totalCount || 0}</span> workshops
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -230,7 +261,7 @@ export default function WorkshopsPage() {
               <ChevronLeft className="h-4.5 w-4.5" />
             </button>
             <div className="flex items-center px-4 font-bold text-sm text-slate-900">
-              Page {pageNumber} of {pagedData?.totalPages || 1}
+              Trang {pageNumber} / {pagedData?.totalPages || 1}
             </div>
             <button
               className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white"
@@ -246,7 +277,7 @@ export default function WorkshopsPage() {
       {/* Sync Footer */}
       <div className="mt-8 inline-flex items-center gap-2.5 rounded-2xl bg-slate-900 px-5 py-3 text-sm text-white shadow-lg shadow-slate-200">
         <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-        Dashboard automatically synchronizes with the central schedule.
+        Bảng điều khiển tự động đồng bộ hóa với lịch trình trung tâm.
       </div>
 
       <CreateWorkshopModal

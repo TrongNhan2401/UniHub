@@ -35,6 +35,8 @@ namespace Application.DTOs.Workshop
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
         public string UserEmail { get; set; } = string.Empty;
+        public string UserFullName { get; set; } = string.Empty;
+        public string StudentId { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }
@@ -44,6 +46,8 @@ namespace Application.DTOs.Workshop
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
         public string UserEmail { get; set; } = string.Empty;
+        public string UserFullName { get; set; } = string.Empty;
+        public string StudentId { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public DateTime CheckedInAt { get; set; }
     }

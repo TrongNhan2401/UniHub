@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Bell, Grid2x2, Compass, CalendarDays, Settings, LogOut, User, ChevronDown, QrCode } from "lucide-react";
+import { Bell, Grid2x2, Compass, CalendarDays, Settings, LogOut, User, ChevronDown, QrCode, RefreshCw } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 const sideItems = [
@@ -8,7 +8,7 @@ const sideItems = [
   { label: "Danh sách workshops", icon: Compass, to: "/workshops" },
   { label: "Lịch trình", icon: CalendarDays, to: "/calendar" },
   { label: "Staff check-in", icon: QrCode, to: "/checkin-staff" },
-  { label: "Thông báo", icon: Bell, to: "/notifications" },
+  { label: "Đồng bộ sinh viên", icon: RefreshCw, to: "/student-sync" },
 ];
 
 export default function AdminShell({ children, activeTop = "Quản lý Workshop" }) {
@@ -39,10 +39,9 @@ export default function AdminShell({ children, activeTop = "Quản lý Workshop"
                 to={item.to}
                 end={item.to === "/"}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all ${
-                    isActive
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-200/70"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all ${isActive
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-200/70"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`
                 }
               >

@@ -136,6 +136,19 @@ function TrendChart({ data }) {
         <circle key={i} cx={p.x} cy={p.y} r="4" fill="#3b82f6" />
       ))}
       {pts.map((p, i) => (
+        <text 
+          key={`val-${i}`} 
+          x={p.x} 
+          y={p.y - 10} 
+          textAnchor="middle" 
+          fontSize="10" 
+          fontWeight="bold" 
+          fill="#1e40af"
+        >
+          {safeData[i].value}
+        </text>
+      ))}
+      {pts.map((p, i) => (
         <text key={i} x={p.x} y={H + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
           {p.day}
         </text>
@@ -144,17 +157,6 @@ function TrendChart({ data }) {
   );
 }
 
-const statusStyles = {
-  CONFIRMED: "bg-emerald-100 text-emerald-700",
-  CHECKED_IN: "bg-blue-100 text-blue-700",
-  PENDING: "bg-amber-100 text-amber-700",
-};
-
-const statusLabels = {
-  CONFIRMED: "ĐÃ XÁC NHẬN",
-  CHECKED_IN: "ĐÃ CHECK-IN",
-  PENDING: "ĐANG CHỜ",
-};
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -282,11 +284,11 @@ export default function DashboardPage() {
 
     const filtered = q
       ? rows.filter(
-          (r) =>
-            r.name.toLowerCase().includes(q) ||
-            r.email.toLowerCase().includes(q) ||
-            r.workshop.toLowerCase().includes(q),
-        )
+        (r) =>
+          r.name.toLowerCase().includes(q) ||
+          r.email.toLowerCase().includes(q) ||
+          r.workshop.toLowerCase().includes(q),
+      )
       : rows;
 
     return filtered.slice(0, 8);
@@ -385,15 +387,13 @@ export default function DashboardPage() {
               <tr>
                 <th className="px-4 py-3 font-medium">NGƯỜI DÙNG</th>
                 <th className="px-4 py-3 font-medium">WORKSHOP</th>
-                <th className="px-4 py-3 font-medium">TRẠNG THÁI</th>
                 <th className="px-4 py-3 font-medium">NGÀY</th>
-                <th className="px-4 py-3 font-medium">THAO TÁC</th>
               </tr>
             </thead>
             <tbody>
               {recentRegistrations.length === 0 ? (
                 <tr className="border-t">
-                  <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                  <td colSpan={3} className="px-4 py-6 text-center text-slate-500">
                     {loading ? "Đang tải dữ liệu đăng ký..." : "Không có dữ liệu đăng ký."}
                   </td>
                 </tr>
@@ -414,19 +414,7 @@ export default function DashboardPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">{r.workshop}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded px-2 py-1 text-xs font-bold ${statusStyles[r.status] || statusStyles.PENDING}`}
-                      >
-                        {statusLabels[r.status] || r.status}
-                      </span>
-                    </td>
                     <td className="px-4 py-3 text-slate-500">{r.date}</td>
-                    <td className="px-4 py-3">
-                      <button className="text-slate-400">
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                    </td>
                   </tr>
                 ))
               )}

@@ -54,8 +54,8 @@ namespace Domain.Entities
             SpeakerBio = speakerBio;
             Room = room;
             RoomMapUrl = roomMapUrl;
-            StartTime = startTime;
-            EndTime = endTime;
+            StartTime = startTime.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(startTime, DateTimeKind.Utc) : startTime.ToUniversalTime();
+            EndTime = endTime.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(endTime, DateTimeKind.Utc) : endTime.ToUniversalTime();
             TotalSlots = totalSlots;
             IsFree = isFree;
             Price = price;
@@ -134,8 +134,8 @@ namespace Domain.Entities
             SpeakerBio = speakerBio;
             Room = room;
             RoomMapUrl = roomMapUrl;
-            StartTime = startTime;
-            EndTime = endTime;
+            StartTime = startTime.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(startTime, DateTimeKind.Utc) : startTime.ToUniversalTime();
+            EndTime = endTime.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(endTime, DateTimeKind.Utc) : endTime.ToUniversalTime();
             TotalSlots = totalSlots;
             IsFree = isFree;
             Price = price;

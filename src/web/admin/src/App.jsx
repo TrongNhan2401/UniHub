@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AdminSignInPage from "./pages/AdminSignInPage";
 import WorkshopDetailPage from "./pages/WorkshopDetailPage";
 import CheckinStaffPage from "./pages/CheckinStaffPage";
+import StudentSyncPage from "./pages/StudentSyncPage";
 
 function ProtectedRoute({ children }) {
   const { token, loading } = useAuth();
@@ -48,6 +49,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <CheckinStaffPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student-sync"
+        element={
+          <ProtectedRoute>
+            <StudentSyncPage />
           </ProtectedRoute>
         }
       />
