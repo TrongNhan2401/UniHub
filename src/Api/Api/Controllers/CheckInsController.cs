@@ -41,6 +41,20 @@ namespace Api.Controllers
         }
 
         /// <summary>
+        /// Lấy danh sách tất cả staff check-in.
+        /// </summary>
+        [HttpGet("staff")]
+        public async Task<IActionResult> GetAllStaff([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            var result = await _checkInService.GetAllCheckinStaffAsync(pageNumber, pageSize);
+            if (result.IsFailure)
+            {
+                return ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message, "invalid_request");
+            }
+            return Ok(result.Value);
+        }
+
+        /// <summary>
         /// Check-in sinh viên bằng QR code (online).
         /// Staff quét QR và gọi endpoint này để ghi nhận attendance.
         /// </summary>

@@ -34,5 +34,10 @@ namespace Application.Features.Interfaces
         /// Đăng ký tài khoản staff check-in mới.
         /// </summary>
         Task<Result<Guid>> RegisterCheckinStaffAsync(CreateCheckinStaffRequestDto request);
+
+        /// <summary>
+        /// Lấy danh sách tất cả staff check-in.
+        /// </summary>
+        Task<Result<PagedResult<CheckinStaffDto>>> GetAllCheckinStaffAsync(int pageNumber, int pageSize);
     }
 }
