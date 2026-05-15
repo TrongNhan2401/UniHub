@@ -3,11 +3,7 @@ import api from "./api";
 export const authService = {
   login: (email, password) => api.post("/auth/signin", { email, password }),
   me: () => api.get("/auth/me"),
-  createCheckinStaff: (data) =>
-    api.post("/auth/signup", {
-      ...data,
-      role: "CHECKIN_STAFF",
-    }),
+  createCheckinStaff: (data) => api.post("/checkins/signup-staff", data),
 };
 
 export const workshopService = {

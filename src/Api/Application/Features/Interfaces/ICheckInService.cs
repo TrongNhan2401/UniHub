@@ -29,5 +29,10 @@ namespace Application.Features.Interfaces
         /// Đồng bộ batch check-in đã lưu offline.
         /// </summary>
         Task<Result<OfflineSyncResponseDto>> SyncOfflineAsync(OfflineSyncRequestDto request, Guid staffUserId);
+
+        /// <summary>
+        /// Đăng ký tài khoản staff check-in mới.
+        /// </summary>
+        Task<Result<Guid>> RegisterCheckinStaffAsync(CreateCheckinStaffRequestDto request);
     }
 }
