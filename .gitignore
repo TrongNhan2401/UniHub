@@ -64,3 +64,4 @@ docker-compose.override.yml
 
 # Seed temp exports
 src/seed/tmp/
+*.lscache
