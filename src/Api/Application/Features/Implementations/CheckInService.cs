@@ -5,11 +5,14 @@ using Domain;
 using Domain.Entities;
 using Domain.Shared;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Implementations
 {
     public class CheckInService : ICheckInService
     {
+        private const string CheckInStaffRoleName = "CHECKIN_STAFF";
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
@@ -42,14 +45,39 @@ namespace Application.Features.Implementations
             }
 
             // Đảm bảo role tồn tại và gán role
-            var roleName = UserRole.CheckInStaff.ToString().ToUpperInvariant();
-            if (!await _roleManager.RoleExistsAsync(roleName))
+            if (!await _roleManager.RoleExistsAsync(CheckInStaffRoleName))
             {
-                await _roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
+                await _roleManager.CreateAsync(new IdentityRole<Guid>(CheckInStaffRoleName));
             }
-            await _userManager.AddToRoleAsync(user, roleName);
+            await _userManager.AddToRoleAsync(user, CheckInStaffRoleName);
 
             return Result.Success(user.Id);
+        }
+
+        public async Task<Result<List<CheckinStaffDto>>> GetAllCheckinStaffAsync()
+        {
+            try
+            {
+                var staffUsers = await _userManager.Users
+                    .Where(u => u.Role == UserRole.CheckInStaff)
+                    .ToListAsync();
+
+                var staffList = staffUsers
+                    .Select(u => new CheckinStaffDto
+                    {
+                        Id = u.Id,
+                        Email = u.Email ?? string.Empty,
+                        FullName = u.FullName,
+                        CreatedAt = u.CreatedAt
+                    })
+                    .ToList();
+
+                return Result.Success(staffList);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<List<CheckinStaffDto>>(new Error("CheckIn.GetStaffFailed", $"Loi khi lay danh sach staff: {ex.Message}"));
+            }
         }
 
         public async Task<Result<CheckInResponseDto>> CheckInAsync(string qrCode, Guid staffUserId)
