@@ -4,16 +4,52 @@ using Application.Features.Interfaces;
 using Domain;
 using Domain.Entities;
 using Domain.Shared;
+using Microsoft.AspNetCore.Identity;
 
 namespace Application.Features.Implementations
 {
     public class CheckInService : ICheckInService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
 
-        public CheckInService(IUnitOfWork unitOfWork)
+        public CheckInService(IUnitOfWork unitOfWork, UserManager<AppUser> userManager, RoleManager<IdentityRole<Guid>> roleManager)
         {
             _unitOfWork = unitOfWork;
+            _userManager = userManager;
+            _roleManager = roleManager;
+        }
+
+        public async Task<Result<Guid>> RegisterCheckinStaffAsync(CreateCheckinStaffRequestDto request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password) || string.IsNullOrWhiteSpace(request.FullName))
+            {
+                return Result.Failure<Guid>(new Error("CheckIn.InvalidRequest", "Email, password, fullName khong duoc de trong."));
+            }
+
+            if (await _userManager.FindByEmailAsync(request.Email) is not null)
+            {
+                return Result.Failure<Guid>(new Error("CheckIn.EmailExists", "Email da ton tai."));
+            }
+
+            var user = new AppUser(request.Email, request.FullName, UserRole.CheckInStaff);
+            var createResult = await _userManager.CreateAsync(user, request.Password);
+            if (!createResult.Succeeded)
+            {
+                var errorMsg = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                return Result.Failure<Guid>(new Error("CheckIn.CreateFailed", errorMsg));
+            }
+
+            // Đảm bảo role tồn tại và gán role
+            var roleName = UserRole.CheckInStaff.ToString().ToUpperInvariant();
+            if (!await _roleManager.RoleExistsAsync(roleName))
+            {
+                await _roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
+            }
+            await _userManager.AddToRoleAsync(user, roleName);
+
+            return Result.Success(user.Id);
         }
 
         public async Task<Result<CheckInResponseDto>> CheckInAsync(string qrCode, Guid staffUserId)

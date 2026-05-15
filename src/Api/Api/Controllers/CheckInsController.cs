@@ -22,6 +22,25 @@ namespace Api.Controllers
         }
 
         /// <summary>
+        /// Đăng ký tài khoản staff check-in mới.
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("signup-staff")]
+        public async Task<IActionResult> RegisterCheckinStaff([FromBody] CreateCheckinStaffRequestDto request)
+        {
+            var result = await _checkInService.RegisterCheckinStaffAsync(request);
+            if (result.IsFailure)
+            {
+                return result.Error.Code switch
+                {
+                    "CheckIn.EmailExists" => ProblemResponse(StatusCodes.Status409Conflict, "Xung dot du lieu.", result.Error.Message),
+                    _ => ProblemResponse(StatusCodes.Status400BadRequest, "Yeu cau khong hop le.", result.Error.Message)
+                };
+            }
+            return Ok(new { message = "Tao tai khoan staff check-in thanh cong.", userId = result.Value });
+        }
+
+        /// <summary>
         /// Check-in sinh viên bằng QR code (online).
         /// Staff quét QR và gọi endpoint này để ghi nhận attendance.
         /// </summary>
