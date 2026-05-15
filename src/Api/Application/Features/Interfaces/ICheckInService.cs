@@ -38,6 +38,6 @@ namespace Application.Features.Interfaces
         /// <summary>
         /// Lấy danh sách tất cả staff check-in.
         /// </summary>
-        Task<Result<List<CheckinStaffDto>>> GetAllCheckinStaffAsync();
+        Task<Result<PagedResult<CheckinStaffDto>>> GetAllCheckinStaffAsync(int pageNumber, int pageSize);
     }
 }

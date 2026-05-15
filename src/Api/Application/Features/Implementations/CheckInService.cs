@@ -54,12 +54,24 @@ namespace Application.Features.Implementations
             return Result.Success(user.Id);
         }
 
-        public async Task<Result<List<CheckinStaffDto>>> GetAllCheckinStaffAsync()
+        public async Task<Result<PagedResult<CheckinStaffDto>>> GetAllCheckinStaffAsync(int pageNumber, int pageSize)
         {
             try
             {
-                var staffUsers = await _userManager.Users
+                if (pageNumber < 1 || pageSize < 1)
+                {
+                    return Result.Failure<PagedResult<CheckinStaffDto>>(new Error("CheckIn.InvalidRequest", "pageNumber va pageSize phai lon hon 0."));
+                }
+
+                var query = _userManager.Users
+                    .AsNoTracking()
                     .Where(u => u.Role == UserRole.CheckInStaff)
+                    .OrderByDescending(u => u.CreatedAt);
+
+                var totalCount = await query.CountAsync();
+                var staffUsers = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
                     .ToListAsync();
 
                 var staffList = staffUsers
@@ -72,11 +84,11 @@ namespace Application.Features.Implementations
                     })
                     .ToList();
 
-                return Result.Success(staffList);
+                return Result.Success(new PagedResult<CheckinStaffDto>(staffList, totalCount, pageNumber, pageSize));
             }
             catch (Exception ex)
             {
-                return Result.Failure<List<CheckinStaffDto>>(new Error("CheckIn.GetStaffFailed", $"Loi khi lay danh sach staff: {ex.Message}"));
+                return Result.Failure<PagedResult<CheckinStaffDto>>(new Error("CheckIn.GetStaffFailed", $"Loi khi lay danh sach staff: {ex.Message}"));
             }
         }
 
