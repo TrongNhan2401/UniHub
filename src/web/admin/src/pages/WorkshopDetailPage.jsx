@@ -66,37 +66,10 @@ export default function AdminWorkshopDetailPage() {
     setLoading(true);
     setError("");
     try {
-      const [detailRes, checkinsRes, registrationsRes] = await Promise.all([
-        workshopService.getById(id),
-        checkinService.getByWorkshop(id).catch(() => ({ data: [] })),
-        checkinService.getRegistrationsByWorkshop(id).catch(() => ({ data: [] })),
-      ]);
-
-      const data = detailRes?.data;
-      const checkinItems = Array.isArray(checkinsRes?.data) ? checkinsRes.data : [];
-      const registrationItems = Array.isArray(registrationsRes?.data) ? registrationsRes.data : [];
-
-      const registrationMap = registrationItems.reduce((acc, item) => {
-        const key = item?.registration_id || item?.registrationId;
-        if (key) acc[key] = item;
-        return acc;
-      }, {});
-
-      const normalizedCheckins = checkinItems.map((item) => {
-        const registrationId = item?.registration_id || item?.registrationId;
-        const matchedReg = registrationMap[registrationId];
-        return {
-          attendanceId: item?.attendance_id || item?.attendanceId,
-          registrationId,
-          userId: item?.user_id || item?.userId,
-          userEmail: matchedReg?.student_email || matchedReg?.studentEmail || "-",
-          status: "CHECKED_IN",
-          checkedInAt: item?.checked_in_at || item?.checkedInAt,
-        };
-      });
-
+      const { data } = await workshopService.getById(id);
+      
       setWorkshop(data);
-      setCheckins(normalizedCheckins);
+      setCheckins(data.attendances || []);
       setEditFormData({
         ...data,
         startTime: toLocalInput(data?.startTime),
@@ -182,6 +155,32 @@ export default function AdminWorkshopDetailPage() {
     }
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !id) return;
+
+    if (!window.confirm("Ban co chac chan muon thay doi anh bia cho workshop nay?")) {
+      e.target.value = "";
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append("file", file);
+    setUploading(true);
+    setMessage("");
+    setError("");
+    try {
+      await workshopService.uploadImage(id, fd);
+      setMessage("Cap nhat anh bia thanh cong.");
+      await loadDetail();
+    } catch (err) {
+      setError(err?.response?.data?.detail || err?.response?.data?.message || "Tai anh bia that bai.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
   return (
     <AdminShell activeTop="Quan ly Workshop">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -243,22 +242,51 @@ export default function AdminWorkshopDetailPage() {
             <div className="space-y-5">
               {activeTab === "overview" ? (
                 <>
-                  <div className="rounded-2xl border bg-white p-6">
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                        {statusLabel(workshop.status)}
-                      </span>
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-                        {workshop.isFree ? "Mien phi" : `${Number(workshop.price || 0).toLocaleString("vi-VN")} VND`}
-                      </span>
+                  <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+                    {/* Cover Image Section */}
+                    <div className="relative aspect-[21/9] w-full bg-slate-100 border-b">
+                      {workshop.imageUrl ? (
+                        <img 
+                          src={workshop.imageUrl} 
+                          alt={workshop.title} 
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-slate-50 text-slate-300">
+                           <FileText size={48} strokeWidth={1} />
+                        </div>
+                      )}
+                      <div className="absolute bottom-4 right-4 flex gap-2">
+                         <label className="cursor-pointer rounded-lg bg-white/90 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm backdrop-blur-sm hover:bg-white">
+                            <Upload className="inline-block mr-1 h-3 w-3" /> Doi anh bia
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={handleImageUpload} 
+                              disabled={uploading}
+                            />
+                         </label>
+                      </div>
                     </div>
-                    <h1 className="text-3xl font-black text-slate-900">{workshop.title}</h1>
-                    <p className="mt-3 text-slate-600">{workshop.description || "Chua co mo ta."}</p>
-                    <div className="mt-5 grid gap-3 md:grid-cols-2">
-                      <InfoItem label="Dien gia" value={workshop.speakerName} />
-                      <InfoItem label="Phong" value={workshop.room} />
-                      <InfoItem label="Bat dau" value={toDateTimeLabel(workshop.startTime)} />
-                      <InfoItem label="Ket thuc" value={toDateTimeLabel(workshop.endTime)} />
+
+                    <div className="p-6">
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+                          {statusLabel(workshop.status)}
+                        </span>
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+                          {workshop.isFree ? "Mien phi" : `${Number(workshop.price || 0).toLocaleString("vi-VN")} VND`}
+                        </span>
+                      </div>
+                      <h1 className="text-3xl font-black text-slate-900">{workshop.title}</h1>
+                      <p className="mt-3 text-slate-600">{workshop.description || "Chua co mo ta."}</p>
+                      <div className="mt-5 grid gap-3 md:grid-cols-2">
+                        <InfoItem label="Dien gia" value={workshop.speakerName} />
+                        <InfoItem label="Phong" value={workshop.room} />
+                        <InfoItem label="Bat dau" value={toDateTimeLabel(workshop.startTime)} />
+                        <InfoItem label="Ket thuc" value={toDateTimeLabel(workshop.endTime)} />
+                      </div>
                     </div>
                   </div>
 

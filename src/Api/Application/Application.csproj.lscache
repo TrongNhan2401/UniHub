@@ -57,25 +57,52 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 Abstractions/
  IAiService.cs
  IJwtTokenService.cs
- IPaymentService.cs
+ INotificationChannel.cs
+ INotificationService.cs
+ IPaymentGateway.cs
  IPdfService.cs
  IUnitOfWork.cs
  IUploadService.cs
- Repositories/IWorkshopRepo.cs
+ Repositories/
+  IAttendanceRepo.cs
+  IPaymentRepo.cs
+  IRegistrationRepo.cs
+  ISyncTaskRepo.cs
+  IWorkshopRepo.cs
 DependencyInjection.cs
-DTOs/Workshop/
- CreateWorkshopDto.cs
- UpdateWorkshopDto.cs
- WorkshopDetailDto.cs
- WorkshopDto.cs
- WorkshopListDto.cs
+DTOs/
+ CheckIn/CheckInDto.cs
+ Payment/
+  ConfirmWebhookRequestDto.cs
+  CreateCheckoutResponseDto.cs
+  PaymentGatewayDtos.cs
+  PaymentStatusDto.cs
+  PayOsWebhookDto.cs
+  RefundPaymentRequestDto.cs
+ Registration/
+  CreateRegistrationRequestDto.cs
+  RegistrationDto.cs
+ Workshop/
+  CreateWorkshopDto.cs
+  UpdateWorkshopDto.cs
+  WorkshopDetailDto.cs
+  WorkshopDto.cs
+  WorkshopListDto.cs
 Features/
  Auth/Dtos.cs
  Implementations/
   AuthService.cs
+  CheckInService.cs
+  PaymentService.cs
+  RegistrationService.cs
+  SyncTaskService.cs
   WorkshopService.cs
  Interfaces/
   IAuthService.cs
+  ICheckInService.cs
+  IPaymentService.cs
+  IRegistrationService.cs
+  ISyncTaskService.cs
   IWorkshopService.cs
 Mappings/WorkshopMappingExtensions.cs
 obj/Debug/net10.0/
@@ -85,7 +112,7 @@ obj/Debug/net10.0/
 
 [metadataReferences]
 ../Domain/obj/Debug/net10.0/ref/Domain.dll
-<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/ref/net10.0/
+<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/ref/net10.0/
  Microsoft.CSharp.dll
  Microsoft.VisualBasic.Core.dll
  Microsoft.VisualBasic.dll
@@ -254,6 +281,7 @@ obj/Debug/net10.0/
  System.Xml.XPath.XDocument.dll
  WindowsBase.dll
 <NUGET>/
+ csvhelper/33.1.0/lib/net9.0/CsvHelper.dll
  microsoft.aspnetcore.cryptography.internal/10.0.7/lib/net10.0/Microsoft.AspNetCore.Cryptography.Internal.dll
  microsoft.aspnetcore.cryptography.keyderivation/10.0.7/lib/net10.0/Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
  microsoft.aspnetcore.http.abstractions/2.3.9/lib/netstandard2.0/Microsoft.AspNetCore.Http.Abstractions.dll
@@ -280,14 +308,14 @@ obj/Debug/net10.0/
  microsoft.extensions.primitives/10.0.7/lib/net10.0/Microsoft.Extensions.Primitives.dll
 
 [analyzerReferences]
-<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/analyzers/dotnet/cs/
+<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/analyzers/dotnet/cs/
  Microsoft.Interop.ComInterfaceGenerator.dll
  Microsoft.Interop.JavaScript.JSImportGenerator.dll
  Microsoft.Interop.LibraryImportGenerator.dll
  Microsoft.Interop.SourceGeneration.dll
  System.Text.Json.SourceGeneration.dll
  System.Text.RegularExpressions.Generator.dll
-<DOTNET>/sdk/10.0.203/Sdks/Microsoft.NET.Sdk/analyzers/
+<DOTNET>/sdk/10.0.204/Sdks/Microsoft.NET.Sdk/analyzers/
  Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll
  Microsoft.CodeAnalysis.NetAnalyzers.dll
 <NUGET>/
@@ -296,5 +324,5 @@ obj/Debug/net10.0/
  microsoft.extensions.options/10.0.7/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Options.SourceGeneration.dll
 
 [analyzerConfigFiles]
-<DOTNET>/sdk/10.0.203/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
+<DOTNET>/sdk/10.0.204/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
 obj/Debug/net10.0/Application.GeneratedMSBuildEditorConfig.editorconfig

@@ -18,6 +18,7 @@ export const workshopService = {
   cancel: (id) => api.patch(`/workshops/${id}/cancel`),
   publish: (id) => api.patch(`/workshops/${id}/publish`),
   uploadPdf: (id, formData) => api.post(`/workshops/${id}/pdf`, formData),
+  uploadImage: (id, formData) => api.post(`/workshops/${id}/image`, formData),
 };
 
 export const registrationService = {

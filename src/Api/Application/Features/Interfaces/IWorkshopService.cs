@@ -12,6 +12,7 @@ namespace Application.Features.Interfaces
         Task<Result<bool>> PublishWorkshopAsync(Guid id);
         Task<Result<bool>> CancelWorkshopAsync(Guid id);
         Task<Result<string>> UploadWorkshopPdfAsync(Guid id, Microsoft.AspNetCore.Http.IFormFile file);
+        Task<Result<string>> UploadWorkshopImageAsync(Guid id, Microsoft.AspNetCore.Http.IFormFile file);
         Task<Result<PagedResult<WorkshopListDto>>> GetWorkshopsPagedAsync(int pageNumber, int pageSize, DateTime? date = null);
         Task<Result<WorkshopDetailDto>> GetWorkshopDetailAsync(Guid id);
     }

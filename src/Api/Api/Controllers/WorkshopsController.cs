@@ -1,6 +1,7 @@
 using Application.DTOs.Workshop;
 using Application.Features.Interfaces;
 using Domain.Shared;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class WorkshopsController : ControllerBase
     {
         private readonly IWorkshopService _workshopService;
@@ -57,6 +59,23 @@ namespace Api.Controllers
         public async Task<IActionResult> UploadPdf(Guid id, IFormFile file)
         {
             var result = await _workshopService.UploadWorkshopPdfAsync(id, file);
+
+            if (result.IsFailure)
+            {
+                if (result.Error.Code == "Workshop.NotFound")
+                {
+                    return NotFound(result.Error);
+                }
+                return BadRequest(result.Error);
+            }
+
+            return Ok(new { Url = result.Value });
+        }
+
+        [HttpPost("{id}/image")]
+        public async Task<IActionResult> UploadImage(Guid id, IFormFile file)
+        {
+            var result = await _workshopService.UploadWorkshopImageAsync(id, file);
 
             if (result.IsFailure)
             {

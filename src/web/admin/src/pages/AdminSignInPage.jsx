@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 import { Lock, Mail, ArrowRight, ShieldCheck } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminSignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { signin, loading: isLoading } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Giả lập xử lý đăng nhập
-    console.log("Admin Login:", { email, password });
-    setTimeout(() => {
-      window.location.href = "/admin/dashboard"; // Chuyển hướng sau khi thành công
-    }, 1500);
+    const result = await signin(email, password);
+    if (result.success) {
+      navigate("/");
+    } else {
+      alert(result.error);
+    }
   };
 
   return (

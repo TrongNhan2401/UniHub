@@ -54,6 +54,7 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /warnaserror+:NU1605,SYSLIB0011
 
 [sourceFiles]
+BackgroundJobs/SyncBackgroundService.cs
 DependencyInjection.cs
 Migrations/
  20260426123039_InitialCreate.cs
@@ -63,6 +64,10 @@ obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
  Infrastructure.AssemblyInfo.cs
  Infrastructure.GlobalUsings.g.cs
+Options/
+ EmailSettings.cs
+ PayOsSettings.cs
+ TelegramSettings.cs
 Persistence/Configurations/
  AppUserConfiguration.cs
  AttendanceConfiguration.cs
@@ -72,13 +77,28 @@ Persistence/Configurations/
  WorkshopConfiguration.cs
 Persistence/
  Contexts/AppDbContext.cs
- Repositories/WorkshopRepo.cs
- Seed/SystemRoleSeeder.cs
+ Repositories/
+  AttendanceRepo.cs
+  PaymentRepo.cs
+  RegistrationRepo.cs
+  SyncTaskRepo.cs
+  WorkshopRepo.cs
+ Seed/
+  SeedUserSeeder.cs
+  SystemRoleSeeder.cs
  UnitOfWork.cs
 Services/
  GeminiService.cs
  JwtTokenService.cs
+ MockPaymentGateway.cs
+ MockPaymentGatewayFailure.cs
+ Notifications/
+  EmailNotificationChannel.cs
+  NotificationService.cs
+  TelegramNotificationChannel.cs
+ PayOsGateway.cs
  PdfService.cs
+ Resilience/PaymentCircuitBreakerPolicy.cs
 Storage/
  CloudinarySettings.cs
  CloudinaryUploadService.cs
@@ -87,7 +107,7 @@ Storage/
 ../
  Application/obj/Debug/net10.0/ref/Application.dll
  Domain/obj/Debug/net10.0/ref/Domain.dll
-<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.7/ref/net10.0/
+<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.8/ref/net10.0/
  Microsoft.AspNetCore.Antiforgery.dll
  Microsoft.AspNetCore.Authentication.Abstractions.dll
  Microsoft.AspNetCore.Authentication.BearerToken.dll
@@ -228,7 +248,7 @@ Storage/
  System.Formats.Cbor.dll
  System.Security.Cryptography.Xml.dll
  System.Threading.RateLimiting.dll
-<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/ref/net10.0/
+<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/ref/net10.0/
  Microsoft.CSharp.dll
  Microsoft.VisualBasic.Core.dll
  Microsoft.VisualBasic.dll
@@ -398,6 +418,10 @@ Storage/
  WindowsBase.dll
 <NUGET>/
  cloudinarydotnet/1.28.0/lib/netstandard2.0/CloudinaryDotNet.dll
+ csvhelper/33.1.0/lib/net9.0/CsvHelper.dll
+ efcore.bulkextensions.core/10.0.1/lib/net10.0/EFCore.BulkExtensions.Core.dll
+ efcore.bulkextensions.postgresql/10.0.1/lib/net10.0/EFCore.BulkExtensions.PostgreSql.dll
+ medalliontopologicalsort/1.0.0/lib/netstandard2.0/MedallionTopologicalSort.dll
  microsoft.aspnetcore.authentication.jwtbearer/10.0.7/lib/net10.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
  microsoft.aspnetcore.identity.entityframeworkcore/10.0.7/lib/net10.0/Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
  microsoft.entityframeworkcore.abstractions/10.0.7/lib/net10.0/Microsoft.EntityFrameworkCore.Abstractions.dll
@@ -409,9 +433,11 @@ Storage/
  microsoft.identitymodel.protocols.openidconnect/8.0.1/lib/net9.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
  microsoft.identitymodel.protocols/8.0.1/lib/net9.0/Microsoft.IdentityModel.Protocols.dll
  microsoft.identitymodel.tokens/8.0.1/lib/net9.0/Microsoft.IdentityModel.Tokens.dll
+ nettopologysuite/2.6.0/lib/netstandard2.1/NetTopologySuite.dll
  newtonsoft.json/13.0.4/lib/net6.0/Newtonsoft.Json.dll
  npgsql.entityframeworkcore.postgresql/10.0.1/lib/net10.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
  npgsql/10.0.2/lib/net10.0/Npgsql.dll
+ payos/2.1.0/lib/net9.0/PayOS.dll
  pdfpig/0.1.14/lib/net8.0/
   UglyToad.PdfPig.Core.dll
   UglyToad.PdfPig.dll
@@ -420,10 +446,13 @@ Storage/
   UglyToad.PdfPig.Package.dll
   UglyToad.PdfPig.Tokenization.dll
   UglyToad.PdfPig.Tokens.dll
+ polly.core/8.4.1/lib/net8.0/Polly.Core.dll
+ polly.extensions.http/3.0.0/lib/netstandard2.0/Polly.Extensions.Http.dll
+ polly/8.4.1/lib/net6.0/Polly.dll
  system.identitymodel.tokens.jwt/8.0.1/lib/net9.0/System.IdentityModel.Tokens.Jwt.dll
 
 [analyzerReferences]
-<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.7/analyzers/dotnet/cs/
+<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.8/analyzers/dotnet/cs/
  Microsoft.AspNetCore.App.Analyzers.dll
  Microsoft.AspNetCore.App.CodeFixes.dll
  Microsoft.AspNetCore.App.SourceGenerators.dll
@@ -431,14 +460,14 @@ Storage/
  Microsoft.Extensions.Logging.Generators.dll
  Microsoft.Extensions.Options.SourceGeneration.dll
  Microsoft.Extensions.Validation.ValidationsGenerator.dll
-<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/analyzers/dotnet/cs/
+<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/analyzers/dotnet/cs/
  Microsoft.Interop.ComInterfaceGenerator.dll
  Microsoft.Interop.JavaScript.JSImportGenerator.dll
  Microsoft.Interop.LibraryImportGenerator.dll
  Microsoft.Interop.SourceGeneration.dll
  System.Text.Json.SourceGeneration.dll
  System.Text.RegularExpressions.Generator.dll
-<DOTNET>/sdk/10.0.203/Sdks/Microsoft.NET.Sdk/analyzers/
+<DOTNET>/sdk/10.0.204/Sdks/Microsoft.NET.Sdk/analyzers/
  Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll
  Microsoft.CodeAnalysis.NetAnalyzers.dll
 <NUGET>/microsoft.codeanalysis.analyzers/3.11.0/analyzers/dotnet/cs/
@@ -447,5 +476,5 @@ Storage/
 <NUGET>/microsoft.entityframeworkcore.analyzers/10.0.7/analyzers/dotnet/cs/Microsoft.EntityFrameworkCore.Analyzers.dll
 
 [analyzerConfigFiles]
-<DOTNET>/sdk/10.0.203/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
+<DOTNET>/sdk/10.0.204/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
 obj/Debug/net10.0/Infrastructure.GeneratedMSBuildEditorConfig.editorconfig

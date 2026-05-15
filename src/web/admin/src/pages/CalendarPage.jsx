@@ -185,11 +185,10 @@ export default function CalendarPage() {
                     <button
                       key={day}
                       onClick={() => setSelectedDate(day)}
-                      className={`relative aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-bold transition-all ${
-                        isSelected
+                      className={`relative aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-bold transition-all ${isSelected
                           ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-110 z-10"
                           : "text-slate-600 hover:bg-white hover:shadow-sm"
-                      }`}
+                        }`}
                     >
                       {day}
                       {hasEvents && !isSelected && (
@@ -201,23 +200,6 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div className="p-8 flex-1 overflow-y-auto">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Ghi chú hôm nay</h3>
-              <div className="space-y-4">
-                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
-                  <p className="text-sm font-medium text-amber-900">
-                    Kiểm tra lại danh sách đăng ký cho hội trường A1 trước 5h chiều.
-                  </p>
-                </div>
-                <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                  <p className="text-sm font-medium text-blue-900">
-                    Liên hệ diễn giả TS. Nguyễn Văn A để xác nhận tài liệu trình chiếu.
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right: Daily Workshop List */}

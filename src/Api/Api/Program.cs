@@ -88,7 +88,11 @@ if (!string.IsNullOrWhiteSpace(clientUrl))
 }
 
 allowedOrigins = allowedOrigins.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-
+foreach (var kv in builder.Configuration.AsEnumerable())
+{
+    if (kv.Key.Contains("ConnectionStrings"))
+        Console.WriteLine($"{kv.Key} = {kv.Value}");
+}
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost", policy =>

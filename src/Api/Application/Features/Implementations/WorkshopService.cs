@@ -85,7 +85,7 @@ namespace Application.Features.Implementations
 
         public async Task<Result<WorkshopDto>> UpdateWorkshopAsync(Guid id, UpdateWorkshopDto dto)
         {
-            var workshop = await _unitOfWork.Workshops.GetByIdAsync(id);
+            var workshop = await _unitOfWork.Workshops.GetByIdWithTrackingAsync(id);
             if (workshop == null)
             {
                 return Result.Failure<WorkshopDto>(new Error("Workshop.NotFound", $"Workshop with id {id} was not found."));
@@ -139,7 +139,7 @@ namespace Application.Features.Implementations
 
         public async Task<Result<bool>> PublishWorkshopAsync(Guid id)
         {
-            var workshop = await _unitOfWork.Workshops.GetByIdAsync(id);
+            var workshop = await _unitOfWork.Workshops.GetByIdWithTrackingAsync(id);
             if (workshop == null)
             {
                 return Result.Failure<bool>(new Error("Workshop.NotFound", $"Workshop with id {id} was not found."));
@@ -164,7 +164,7 @@ namespace Application.Features.Implementations
 
         public async Task<Result<bool>> CancelWorkshopAsync(Guid id)
         {
-            var workshop = await _unitOfWork.Workshops.GetByIdAsync(id);
+            var workshop = await _unitOfWork.Workshops.GetByIdWithTrackingAsync(id);
             if (workshop == null)
             {
                 return Result.Failure<bool>(new Error("Workshop.NotFound", $"Workshop with id {id} was not found."));
@@ -190,7 +190,7 @@ namespace Application.Features.Implementations
 
         public async Task<Result<string>> UploadWorkshopPdfAsync(Guid id, IFormFile file)
         {
-            var workshop = await _unitOfWork.Workshops.GetByIdAsync(id);
+            var workshop = await _unitOfWork.Workshops.GetByIdWithTrackingAsync(id);
             if (workshop == null)
             {
                 return Result.Failure<string>(new Error("Workshop.NotFound", $"Workshop with id {id} was not found."));
@@ -233,6 +233,29 @@ namespace Application.Features.Implementations
             catch (Exception ex)
             {
                 return Result.Failure<string>(new Error("Workshop.PdfUploadFailed", ex.Message));
+            }
+        }
+
+        public async Task<Result<string>> UploadWorkshopImageAsync(Guid id, IFormFile file)
+        {
+            var workshop = await _unitOfWork.Workshops.GetByIdWithTrackingAsync(id);
+            if (workshop == null)
+            {
+                return Result.Failure<string>(new Error("Workshop.NotFound", $"Workshop with id {id} was not found."));
+            }
+
+            try
+            {
+                var imageUrl = await _uploadService.UploadImageAsync(file);
+                workshop.UpdateImageUrl(imageUrl);
+
+                await _unitOfWork.SaveChangesAsync();
+
+                return Result.Success(imageUrl);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<string>(new Error("Workshop.ImageUploadFailed", ex.Message));
             }
         }
 

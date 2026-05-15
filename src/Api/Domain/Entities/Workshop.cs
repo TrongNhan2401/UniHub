@@ -61,7 +61,7 @@ namespace Domain.Entities
             Price = price;
             CreatedByUserId = createdByUserId;
             ImageUrl = imageUrl;
-            Status = WorkshopStatus.Published;
+            Status = WorkshopStatus.Draft;
         }
 
         public static Result<Workshop> Create(
@@ -92,6 +92,7 @@ namespace Domain.Entities
 
         public void UpdateImageUrl(string? imageUrl)
         {
+            Console.WriteLine("[Workshop] UpdateImageUrl called with: " + imageUrl);
             ImageUrl = imageUrl;
         }
 

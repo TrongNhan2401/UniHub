@@ -1,24 +1,22 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import WorkshopsPage from "@/pages/WorkshopsPage";
 import CalendarPage from "@/pages/CalendarPage";
-import { useAuthStore } from "@/store/authStore";
+import { useAuth } from "@/contexts/AuthContext";
 import AdminSignInPage from "./pages/AdminSignInPage";
 import WorkshopDetailPage from "./pages/WorkshopDetailPage";
-import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import CheckinStaffPage from "./pages/CheckinStaffPage";
 
 function ProtectedRoute({ children }) {
-  const token = useAuthStore((s) => s.token);
+  const { token, loading } = useAuth();
+  if (loading) return <div>Loading...</div>;
   return token ? children : <Navigate to="/login" replace />;
 }
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
       <Route
         path="/"
         element={
@@ -45,14 +43,6 @@ export default function App() {
       />
       <Route path="/workshop/:id" element={<WorkshopDetailPage />} />
       <Route path="/sign-in" element={<AdminSignInPage />} />
-      <Route
-        path="/notifications"
-        element={
-          <ProtectedRoute>
-            <NotificationSettingsPage />
-          </ProtectedRoute>
-        }
-      />
       <Route
         path="/checkin-staff"
         element={

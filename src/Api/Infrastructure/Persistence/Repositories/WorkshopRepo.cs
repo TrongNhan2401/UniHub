@@ -55,5 +55,14 @@ namespace Infrastructure.Persistence.Repositories
                     .ThenInclude(a => a.User)
                 .FirstOrDefaultAsync(w => w.Id == id);
         }
+        public async Task<Workshop?> GetByIdWithTrackingAsync(Guid id)
+        {
+            return await _context.Workshops
+                .Include(w => w.Registrations)
+                    .ThenInclude(r => r.User)
+                .Include(w => w.Attendances)
+                    .ThenInclude(a => a.User)
+                .FirstOrDefaultAsync(w => w.Id == id);
+        }
     }
 }
