@@ -59,6 +59,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var clientUrl = builder.Configuration["ClientUrl"];
+var clientUrls = builder.Configuration["ClientUrls"];
 var allowedOrigins = new List<string>
 {
     "http://localhost:5125",
@@ -85,6 +86,13 @@ var allowedOrigins = new List<string>
 if (!string.IsNullOrWhiteSpace(clientUrl))
 {
     allowedOrigins.Add(clientUrl);
+}
+
+if (!string.IsNullOrWhiteSpace(clientUrls))
+{
+    var urls = clientUrls
+        .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    allowedOrigins.AddRange(urls);
 }
 
 allowedOrigins = allowedOrigins.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
