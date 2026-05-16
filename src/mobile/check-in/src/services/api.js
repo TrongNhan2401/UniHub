@@ -2,6 +2,20 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
+function resolveApiBaseUrl() {
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL;
+  if (fromEnv && fromEnv.trim()) {
+    return fromEnv.trim();
+  }
+
+  // Android emulator cannot reach host machine via localhost.
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:5186/api";
+  }
+
+  return "http://localhost:5186/api";
+}
+
 // SecureStore is not available on web — fall back to localStorage
 const storage = {
   getItem: async (key) => {
@@ -27,7 +41,7 @@ const storage = {
 export { storage as tokenStorage };
 
 const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || "http://localhost:5186/api",
+  baseURL: resolveApiBaseUrl(),
   timeout: 10000,
 });
 

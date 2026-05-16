@@ -16,6 +16,20 @@ import { Mail, Lock, Eye, EyeOff, QrCode, ChevronRight } from "lucide-react-nati
 import { checkinService, tokenStorage } from "../services/api";
 import { useCheckin } from "../context/CheckinContext";
 
+function getLoginErrorMessage(error) {
+  const apiDetail = error?.response?.data?.detail;
+  if (apiDetail) {
+    return apiDetail;
+  }
+
+  if (!error?.response) {
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL || "(fallback theo platform)";
+    return `Khong ket noi duoc API. Kiem tra EXPO_PUBLIC_API_URL (${apiUrl}) va dam bao backend dang chay.`;
+  }
+
+  return "Dang nhap khong thanh cong. Vui long kiem tra email/mat khau.";
+}
+
 export default function LoginScreen() {
   const navigation = useNavigation();
   const { refreshWorkshops } = useCheckin();
@@ -41,7 +55,7 @@ export default function LoginScreen() {
       await refreshWorkshops();
       navigation.replace("Main");
     } catch (error) {
-      const message = error?.response?.data?.detail || "Đăng nhập không thành công. Vui lòng kiểm tra email/mật khẩu.";
+      const message = getLoginErrorMessage(error);
       Alert.alert("Đăng nhập thất bại", message);
     } finally {
       setSubmitting(false);
