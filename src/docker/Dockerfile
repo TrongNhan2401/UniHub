@@ -1,7 +1,7 @@
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY Api/Api/ ./
+COPY src/Api/Api/ ./
 RUN dotnet publish -c Release -o /app/out
 
 # Runtime stage
