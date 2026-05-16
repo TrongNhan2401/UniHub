@@ -261,23 +261,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.MapOpenApi();
 }
-else
-{
-    app.UseHttpsRedirection();
-}
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 
-app.MapGet("/", () => Results.Ok(new
+app.MapMethods("/", new[] { "GET", "HEAD" }, () => Results.Ok(new
 {
     service = "UniHub API",
     status = "live",
     timestampUtc = DateTime.UtcNow
 }));
 
-app.MapGet("/health", () => Results.Ok(new
+app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Ok(new
 {
     status = "healthy"
 }));
