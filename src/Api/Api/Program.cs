@@ -270,6 +270,18 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 
+app.MapGet("/", () => Results.Ok(new
+{
+    service = "UniHub API",
+    status = "live",
+    timestampUtc = DateTime.UtcNow
+}));
+
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy"
+}));
+
 app.MapControllers();
 
 app.Run();
