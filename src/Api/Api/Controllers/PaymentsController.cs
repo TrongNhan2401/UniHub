@@ -24,14 +24,15 @@ namespace Api.Controllers
         }
 
         [HttpPost("registrations/{registrationId:guid}/checkout")]
-        public async Task<IActionResult> CreateCheckout(Guid registrationId)
+        public async Task<IActionResult> CreateCheckout(
+            Guid registrationId,
+            [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
         {
             if (!TryGetCurrentUserId(out var userId))
             {
                 return ProblemResponse(StatusCodes.Status401Unauthorized, "Chua xac thuc.", "Token khong hop le.");
             }
 
-            var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
             var origin = Request.Headers.Origin.ToString();
             var clientBaseUrl = ResolveClientBaseUrl(origin);
             var result = await _paymentService.CreateCheckoutAsync(userId, registrationId, idempotencyKey, clientBaseUrl);
