@@ -19,6 +19,7 @@ namespace Application.Mappings
                 TotalSlots = workshop.TotalSlots,
                 RegisteredCount = workshop.RegisteredCount,
                 IsFree = workshop.IsFree,
+                Price = workshop.Price,
                 ImageUrl = workshop.ImageUrl,
                 Status = workshop.Status.ToString()
             };
