@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
+import { AppState } from "react-native";
 import { checkinService } from "../services/api";
 
 const CheckinContext = createContext(null);
@@ -107,6 +108,8 @@ export function CheckinProvider({ children }) {
   const [pendingCheckins, setPendingCheckins] = useState([]);
   const [recentScans, setRecentScans] = useState([]);
   const [lastSyncSummary, setLastSyncSummary] = useState(null);
+  const autoSyncTimerRef = useRef(null);
+  const syncInFlightRef = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -159,38 +162,10 @@ export function CheckinProvider({ children }) {
     AsyncStorage.setItem(STORAGE_KEYS.recentScans, JSON.stringify(recentScans));
   }, [recentScans]);
 
-  // NetInfo listener - auto detect network state changes
-  const prevOnlineRef = useRef(true);
-
-  useEffect(() => {
-    // Subscribe tới NetInfo state changes
-    const unsubscribe = NetInfo.addEventListener(({ isConnected, isInternetReachable }) => {
-      const isOnlineNow = isConnected && isInternetReachable !== false;
-      setIsOnline(isOnlineNow);
-      prevOnlineRef.current = isOnlineNow;
-    });
-
-    // Lấy trạng thái ban đầu
-    NetInfo.fetch().then(({ isConnected, isInternetReachable }) => {
-      const isOnlineNow = isConnected && isInternetReachable !== false;
-      setIsOnline(isOnlineNow);
-      prevOnlineRef.current = isOnlineNow;
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Auto-sync khi từ offline chuyển sang online
-  useEffect(() => {
-    if (isOnline && pendingCheckins.length > 0) {
-      // Delay 500ms để tránh race condition khi mạng vừa kết nối
-      const timer = setTimeout(() => {
-        syncNow();
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [isOnline, pendingCheckins.length]);
+  const hasPendingSync = useMemo(
+    () => pendingCheckins.some((item) => item.sync_status === "PENDING"),
+    [pendingCheckins],
+  );
 
   async function refreshWorkshops(preferredWorkshopId = "") {
     try {
@@ -227,6 +202,10 @@ export function CheckinProvider({ children }) {
       return { ok: false, message: "Đang ngoại tuyến. Không thể đồng bộ." };
     }
 
+    if (syncInFlightRef.current) {
+      return { ok: false, message: "Đang đồng bộ, vui lòng đợi." };
+    }
+
     const queue = pendingCheckins.filter((p) => p.sync_status === "PENDING");
     if (!queue.length) {
       const summary = { total: 0, inserted: 0, duplicates: 0, failed: 0 };
@@ -235,6 +214,7 @@ export function CheckinProvider({ children }) {
     }
 
     try {
+      syncInFlightRef.current = true;
       const response = await checkinService.sync(
         queue.map((item) => ({
           registration_id: item.registration_id,
@@ -264,8 +244,79 @@ export function CheckinProvider({ children }) {
     } catch (error) {
       const mappedError = mapApiError(error);
       return { ok: false, message: mappedError.message };
+    } finally {
+      syncInFlightRef.current = false;
     }
   };
+
+  const scheduleAutoSync = ({ onlineOverride } = {}) => {
+    const onlineNow = typeof onlineOverride === "boolean" ? onlineOverride : isOnline;
+    if (!onlineNow || !hasPendingSync) return;
+
+    if (autoSyncTimerRef.current) {
+      clearTimeout(autoSyncTimerRef.current);
+    }
+
+    // Delay nhẹ để ổn định network stack trước khi gọi sync.
+    autoSyncTimerRef.current = setTimeout(() => {
+      syncNow();
+    }, 600);
+  };
+
+  // NetInfo listener - detect network state changes and auto-sync when online resumes.
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(({ isConnected, isInternetReachable }) => {
+      const isOnlineNow = isConnected && isInternetReachable !== false;
+      setIsOnline(isOnlineNow);
+
+      if (isOnlineNow) {
+        scheduleAutoSync({ onlineOverride: isOnlineNow });
+      }
+    });
+
+    NetInfo.fetch().then(({ isConnected, isInternetReachable }) => {
+      const isOnlineNow = isConnected && isInternetReachable !== false;
+      setIsOnline(isOnlineNow);
+
+      if (isOnlineNow) {
+        scheduleAutoSync({ onlineOverride: isOnlineNow });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [hasPendingSync, isOnline]);
+
+  // Retry auto-sync when app becomes active again.
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (nextState !== "active") return;
+
+      NetInfo.fetch().then(({ isConnected, isInternetReachable }) => {
+        const isOnlineNow = isConnected && isInternetReachable !== false;
+        setIsOnline(isOnlineNow);
+        if (isOnlineNow) {
+          scheduleAutoSync({ onlineOverride: isOnlineNow });
+        }
+      });
+    });
+
+    return () => {
+      sub.remove();
+    };
+  }, [hasPendingSync, isOnline]);
+
+  // Ensure pending queue syncs automatically when queue changes while already online.
+  useEffect(() => {
+    if (isOnline && hasPendingSync) {
+      scheduleAutoSync();
+    }
+
+    return () => {
+      if (autoSyncTimerRef.current) {
+        clearTimeout(autoSyncTimerRef.current);
+      }
+    };
+  }, [isOnline, hasPendingSync]);
 
   const preloadForWorkshop = async (workshopId) => {
     if (!workshopId) {
