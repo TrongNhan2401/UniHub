@@ -136,18 +136,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Divider */}
-          <View style={s.divRow}>
-            <View style={s.divLine} />
-            <Text style={s.divTxt}>hoặc</Text>
-            <View style={s.divLine} />
-          </View>
-
-          {/* Demo */}
-          <TouchableOpacity style={s.demoBtn} onPress={handleLogin} activeOpacity={0.85}>
-            <Text style={{ fontSize: 14, fontWeight: "600", color: "#374151" }}>Đăng nhập nhanh CHECKIN_STAFF</Text>
-          </TouchableOpacity>
-
           <Text style={s.footer}>UniHub Workshop System · v1.0</Text>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -210,17 +198,6 @@ const s = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 4,
-  },
-  divRow: { flexDirection: "row", alignItems: "center", marginVertical: 16 },
-  divLine: { flex: 1, height: 1, backgroundColor: "#e2e8f0" },
-  divTxt: { marginHorizontal: 14, fontSize: 12, color: "#94a3b8", fontWeight: "600" },
-  demoBtn: {
-    borderWidth: 1.5,
-    borderColor: "#e2e8f0",
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
-    backgroundColor: "#fff",
   },
   footer: { textAlign: "center", marginTop: 24, fontSize: 12, color: "#cbd5e1" },
 });
