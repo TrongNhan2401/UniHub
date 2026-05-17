@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, Clock3, MapPin, Search, Ticket } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, Search, Ticket, ChevronLeft, ChevronRight } from "lucide-react";
 import StudentShell from "@/components/StudentShell";
 import { workshopService } from "@/services/workshopService";
 
@@ -17,12 +17,14 @@ const statusLabel = {
 };
 
 export default function WorkshopListPage() {
+  const pageSize = 6;
   const [query, setQuery] = React.useState("");
   const [workshops, setWorkshops] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [category, setCategory] = React.useState("ALL");
   const [onlyFree, setOnlyFree] = React.useState(false);
+  const [page, setPage] = React.useState(1);
 
   React.useEffect(() => {
     let active = true;
@@ -69,6 +71,23 @@ export default function WorkshopListPage() {
 
     return passQuery && passPrice && passCategory;
   });
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [query, category, onlyFree]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const pagedItems = filtered.slice(startIndex, endIndex);
+
+  const visiblePageNumbers = (() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (safePage <= 3) return [1, 2, 3, 4, 5];
+    if (safePage >= totalPages - 2) return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [safePage - 2, safePage - 1, safePage, safePage + 1, safePage + 2];
+  })();
 
   return (
     <StudentShell activeTop="Khám phá">
@@ -140,7 +159,8 @@ export default function WorkshopListPage() {
               />
             </div>
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Hiển thị {filtered.length} / {workshops.length} workshop
+              Hiển thị {filtered.length ? startIndex + 1 : 0}-{Math.min(endIndex, filtered.length)} / {filtered.length}{" "}
+              workshop
             </span>
           </div>
 
@@ -157,7 +177,7 @@ export default function WorkshopListPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {!loading &&
               !error &&
-              filtered.map((item) => (
+              pagedItems.map((item) => (
                 <article
                   key={item.id}
                   className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
@@ -232,6 +252,48 @@ export default function WorkshopListPage() {
                 </article>
               ))}
           </div>
+
+          {!loading && !error && filtered.length > 0 ? (
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-sm text-slate-500">
+                Trang {safePage} / {totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  disabled={safePage === 1}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                {visiblePageNumbers.map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setPage(num)}
+                    className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-sm font-semibold ${
+                      num === safePage
+                        ? "bg-blue-600 text-white"
+                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={safePage === totalPages}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           {!loading && !error && !filtered.length ? (
             <p className="mt-4 text-sm text-slate-500">Không tìm thấy workshop phù hợp với bộ lọc hiện tại.</p>
