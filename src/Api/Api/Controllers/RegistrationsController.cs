@@ -23,14 +23,15 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateRegistrationRequestDto request)
+        public async Task<IActionResult> Create(
+            [FromBody] CreateRegistrationRequestDto request,
+            [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
         {
             if (!TryGetCurrentUserId(out var userId))
             {
                 return ProblemResponse(StatusCodes.Status401Unauthorized, "Chua xac thuc.", "Token khong hop le.");
             }
 
-            var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
             var result = await _registrationService.CreateAsync(userId, request, idempotencyKey);
 
             if (result.IsFailure)
