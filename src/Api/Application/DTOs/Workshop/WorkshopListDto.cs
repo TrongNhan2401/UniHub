@@ -14,6 +14,7 @@ namespace Application.DTOs.Workshop
         public int TotalSlots { get; set; }
         public int RegisteredCount { get; set; }
         public bool IsFree { get; set; }
+        public decimal Price { get; set; }
         public string? ImageUrl { get; set; }
         public string Status { get; set; } = string.Empty;
     }

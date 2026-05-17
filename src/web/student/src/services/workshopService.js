@@ -35,6 +35,17 @@ function toPriceLabel(isFree, price) {
   return `${amount.toLocaleString("vi-VN")} VND`;
 }
 
+function parseBoolean(value, fallback = false) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  if (typeof value === "number") return value !== 0;
+  return fallback;
+}
+
 function toAboutPoints(description, speakerName, room) {
   const points = [
     `Diễn giả: ${speakerName || "Đang cập nhật"}`,
@@ -45,36 +56,46 @@ function toAboutPoints(description, speakerName, room) {
 }
 
 export function mapWorkshopToUi(raw) {
-  const capacity = Number(raw?.totalSlots ?? 0);
-  const registered = Number(raw?.registeredCount ?? 0);
+  const totalSlotsRaw = raw?.totalSlots ?? raw?.TotalSlots ?? 0;
+  const registeredRaw = raw?.registeredCount ?? raw?.RegisteredCount ?? 0;
+  const isFreeRaw = raw?.isFree ?? raw?.IsFree;
+  const priceRaw = raw?.price ?? raw?.Price ?? 0;
+  const capacity = Number(totalSlotsRaw);
+  const registered = Number(registeredRaw);
   const slotsLeft = Math.max(capacity - registered, 0);
-  const start = raw?.startTime;
-  const end = raw?.endTime;
+  const start = raw?.startTime ?? raw?.StartTime;
+  const end = raw?.endTime ?? raw?.EndTime;
+  const isFree = parseBoolean(isFreeRaw, false);
 
   return {
-    id: raw?.id,
-    title: raw?.title || "Workshop chưa có tiêu đề",
-    code: String(raw?.id || "")
+    id: raw?.id ?? raw?.Id,
+    title: raw?.title ?? raw?.Title ?? "Workshop chưa có tiêu đề",
+    code: String(raw?.id ?? raw?.Id ?? "")
       .slice(0, 8)
       .toUpperCase(),
-    speaker: raw?.speakerName || "Đang cập nhật",
+    speaker: raw?.speakerName ?? raw?.SpeakerName ?? "Đang cập nhật",
     dateLabel: formatDateLabel(start),
     timeLabel: formatTimeLabel(start, end),
     shortTime: start ? new Date(start).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : "-",
-    room: raw?.room || "Đang cập nhật",
-    status: toUiWorkshopStatus(raw?.status, slotsLeft),
-    image: raw?.imageUrl || PLACEHOLDER_IMAGE,
-    description: raw?.description || "Nội dung workshop đang được cập nhật.",
-    aboutPoints: toAboutPoints(raw?.description, raw?.speakerName, raw?.room),
-    price: toPriceLabel(raw?.isFree, raw?.price),
+    room: raw?.room ?? raw?.Room ?? "Đang cập nhật",
+    status: toUiWorkshopStatus(raw?.status ?? raw?.Status, slotsLeft),
+    image: raw?.imageUrl ?? raw?.ImageUrl ?? PLACEHOLDER_IMAGE,
+    description: raw?.description ?? raw?.Description ?? "Nội dung workshop đang được cập nhật.",
+    aboutPoints: toAboutPoints(
+      raw?.description ?? raw?.Description,
+      raw?.speakerName ?? raw?.SpeakerName,
+      raw?.room ?? raw?.Room,
+    ),
+    price: toPriceLabel(isFree, priceRaw),
     slotsLeft,
     capacity,
-    location: raw?.room || "Đang cập nhật",
-    roomMapUrl: raw?.roomMapUrl || "https://maps.google.com",
-    speakerRole: raw?.speakerBio || "Diễn giả workshop",
-    materials: raw?.pdfUrl ? ["Tài liệu PDF workshop"] : ["Tài liệu đang cập nhật"],
-    aiSummary: raw?.aiSummary || "Tóm tắt AI sẽ được cập nhật sau.",
-    isFree: Boolean(raw?.isFree),
+    location: raw?.room ?? raw?.Room ?? "Đang cập nhật",
+    roomMapUrl: raw?.roomMapUrl ?? raw?.RoomMapUrl ?? "https://maps.google.com",
+    speakerRole: raw?.speakerBio ?? raw?.SpeakerBio ?? "Diễn giả workshop",
+    materials: (raw?.pdfUrl ?? raw?.PdfUrl) ? ["Tài liệu PDF workshop"] : ["Tài liệu đang cập nhật"],
+    aiSummary: raw?.aiSummary ?? raw?.AiSummary ?? "Tóm tắt AI sẽ được cập nhật sau.",
+    isFree,
+    priceValue: Number(priceRaw ?? 0),
     startTime: start,
     endTime: end,
   };

@@ -47,18 +47,25 @@ export default function WorkshopListPage() {
     };
   }, []);
 
+  const now = Date.now();
+  const soonWindowMs = 14 * 24 * 60 * 60 * 1000;
+
   const filtered = workshops.filter((item) => {
     const haystack = `${item.title} ${item.speaker} ${item.dateLabel}`.toLowerCase();
     const passQuery = haystack.includes(query.toLowerCase());
     const passPrice = onlyFree ? item.isFree : true;
+    const occupancyRatio = item.capacity > 0 ? (item.capacity - item.slotsLeft) / item.capacity : 0;
+    const startAt = item.startTime ? new Date(item.startTime).getTime() : NaN;
+    const isNewUpcoming = Number.isFinite(startAt) && startAt >= now && startAt - now <= soonWindowMs;
+    const isAlmostFull = item.status === "FULL" || item.slotsLeft <= Math.max(3, Math.ceil(item.capacity * 0.15));
     const passCategory =
       category === "ALL"
         ? true
         : category === "TRENDING"
-          ? item.status === "OPEN" && item.slotsLeft <= Math.max(Math.floor(item.capacity * 0.4), 3)
+          ? item.status === "OPEN" && occupancyRatio >= 0.5
           : category === "NEW"
-            ? item.id % 2 === 0
-            : item.status === "FULL" || item.slotsLeft <= 3;
+            ? isNewUpcoming
+            : isAlmostFull;
 
     return passQuery && passPrice && passCategory;
   });
