@@ -59,6 +59,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var clientUrl = builder.Configuration["ClientUrl"];
+var clientUrls = builder.Configuration["ClientUrls"];
 var allowedOrigins = new List<string>
 {
     "http://localhost:5125",
@@ -87,12 +88,14 @@ if (!string.IsNullOrWhiteSpace(clientUrl))
     allowedOrigins.Add(clientUrl);
 }
 
-allowedOrigins = allowedOrigins.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-foreach (var kv in builder.Configuration.AsEnumerable())
+if (!string.IsNullOrWhiteSpace(clientUrls))
 {
-    if (kv.Key.Contains("ConnectionStrings"))
-        Console.WriteLine($"{kv.Key} = {kv.Value}");
+    var urls = clientUrls
+        .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    allowedOrigins.AddRange(urls);
 }
+
+allowedOrigins = allowedOrigins.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost", policy =>
@@ -266,14 +269,22 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.MapOpenApi();
 }
-else
-{
-    app.UseHttpsRedirection();
-}
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+
+app.MapMethods("/", new[] { "GET", "HEAD" }, () => Results.Ok(new
+{
+    service = "UniHub API",
+    status = "live",
+    timestampUtc = DateTime.UtcNow
+}));
+
+app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Ok(new
+{
+    status = "healthy"
+}));
 
 app.MapControllers();
 

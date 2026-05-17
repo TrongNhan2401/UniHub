@@ -57,6 +57,7 @@ export default function WorkshopDetailPage() {
     () => allWorkshops.filter((w) => String(w.id) !== String(id)).slice(0, 3),
     [allWorkshops, id],
   );
+  const aiSummaryHtml = useMemo(() => normalizeAiSummaryHtml(workshop?.aiSummary), [workshop?.aiSummary]);
 
   const handleRegister = async () => {
     if (!workshop || !canRegister || submitting) return;
@@ -169,9 +170,12 @@ export default function WorkshopDetailPage() {
 
             <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
               <p className="inline-flex items-center gap-2 text-base font-semibold text-blue-700">
-                <Sparkles className="h-4 w-4" /> Gợi ý AI
+                <Sparkles className="h-4 w-4" /> Mô tả workshop
               </p>
-              <p className="mt-2 text-sm italic text-slate-700">"{workshop.aiSummary}"</p>
+              <div
+                className="ai-summary-content mt-3 text-sm leading-relaxed text-slate-700 [&_h1]:mb-2 [&_h1]:mt-4 [&_h1]:text-lg [&_h1]:font-black [&_h2]:mb-2 [&_h2]:mt-4 [&_h2]:text-base [&_h2]:font-bold [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-sm [&_h3]:font-bold [&_li]:mb-1 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5 [&_p]:mb-2 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5"
+                dangerouslySetInnerHTML={{ __html: aiSummaryHtml }}
+              />
             </div>
 
             <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
@@ -312,6 +316,38 @@ export default function WorkshopDetailPage() {
       <SuccessModal open={openSuccess} onClose={() => setOpenSuccess(false)} workshop={workshop} />
     </StudentShell>
   );
+}
+
+function normalizeAiSummaryHtml(input) {
+  const fallback = "<p>Tóm tắt AI sẽ được cập nhật sau.</p>";
+  if (!input || typeof input !== "string") return fallback;
+
+  let content = input.trim();
+
+  // Remove a single wrapping quote/backtick pair often returned by model output.
+  if (
+    (content.startsWith('"') && content.endsWith('"')) ||
+    (content.startsWith("'") && content.endsWith("'")) ||
+    (content.startsWith("`") && content.endsWith("`"))
+  ) {
+    content = content.slice(1, -1).trim();
+  }
+
+  // Keep only body content if the model returns a full HTML fragment.
+  const bodyMatch = content.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  if (bodyMatch?.[1]) {
+    content = bodyMatch[1].trim();
+  }
+
+  content = content
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
+    .replace(/<\/?(iframe|object|embed|link|meta)[^>]*>/gi, "")
+    .replace(/\son\w+\s*=\s*(["']).*?\1/gi, "")
+    .replace(/\son\w+\s*=\s*[^\s>]+/gi, "")
+    .replace(/(href|src)\s*=\s*(["'])\s*javascript:[^"']*\2/gi, '$1="#"');
+
+  return content || fallback;
 }
 
 function buildAgenda(startTime, endTime, aboutPoints = []) {
