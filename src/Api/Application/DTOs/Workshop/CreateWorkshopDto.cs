@@ -8,7 +8,7 @@ namespace Application.DTOs.Workshop
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string SpeakerName { get; set; } = string.Empty;
-        public string SpeakerBio { get; set; } = string.Empty;
+        public string SpeakerBio { get; set; } = "123";
         public string Room { get; set; } = string.Empty;
         public string? RoomMapUrl { get; set; }
         public DateTime StartTime { get; set; }

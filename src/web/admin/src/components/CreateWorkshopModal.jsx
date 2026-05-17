@@ -6,7 +6,7 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     title: "",
     speakerName: "",
-    speakerBio: "",
+    speakerBio: "123",
     description: "",
     room: "",
     date: "",
@@ -218,6 +218,18 @@ export default function CreateWorkshopModal({ isOpen, onClose, onSuccess }) {
                         onChange={(e) => setFormData({ ...formData, totalSlots: e.target.value })}
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Tiểu sử diễn giả</label>
+                    <textarea
+                      required
+                      rows={2}
+                      placeholder="Thông tin ngắn về diễn giả..."
+                      className="w-full rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium outline-none focus:border-blue-500 transition-all resize-none shadow-sm"
+                      value={formData.speakerBio}
+                      onChange={(e) => setFormData({ ...formData, speakerBio: e.target.value })}
+                    />
                   </div>
 
                   <div className="space-y-2">

@@ -1,0 +1,6 @@
+StudentId,FullName,Email,PhoneNumber,Faculty,DateOfBirth,EntryYear
+SE123456,Nguyen Van A,vana@unihub.edu.vn,0901234567,Software Engineering,15/05/2002,2020
+SE123457,Tran Thi B,thib@unihub.edu.vn,0901234568,Information Systems,20/08/2003,2021
+SE123458,Le Van C,vanc@unihub.edu.vn,0901234569,Digital Marketing,10/12/2002,2020
+SE123459,Pham Thi D,thid@unihub.edu.vn,0901234570,Business Administration,05/01/2004,2022
+SE123460,Hoang Van E,vane@unihub.edu.vn,0901234571,Software Engineering,30/03/2003,2021

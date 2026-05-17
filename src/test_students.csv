@@ -1,0 +1,26 @@
+StudentId,FullName,Email,PhoneNumber,Faculty,DateOfBirth,EntryYear
+SV301,Nguyen An,an.n@student.unihub.edu.vn,0912345678,Information Technology,10/10/2002,2020
+SV302,Le Binh,binh.l@student.unihub.edu.vn,0912345679,Business Administration,11/11/2003,2021
+SV303,Tran Canh,canh.t@student.unihub.edu.vn,0912345680,Graphic Design,12/12/2002,2020
+SV304,Pham Duong,duong.p@student.unihub.edu.vn,0912345681,Law,01/01/2001,2019
+SV305,Hoang En,en.h@student.unihub.edu.vn,0912345682,Medicine,02/02/2000,2018
+SV306,Vu Giang,giang.v@student.unihub.edu.vn,0912345683,Architecture,03/03/2002,2020
+SV307,Dang Hai,hai.d@student.unihub.edu.vn,0912345684,Civil Engineering,04/04/2003,2021
+SV308,Bui In,in.b@student.unihub.edu.vn,0912345685,Languages,05/05/2002,2020
+SV309,Ly Khanh,khanh.l@student.unihub.edu.vn,0912345686,Social Science,06/06/2001,2019
+SV310,Ngo Lam,lam.n@student.unihub.edu.vn,0912345687,IT,07/07/2002,2020
+,No ID Record,noid@example.com,0900000001,IT,01/01/2000,2020
+SV312,,noname@example.com,0900000002,Business,01/01/2000,2020
+SV313,No Email Record,,0900000003,Law,01/01/2000,2020
+SV314,Invalid Date,date.error@example.com,0900000004,IT,31/04/2002,2022
+SV315,Wrong Format Date,format.error@example.com,0900000005,Math,25-12-2022,2022
+SV301,Duplicate ID Record,dup.id@example.com,0900000006,IT,01/01/2002,2020
+SV317,Duplicate Email,an.n@student.unihub.edu.vn,0900000007,IT,01/01/2002,2020
+SV318,Invalid Email,not-valid-email,0900000008,IT,01/01/2000,2020
+SV319,Whitespace Name,  Leading Trailing Space  ,whitespace@example.com,0900000009,01/01/2000,2020
+SV320,Symbols Name (!@#),symbols@example.com,0900000010,IT,01/01/2000,2020
+SV321,Null Phone,,nullphone@example.com,,01/01/2002,2020
+SV322,Extreme Year,extreme@example.com,0900000011,IT,01/01/2000,1900
+SV323,Future Year,future2@example.com,0900000012,IT,01/01/2000,2100
+SV324,Missing Date,nodate@example.com,0900000013,IT,,2020
+SV325,Correct Record Last,last@student.unihub.edu.vn,0900000014,IT,20/12/2002,2020

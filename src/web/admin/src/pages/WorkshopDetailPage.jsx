@@ -82,6 +82,7 @@ export default function AdminWorkshopDetailPage() {
         ...data,
         startTime: toLocalInput(data?.startTime),
         endTime: toLocalInput(data?.endTime),
+        speakerBio: data?.speakerBio || "123",
       });
     } catch (err) {
       setError(err?.response?.data?.detail || err?.response?.data?.message || "Không thể tải chi tiết workshop.");
@@ -497,6 +498,14 @@ export default function AdminWorkshopDetailPage() {
                   className="w-full rounded-lg border px-3 py-2"
                   value={editFormData.endTime || ""}
                   onChange={(e) => setEditFormData({ ...editFormData, endTime: e.target.value })}
+                />
+              </Field>
+              <Field label="Tiểu sử diễn giả">
+                <textarea
+                  rows={2}
+                  className="w-full rounded-lg border px-3 py-2"
+                  value={editFormData.speakerBio || "123"}
+                  onChange={(e) => setEditFormData({ ...editFormData, speakerBio: e.target.value })}
                 />
               </Field>
             </div>

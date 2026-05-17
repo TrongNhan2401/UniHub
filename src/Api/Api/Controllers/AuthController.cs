@@ -3,14 +3,12 @@ using Application.Features.Interfaces;
 using Application.Abstractions;
 using Domain;
 using Domain.Entities;
-using Domain.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-
 namespace Api.Controllers
 {
     [ApiController]
