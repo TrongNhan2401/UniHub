@@ -91,6 +91,7 @@ export function mapWorkshopToUi(raw) {
     price: toPriceLabel(isFree, priceRaw),
     slotsLeft,
     capacity,
+    registeredCount: registered,
     location: raw?.room ?? raw?.Room ?? "Đang cập nhật",
     roomMapUrl: raw?.roomMapUrl ?? raw?.RoomMapUrl ?? "https://maps.google.com",
     speakerRole: raw?.speakerBio ?? raw?.SpeakerBio ?? "Diễn giả workshop",
