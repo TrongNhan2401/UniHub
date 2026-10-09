@@ -1,10 +1,15 @@
 import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
+import mockApiAdapter from "@/services/mockApi";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5186/api",
   timeout: 30000,
 });
+
+if (import.meta.env.DEV) {
+  api.defaults.adapter = mockApiAdapter;
+}
 
 // Tự động đính kèm JWT token vào mọi request
 api.interceptors.request.use((config) => {

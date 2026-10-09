@@ -6,6 +6,7 @@ import NotificationBell from "@/components/NotificationBell";
 
 const topItems = [
   { label: "Khám phá", to: "/" },
+  { label: "Xếp hạng", to: "/leaderboard" },
   { label: "Vé của tôi", to: "/my-registrations" },
 ];
 
