@@ -1,6 +1,6 @@
 import api from "./api";
 
-const WORKSHOP_CACHE_KEY = "student_workshops_cache_v1";
+const WORKSHOP_CACHE_KEY = "student_workshops_cache_v2";
 const WORKSHOP_CACHE_TTL_MS = 30 * 1000;
 let workshopCache = null;
 
@@ -81,11 +81,13 @@ export function mapWorkshopToUi(raw) {
     status: toUiWorkshopStatus(raw?.status ?? raw?.Status, slotsLeft),
     image: raw?.imageUrl ?? raw?.ImageUrl ?? PLACEHOLDER_IMAGE,
     description: raw?.description ?? raw?.Description ?? "Nội dung workshop đang được cập nhật.",
-    aboutPoints: toAboutPoints(
-      raw?.description ?? raw?.Description,
-      raw?.speakerName ?? raw?.SpeakerName,
-      raw?.room ?? raw?.Room,
-    ),
+    aboutPoints: Array.isArray(raw?.aboutPoints ?? raw?.AboutPoints)
+      ? raw.aboutPoints ?? raw.AboutPoints
+      : toAboutPoints(
+          raw?.description ?? raw?.Description,
+          raw?.speakerName ?? raw?.SpeakerName,
+          raw?.room ?? raw?.Room,
+        ),
     price: toPriceLabel(isFree, priceRaw),
     slotsLeft,
     capacity,
